@@ -11,7 +11,7 @@ const Category = lazy(() => import('@/views/pages/Category')); // single categor
 const AddCategory = lazy(() => import('@/views/pages/Category/components/AddCategory'));
 const AddSubCategory = lazy(() => import('@/views/pages/Category/components/AddSubCategory'));
 const AddJobType = lazy(() => import('@/views/pages/Category/components/AddJobType'));
-const AddSector = lazy(() => import('@/views/pages/Category/Components/AddSector'));
+const AddSector = lazy(() => import('@/views/pages/Category/components/AddSector'));
 const EditSubCategory = lazy(() => import('@/views/pages/Category/components/EditSubCategory'));
 const Jobs = lazy(() => import('@/views/pages/jobs')); 
 const EditJob = lazy(() => import('@/views/pages/jobs/components/EditJob'));

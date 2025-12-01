@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Form, Button, Alert, Container, Image, Spinner } from 'react-bootstrap';
 import axios from '@/api/axios';
 import ComponentCard from '@/components/ComponentCard';
