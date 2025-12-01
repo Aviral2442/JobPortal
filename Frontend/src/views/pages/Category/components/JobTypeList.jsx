@@ -74,8 +74,12 @@ const JobTypeList = () => {
     },
     {
       title: 'Job Type Name',
-      data: 'jobType_name' || 'job_type_name',
+      data: null,
       defaultContent: '-',
+      render: (data, type, row) => {
+        // prefer snake_case, then camelCase, then fallback
+        return row?.job_type_name ?? row?.jobType_name ?? '-';
+      },
     },
     {
       title: 'Status',

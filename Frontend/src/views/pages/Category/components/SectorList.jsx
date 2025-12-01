@@ -2,31 +2,36 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Container, Row, Col, Dropdown, Alert, Spinner } from 'react-bootstrap';
 import { createRoot } from 'react-dom/client';
 import { TbDotsVertical, TbEdit, TbTrash } from 'react-icons/tb';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '@/api/axios';
 import TableList from "@/components/table/TableList";
 import DT from 'datatables.net-bs5';
 
-const SubCategoryList = () => {
-  const [subCategories, setSubCategories] = useState([]);
+const SectorList = ({ onEditRow, refreshFlag, onDataChanged }) => {
+  const [sectors, setSectors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [variant, setVariant] = useState('success');
-  const navigate = useNavigate();
   const tableRef = useRef(null);
-  const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-  // Fetch sub-categories
-  const fetchSubCategories = async () => {
+  // Fetch sectors
+  const fetchSectors = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/subcategories`);
-      const data = Array.isArray(res.data) ? res.data : res.data.data || [];
-      setSubCategories(data);
+      const res = await axios.get('/job-categories/get_job_sector_list');
+      console.log('Fetch sector response:', res.data);
+      
+      // Extract data correctly from response
+      const data = res.data?.jsonData?.data || res.data?.data || [];
+      setSectors(Array.isArray(data) ? data : []);
+      
+      if (data.length === 0) {
+        setMessage('No sectors found.');
+        setVariant('info');
+      }
     } catch (err) {
-      console.error(err);
-      setSubCategories([]);
-      setMessage('Failed to fetch sub-categories.');
+      console.error('Error fetching sectors:', err);
+      setSectors([]);
+      setMessage(err.response?.data?.message || 'Failed to fetch sectors.');
       setVariant('danger');
     } finally {
       setLoading(false);
@@ -34,43 +39,46 @@ const SubCategoryList = () => {
   };
 
   useEffect(() => {
-    fetchSubCategories();
-  }, []);
+    fetchSectors();
+  }, [refreshFlag]);
 
-  // Delete sub-category
+  // Delete sector
   const handleDelete = async (id) => {
     if (!id) return;
-    if (!window.confirm('Are you sure you want to delete this sub-category?')) return;
+    if (!window.confirm('Are you sure you want to delete this sector?')) return;
 
     try {
-      await axios.delete(`${BASE_URL}/api/subcategories/${id}`);
-      setMessage('Sub-category deleted successfully.');
+      await axios.delete(`/job-categories/delete_job_sector/${id}`);
+      setMessage('Sector deleted successfully.');
       setVariant('success');
-      fetchSubCategories();
+      fetchSectors();
+      if (onDataChanged) onDataChanged();
     } catch (err) {
-      console.error(err);
-      setMessage(err.response?.data?.message || 'Failed to delete sub-category.');
+      console.error('Error deleting sector:', err);
+      setMessage(err.response?.data?.message || 'Failed to delete sector.');
       setVariant('danger');
     }
   };
 
   // DataTable columns
   const columns = [
-    { title: 'Sub-Category Name', data: 'subCategoryName' },
-    {
-      title: 'Parent Category',
-      data: 'parentCategory',
-      createdCell: (td, cellData) => {
-        td.innerHTML = cellData?.categoryName || '';
-      },
-    },
-    {
-      title: 'Image',
-      data: 'subCategoryImage',
+    { 
+      title: 'S.No.',
+      data: null,
       orderable: false,
-      createdCell: (td, cellData) => {
-        td.innerHTML = cellData ? `<img src="${VITE_BASE_URL}${cellData}" alt="img" width="50"/>` : '';
-      },
+      render: (data, type, row, meta) => meta.row + 1
+    },
+    { title: 'Sector Name', data: 'job_sector_name' },
+    {
+      title: 'Status',
+      data: 'job_sector_status',
+      render: (data) => {
+        if (data == 0 || data === 'active') {
+          return '<span class="badge badge-label badge-soft-success">Active</span>';
+        } else {
+          return '<span class="badge badge-label badge-soft-danger">Inactive</span>';
+        }
+      }
     },
     {
       title: 'Actions',
@@ -85,9 +93,7 @@ const SubCategoryList = () => {
               <TbDotsVertical />
             </Dropdown.Toggle>
             <Dropdown.Menu>
-              <Dropdown.Item
-                onClick={() => navigate(`/admin/sub-category/edit/${rowData._id}`, { state: rowData })}
-              >
+              <Dropdown.Item onClick={() => onEditRow(rowData)}>
                 <TbEdit className="me-1" /> Edit
               </Dropdown.Item>
               <Dropdown.Item className="text-danger" onClick={() => handleDelete(rowData._id)}>
@@ -105,7 +111,7 @@ const SubCategoryList = () => {
 
   return (
     <Container fluid className="pt-4">
-      {message && <Alert variant={variant}>{message}</Alert>}
+      {message && <Alert variant={variant} dismissible onClose={() => setMessage('')}>{message}</Alert>}
 
       {loading ? (
         <div className="text-center py-4">
@@ -116,12 +122,12 @@ const SubCategoryList = () => {
           <Col>
             <TableList
               ref={tableRef}
-              data={subCategories}
+              data={sectors}
               columns={columns}
               options={{
                 responsive: true,
                 pageLength: 10,
-                dom:  "<'d-md-flex justify-content-between align-items-center my-2'<'dt-buttons'B>f>" +
+                dom: "<'d-md-flex justify-content-between align-items-center my-2'<'dt-buttons'B>f>" +
                   "rt" +
                   "<'d-md-flex justify-content-between align-items-center mt-2'ip>",
                 buttons: [
@@ -140,4 +146,4 @@ const SubCategoryList = () => {
   );
 };
 
-export default SubCategoryList;
+export default SectorList;

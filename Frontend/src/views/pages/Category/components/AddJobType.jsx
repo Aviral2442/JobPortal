@@ -6,26 +6,24 @@ import ComponentCard from "@/components/ComponentCard";
 const AddJobType = ({ mode = "add", data = null, onCancel = () => {}, onDataChanged = () => {} }) => {
   const isEditMode = mode === "edit" && data;
   const [name, setName] = useState("");
-  const [status, setStatus] = useState(0);
   const [message, setMessage] = useState("");
   const [variant, setVariant] = useState("success");
   const [loading, setLoading] = useState(false);
 
-  const baseURL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
-
   useEffect(() => {
     if (isEditMode) {
-      // support different incoming shapes
-      setName(data?.jobType_name || data?.job_type_name || data?.name || "");
-      setStatus(Number(data?.jobType_status ?? data?.job_type_status ?? 0));
+      setName(data?.job_type_name || data?.jobType_name || "");
     } else {
       setName("");
-      setStatus(0);
     }
   }, [isEditMode, data]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Clear previous messages
+    setMessage("");
+    
     if (!name.trim()) {
       setMessage("Job type name is required");
       setVariant("danger");
@@ -34,25 +32,31 @@ const AddJobType = ({ mode = "add", data = null, onCancel = () => {}, onDataChan
 
     setLoading(true);
     try {
+      const payload = {
+        jobType_name: name.trim(),
+      };
+
+      let response;
       if (isEditMode) {
-        // Attempt update; backend route may vary — adjust if your API uses different path
-        await axios.put(`${baseURL}/job-types/update_job_type/${data._id}`, {
-          jobType_name: name.trim(),
-          jobType_status: status,
-        });
+        response = await axios.put(`/job-categories/update_job_type/${data._id}`, payload);
         setMessage("Job type updated successfully");
       } else {
-        const res = await axios.post(`${baseURL}/job-types/create_job_type`, {
-          jobType_name: name.trim(),
-          jobType_status: status,
-        });
-        // backend may return jsonData or jobType
-        console.log("create_job_type response:", res.data);
+        response = await axios.post('/job-categories/create_job_type', payload);
+        console.log("create_job_type response:", response.data);
         setMessage("Job type added successfully");
       }
+      
       setVariant("success");
-      onDataChanged();
-      setTimeout(() => onCancel(), 800);
+      
+      if (!isEditMode) {
+        setName("");
+      }
+
+      // Trigger refresh and hide form after delay
+      setTimeout(() => {
+        onDataChanged();
+        onCancel();
+      }, 1500);
     } catch (err) {
       console.error("Add/Update JobType error:", err.response?.data || err.message);
       setMessage(err.response?.data?.message || "Failed to save job type");
@@ -75,22 +79,23 @@ const AddJobType = ({ mode = "add", data = null, onCancel = () => {}, onDataChan
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+              isInvalid={message && variant === "danger" && !name.trim()}
             />
-          </Form.Group>
-
-          <Form.Group className="mb-3" controlId="jobTypeStatus">
-            <Form.Label>Status</Form.Label>
-            <Form.Select value={String(status)} onChange={(e) => setStatus(Number(e.target.value))}>
-              <option value="0">Active</option>
-              <option value="1">Inactive</option>
-            </Form.Select>
           </Form.Group>
 
           <div className="d-flex gap-2">
             <Button variant="primary" type="submit" disabled={loading}>
-              {loading ? <><Spinner animation="border" size="sm" /> {isEditMode ? "Updating..." : "Adding..."}</> : (isEditMode ? "Update Job Type" : "Add Job Type")}
+              {loading ? (
+                <>
+                  <Spinner animation="border" size="sm" /> {isEditMode ? "Updating..." : "Adding..."}
+                </>
+              ) : (
+                isEditMode ? "Update Job Type" : "Add Job Type"
+              )}
             </Button>
-            <Button variant="secondary" type="button" onClick={onCancel} disabled={loading}>Cancel</Button>
+            <Button variant="secondary" type="button" onClick={onCancel} disabled={loading}>
+              Cancel
+            </Button>
           </div>
         </Form>
       </ComponentCard>

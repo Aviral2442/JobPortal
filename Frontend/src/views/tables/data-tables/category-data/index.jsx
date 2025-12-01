@@ -39,6 +39,7 @@ import { createRoot } from "react-dom/client";
 import axios from "@/api/axios";
 import toast from "react-hot-toast";
 import JobTypeList from "@/views/pages/Category/components/JobTypeList";
+import SectorList from "@/views/pages/Category/components/SectorList";
 
 const tableConfig = {
   1: {
