@@ -25,7 +25,6 @@ const AnswerKey = lazy(() => import('@/views/pages/answer-key'));
 const AddAnswerKey = lazy(() => import('@/views/pages/answer-key/components/AddAnswerKey'));
 const Documents = lazy(() => import('@/views/pages/documents'));
 const Admissions = lazy(() => import('@/views/pages/admission'));
-const EditJobType = lazy(() => import('@/views/pages/Category/components/AddJobType'));
 
 
 
@@ -74,10 +73,6 @@ const categoryRoutes = [
   },
   {
     path: '/admin/job-type/add',
-    element: <AddJobType/>
-  },
-  { 
-    path: '/admin/job-type/edit/:id',
     element: <AddJobType/>
   },
   {

@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Container, Row, Col, Dropdown, Alert, Spinner } from 'react-bootstrap';
 import { createRoot } from 'react-dom/client';
 import { TbDotsVertical, TbEdit, TbTrash } from 'react-icons/tb';
-import { useNavigate } from 'react-router-dom';
 import axios from '@/api/axios';
 import TableList from "@/components/table/TableList";
 import DT from 'datatables.net-bs5';
@@ -14,23 +13,27 @@ import {
   TbChevronsRight,
 } from "react-icons/tb";
 
-const JobTypeList = () => {
+const JobTypeList = ({ onEditRow, refreshFlag, onDataChanged }) => {
   const [jobTypes, setJobTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [variant, setVariant] = useState('success');
-  const navigate = useNavigate();
   const tableRef = useRef(null);
 
   const fetchJobTypes = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const res = await axios.get(`/job-types/get_job_type_list`);
+      const res = await axios.get(`/job-categories/get_job_type_list`);
       console.log('fetchJobTypes response:', res.data);
       
       // Extract data from the response structure
       const data = res.data?.jsonData?.jobTypes || [];
       setJobTypes(Array.isArray(data) ? data : []);
+      
+      if (data.length === 0) {
+        setMessage('No job types found.');
+        setVariant('info');
+      }
     } catch (err) {
       console.error('Fetch error:', err);
       setJobTypes([]);
@@ -43,17 +46,18 @@ const JobTypeList = () => {
 
   useEffect(() => {
     fetchJobTypes();
-  }, []);
+  }, [refreshFlag]);
 
   const handleDelete = async (id) => {
     if (!id) return;
     if (!window.confirm('Are you sure you want to delete this job type?')) return;
 
     try {
-      await axios.delete(`/job-types/delete_job_type/${id}`);
+      await axios.delete(`/job-categories/delete_job_type/${id}`);
       setMessage('Job type deleted successfully.');
       setVariant('success');
       fetchJobTypes();
+      if (onDataChanged) onDataChanged();
     } catch (err) {
       console.error(err);
       setMessage(err.response?.data?.message || 'Failed to delete job type.');
@@ -83,7 +87,7 @@ const JobTypeList = () => {
     },
     {
       title: 'Status',
-      data: 'jobType_status',
+      data: 'job_type_status',
       render: (data) => {
         if (data === 0 || data === "0" || data === "active") {
           return `<span class="badge badge-label badge-soft-success">Active</span>`;
@@ -108,9 +112,7 @@ const JobTypeList = () => {
               <TbDotsVertical />
             </Dropdown.Toggle>
             <Dropdown.Menu>
-              <Dropdown.Item
-                onClick={() => navigate(`/admin/job-type/edit/${rowData._id}`, { state: rowData })}
-              >
+              <Dropdown.Item onClick={() => onEditRow(rowData)}>
                 <TbEdit className="me-1" /> Edit
               </Dropdown.Item>
               <Dropdown.Item className="text-danger" onClick={() => handleDelete(rowData._id)}>

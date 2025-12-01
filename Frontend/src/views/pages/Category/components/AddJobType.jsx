@@ -11,10 +11,15 @@ const AddJobType = ({ mode = "add", data = null, onCancel = () => {}, onDataChan
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isEditMode) {
-      setName(data?.job_type_name || data?.jobType_name || "");
+    if (isEditMode && data) {
+      // Clear any existing messages when entering edit mode
+      setMessage("");
+      setVariant("success");
+      // Handle both snake_case and camelCase
+      setName(data.job_type_name || data.jobType_name || "");
     } else {
       setName("");
+      setMessage("");
     }
   }, [isEditMode, data]);
 
@@ -33,11 +38,19 @@ const AddJobType = ({ mode = "add", data = null, onCancel = () => {}, onDataChan
     setLoading(true);
     try {
       const payload = {
-        jobType_name: name.trim(),
+        id: data?._id,
+        job_type_name: name.trim(),
       };
 
       let response;
       if (isEditMode) {
+        // Make sure we have an ID
+        if (!data?._id) {
+          setMessage("Job type ID is missing");
+          setVariant("danger");
+          setLoading(false);
+          return;
+        }
         response = await axios.put(`/job-categories/update_job_type/${data._id}`, payload);
         setMessage("Job type updated successfully");
       } else {
@@ -69,10 +82,16 @@ const AddJobType = ({ mode = "add", data = null, onCancel = () => {}, onDataChan
   return (
     <Container fluid className="pt-4">
       <ComponentCard title={isEditMode ? "Edit Job Type" : "Add Job Type"}>
-        {message && <Alert variant={variant} dismissible onClose={() => setMessage("")}>{message}</Alert>}
+        {message && (
+          <Alert variant={variant} dismissible onClose={() => setMessage("")}>
+            {message}
+          </Alert>
+        )}
         <Form onSubmit={handleSubmit} className="py-2">
           <Form.Group className="mb-3" controlId="jobTypeName">
-            <Form.Label>Job Type Name <span className="text-danger">*</span></Form.Label>
+            <Form.Label>
+              Job Type Name <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Control
               type="text"
               placeholder="Enter job type name"
@@ -81,6 +100,11 @@ const AddJobType = ({ mode = "add", data = null, onCancel = () => {}, onDataChan
               required
               isInvalid={message && variant === "danger" && !name.trim()}
             />
+            {message && variant === "danger" && !name.trim() && (
+              <Form.Control.Feedback type="invalid">
+                Job type name is required
+              </Form.Control.Feedback>
+            )}
           </Form.Group>
 
           <div className="d-flex gap-2">

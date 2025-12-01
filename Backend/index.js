@@ -34,7 +34,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api", protectedRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/job-categories", jobCategoryRoutes);
-// app.use("/api/job-types", jobTypeRoutes);
 app.use("/api/student", studentRoutes);
 
 // Test route
