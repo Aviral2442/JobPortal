@@ -1,6 +1,20 @@
 const studentModel = require('../models/studentModel');
 const sendEmailOtp = require('../utils/emailOtp');
 
+exports.studentListService = async () => {
+    try {
+
+        
+
+    } catch (error) {
+        return {
+            status: 500,
+            message: 'An error occurred while fetching student list',
+            error: error.message
+        }
+    }
+}
+
 // Student Registration Service
 exports.studentRegistration = async (studentData) => {
     try {

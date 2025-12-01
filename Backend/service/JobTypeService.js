@@ -1,84 +1,87 @@
-const JobType = require('../models/JobType');
+const JobType = require('../models/JobTypeModel');
 const moment = require('moment');
+const { buildDateFilter } = require('../utils/dateFilters');
+const { buildPagination } = require('../utils/paginationFilters');
 
-// Get Job Type List with Filters and Pagination
+// JOB TYPE LIST SERVICE
 exports.getJobTypeList = async (query) => {
-    const {
-        dateFilter,
-        fromDate,
-        toDate,
-        searchFilter,
-        page = 1,
-        limit = 10
-    } = query;
+    try {
+        const {
+            dateFilter,
+            fromDate,
+            toDate,
+            searchFilter,
+            page,
+            limit
+        } = query;
 
-    const skip = (page - 1) * limit;
-    const filter = {};
+        let filter = {};
 
-    // Search Filter
-    if (searchFilter) {
-        filter.jobType_name = { $regex: searchFilter, $options: 'i' };
-    }
-    // Date Filter
-    if (dateFilter) {
-        const today = moment().startOf('day');
-        const now = moment().endOf('day');
-        let startDate, endDate;
-
-        switch (dateFilter) {
-            case 'today':
-                startDate = today.unix();
-                endDate = now.unix();
-                break;
-            case 'yesterday':
-                startDate = today.subtract(1, 'days').unix();
-                endDate = now.subtract(1, 'days').unix();
-                break;
-            case 'this_week':
-                startDate = moment().startOf('week').unix();
-                endDate = moment().endOf('week').unix();
-                break;
-            case 'this_month':
-                startDate = moment().startOf('month').unix();
-                endDate = moment().endOf('month').unix();
-                break;
-            case 'custom':
-                if (fromDate && toDate) {
-                    startDate = moment(fromDate, 'YYYY-MM-DD').startOf('day').unix();
-                    endDate = moment(toDate, 'YYYY-MM-DD').endOf('day').unix();
-                }
-                break;
+        // 🔍 Search filter
+        if (searchFilter) {
+            filter.jobType_name = { $regex: searchFilter, $options: "i" };
         }
-        if (startDate && endDate) {
-            filter.jobType_created_at = { $gte: startDate, $lte: endDate };
-        }
+
+        // 📅 Date filter (Reusable)
+        const dateQuery = buildDateFilter({
+            dateFilter,
+            fromDate,
+            toDate,
+            dateField: "jobType_created_at"
+        });
+
+        filter = { ...filter, ...dateQuery };
+
+        // 📄 Pagination (Reusable)
+        const { skip, limit: finalLimit, currentPage } = buildPagination({
+            dateFilter,
+            fromDate,
+            toDate,
+            searchFilter,
+            page,
+            limit
+        });
+
+        // Database Query
+        const totalCount = await JobType.countDocuments(filter);
+        const jobTypes = await JobType.find(filter)
+            .sort({ jobType_created_at: -1 })
+            .skip(skip)
+            .limit(finalLimit);
+
+        return {
+            result: 200,
+            message: "Job Type list fetched successfully",
+            totalCount,
+            currentPage,
+            totalPages: Math.ceil(totalCount / finalLimit),
+            jsonData: {
+                jobTypes: jobTypes
+            }
+        };
+    } catch (error) {
+        return {
+            result: 500,
+            message: "Internal server error",
+            error: error.message
+        };
     }
+};
 
-    // Pagination and Data Retrieval
-    const totalCount = await JobType.countDocuments(filter);
-    const jobTypes = await JobType.find(filter)
-        .sort({ jobType_created_at: -1 })
-        .skip(skip)
-        .limit(parseInt(limit));
-
-    return {
-        jobTypes,
-        totalCount,
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(totalCount / limit)
-    };
-}
-
-// Create a New Job Type
+// CREATE JOB TYPE SERVICE
 exports.createJobType = async (data) => {
     try {
         const newJobType = new JobType({
-            jobType_name: data.jobType_name,
-            jobType_created_at: Math.floor(Date.now() / 1000)
+            job_type_name: data.job_type_name
         });
 
         const savedJobType = await newJobType.save();
-        return { success: true, jobType: savedJobType };
+
+        return {
+            success: 200,
+            message: `Job Type created successfully`,
+            jsonData: savedJobType
+        };
     } catch (error) {
         return { success: false, error: error.message };
     }
