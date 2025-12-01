@@ -8,7 +8,7 @@ const authRoutes = require("./routes/authRoutes");
 const protectedRoutes = require("./routes/protectedRoutes");
 const jobRoutes = require("./routes/jobRoutes");
 const jobCategoryRoutes = require("./routes/jobCategoryRouters");
-const jobTypeRoutes = require("./routes/jobTypeRoutes");
+// const jobTypeRoutes = require("./routes/jobTypeRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 
 dotenv.config();
@@ -34,7 +34,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api", protectedRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/job-categories", jobCategoryRoutes);
-app.use("/api/job-types", jobTypeRoutes);
+// app.use("/api/job-types", jobTypeRoutes);
 app.use("/api/student", studentRoutes);
 
 // Test route

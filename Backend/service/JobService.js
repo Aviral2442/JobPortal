@@ -15,15 +15,15 @@ class JobService {
   async getJobs(filters = {}) {
     try {
       const query = {};
-      
+
       if (filters.status !== undefined) {
         query.job_status = filters.status;
       }
-      
+
       if (filters.category) {
         query.job_category = filters.category;
       }
-      
+
       if (filters.sector) {
         query.job_sector = filters.sector;
       }
@@ -52,16 +52,16 @@ class JobService {
   async updateJob(id, updateData) {
     try {
       updateData.job_last_updated_date = Math.floor(Date.now() / 1000);
-      
+
       const job = await Job.findByIdAndUpdate(id, updateData, {
         new: true,
         runValidators: true,
       });
-      
+
       if (!job) {
         return { success: false, error: "Job not found" };
       }
-      
+
       return { success: true, job };
     } catch (error) {
       return { success: false, error: error.message };
@@ -92,7 +92,7 @@ class JobService {
       // Update the specific section
       Object.assign(job, data);
       job.job_last_updated_date = Math.floor(Date.now() / 1000);
-      
+
       await job.save();
       return { success: true, job };
     } catch (error) {

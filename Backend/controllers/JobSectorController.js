@@ -1,6 +1,6 @@
 const JobSectorService = require('../service/JobSectorService');
 
-// ✅ Get Job Sector List
+// JOB SECTOR LIST CONTROLLER
 exports.getJobSectorList = async (req, res) => {
     try {
         const result = await JobSectorService.getJobSectorList(req.query);
@@ -15,7 +15,7 @@ exports.getJobSectorList = async (req, res) => {
     }
 };
 
-// ✅ Create Job Sector
+// JOB SECTOR CREATE CONTROLLER
 exports.createJobSector = async (req, res) => {
     try {
         const { job_sector_name, job_sector_status } = req.body;
@@ -32,7 +32,7 @@ exports.createJobSector = async (req, res) => {
     }
 };
 
-// ✅ Update Job Sector
+// JOB SECTOR UPDATE CONTROLLER
 exports.updateJobSector = async (req, res) => {
     try {
         const id = req.params.id;

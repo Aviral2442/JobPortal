@@ -86,3 +86,23 @@ exports.createJobType = async (data) => {
         return { success: false, error: error.message };
     }
 };
+
+// UPDATE JOB TYPE SERVICE
+exports.updateJobType = async (data) => {
+    try {
+        const jobType = await JobType.findById(data.id);
+        if (!jobType) {
+            return { status: 404, message: 'Job Type not found' };
+        }
+        jobType.job_type_name = data.job_type_name || jobType.job_type_name;
+
+        const updatedJobType = await jobType.save();
+        return {
+            status: 200,
+            message: 'Job Type updated successfully',
+            jsonData: updatedJobType
+        };
+    } catch (error) {
+        return { status: 500, message: 'Internal server error', error: error.message };
+    }
+};

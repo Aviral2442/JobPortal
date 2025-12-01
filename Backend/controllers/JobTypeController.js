@@ -31,11 +31,11 @@ exports.createJobType = async (req, res) => {
 // Update Job Type
 exports.updateJobType = async (req, res) => {
     try {
-        const { id, jobType_name } = req.body;
-        if (!id || !jobType_name) {
+        const { id, job_type_name } = req.body;
+        if (!id || !job_type_name) {
             return res.status(400).json({ status: false, message: 'Job Type ID and name are required' });
         }
-        const result = await jobTypeService.updateJobType({ id, jobType_name });
+        const result = await jobTypeService.updateJobType({ id, job_type_name });
 
         res.status(200).json(result);
     } catch (error) {

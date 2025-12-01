@@ -1,7 +1,7 @@
 const JobSectorModel = require('../models/JobSectorModel');
 const moment = require('moment');
 
-// Get Job Sector List with Filters, Pagination, and Search
+// JOB SECTOR LIST SERVICE
 exports.getJobSectorList = async (query) => {
     const { dateFilter, fromDate, toDate, searchFilter, page = 1, limit = 10 } = query;
 
@@ -65,7 +65,7 @@ exports.getJobSectorList = async (query) => {
     };
 };
 
-// Create Job Sector
+// JOB SECTOR CREATE SERVICE
 exports.createJobSector = async (data) => {
     const existingSector = await JobSectorModel.findOne({ job_sector_name: data.job_sector_name });
 
@@ -87,7 +87,7 @@ exports.createJobSector = async (data) => {
     };
 };
 
-// Update Job Sector
+// JOB SECTOR UPDATE SERVICE
 exports.updateJobSector = async (id, data) => {
     const allowedFields = ['job_sector_name', 'job_sector_status'];
     const updateData = {};
