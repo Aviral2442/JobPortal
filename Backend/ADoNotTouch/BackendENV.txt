@@ -3,3 +3,5 @@ MONGOOSE_DB_URL = mongodb+srv://jobportal2025:jobportalpass2025@cluster0.uebotno
 MONGOOSE_DB_USER = jobportal2025
 MONGOOSE_DB_PASSWORD = jobportalpass2025s
 JWT_SECRET=bdbwjdbwjkdbkwqj
+
+RENDER_URL = https://jobportal-react-v2.onrender.com
