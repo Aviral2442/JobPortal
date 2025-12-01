@@ -67,6 +67,21 @@ const Page = () => {
 
                                 <div className="">
                                     <Form onSubmit={handleSubmit}>
+                                    <FormGroup className="mb-3">
+                                            <div style={{ marginBottom: "12px" }}>
+                                                <label htmlFor="role">Role</label>
+                                                <select
+                                                    id="role"
+                                                    name="role"
+                                                    value={formData.role}
+                                                    onChange={handleChange}
+                                                    className="form-select" >
+                                                    <option value="">-- Select Role --</option>
+                                                    <option value="admin">Admin</option>
+
+                                                </select>
+                                            </div>
+                                        </FormGroup>
                                         <FormGroup className="mb-3">
                                             <FormLabel htmlFor="userEmail">
                                                 Email<span className="text-danger">*</span>
@@ -87,24 +102,6 @@ const Page = () => {
                                                 onChange={handleChange}
                                                 required />
                                         </FormGroup>
-                                        <FormGroup className="mb-3">
-                                            <div style={{ marginBottom: "12px" }}>
-                                                <label htmlFor="role">Role</label>
-                                                <select
-                                                    id="role"
-                                                    name="role"
-                                                    value={formData.role}
-                                                    onChange={handleChange}
-                                                    className="form-select" >
-                                                    <option value="">-- Select Role --</option>
-                                                    <option value="admin">Admin</option>
-
-                                                </select>
-                                            </div>
-                                        </FormGroup>
-
-
-
 
                                         <div className="d-grid">
                                             <Button variant="primary" type="submit" className="fw-semibold py-2" disabled={loading}>
