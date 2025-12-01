@@ -16,7 +16,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173','https://job-portal-seven-taupe.vercel.app'], 
+  origin: ['http://localhost:5173','https://job-portal-react-v2.vercel.app/'], 
   credentials: true,
 }));
 
