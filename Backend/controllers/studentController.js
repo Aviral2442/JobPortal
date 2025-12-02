@@ -125,4 +125,16 @@ exports.updateStudentPreferences = async (req, res) => {
     } catch (error) {
         return res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
     }
-}
+};
+
+// UPDATE STUDENT CERTIFICATES CONTROLLER
+exports.updateStudentCertificates = async (req, res) => {
+    try {
+        const studentId = req.params.studentId;
+        const studentCertificateData = req.body;
+        const result = await studentService.updateStudentCertificates(studentId, studentCertificateData);
+        return res.status(result.status).json(result);
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
+    }
+};

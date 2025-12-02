@@ -1,25 +1,27 @@
-// models/StudentCertifications.js
 const mongoose = require("mongoose");
+const { currentUnixTimeStamp } = require("../../utils/currentUnixTimeStamp");
 
-const CertificationSchema = new mongoose.Schema({
-  name: String,
-  issuer: String,
-  issueDate: Number,
-  expiryDate: Number,
-  certificateId: String,
-  certificateUrl: String
-}, { _id: false });
+const CertificateItemSchema = new mongoose.Schema({
+  certificationName: { type: String, required: true },
+  issuingOrganization: { type: String, required: true },
+  issueDate: { type: Date, required: true },
+  expirationDate: { type: Date, default: null },
+  credentialId: { type: String, default: null },
+  certificateUrl: { type: String, default: null },
+  certificateFile: { type: String }
+}, { _id: true });
 
 const StudentCertificationsSchema = new mongoose.Schema({
-  studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true, index: true },
-  certifications: [CertificationSchema],
+  studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true, unique: true },
 
-  createdAt: { type: Number, default: () => Date.now() },
-  updatedAt: { type: Number, default: () => Date.now() }
+  certificates: { type: [CertificateItemSchema], default: [] },
+
+  createdAt: { type: Number, default: () => currentUnixTimeStamp() },
+  updatedAt: { type: Number, default: () => currentUnixTimeStamp() }
 });
 
-StudentCertificationsSchema.pre("save", function(next){
-  this.updatedAt = Date.now();
+StudentCertificationsSchema.pre("save", function (next) {
+  this.updatedAt = currentUnixTimeStamp();
   next();
 });
 

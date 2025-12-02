@@ -7,6 +7,7 @@ const studentBasicDetailModel = require('../models/student/studentBasicDetailMod
 const StudentBankInfo = require('../models/student/studentBankDataModel');
 const StudentBodyDetails = require('../models/student/studentBodyDetailModel');
 const StudentPreferences = require('../models/student/studentCareerPreferenceModel');
+const StudentCertifications = require('../models/student/studentCertificatesModel');
 const sendEmailOtp = require('../utils/emailOtp');
 
 // STUDENT LIST SERVICE
@@ -601,6 +602,71 @@ exports.updateStudentPreferences = async (studentId, studentPreferencesData) => 
         return {
             status: 500,
             message: 'An error occurred during student career preferences update',
+            error: error.message
+        };
+    }
+};
+
+// UPDATE STUDENT CERTIFICATES SERVICE
+exports.updateStudentCertificates = async (studentId, studentCertificateData) => {
+    try {
+
+        const fetchStudent = await studentModel.findById(studentId);
+        if (!fetchStudent) {
+            return {
+                status: 404,
+                message: 'Student not found with the provided ID'
+            };
+        }
+
+        let studentCert = await StudentCertifications.findOne({ studentId });
+
+        // CASE 1: First time student uploads certificates → create document
+        if (!studentCert) {
+            studentCert = new StudentCertifications({
+                studentId,
+                certificates: Array.isArray(studentCertificateData)
+                    ? studentCertificateData
+                    : [studentCertificateData]
+            });
+
+            await studentCert.save();
+        } else {
+            // CASE 2: Update existing certificate
+            if (studentCertificateData.certificateId) {
+                const index = studentCert.certificates.findIndex(
+                    cert => cert._id.toString() === studentCertificateData.certificateId
+                );
+
+                if (index === -1) {
+                    return { status: 404, message: "Certificate not found" };
+                }
+
+                studentCert.certificates[index] = {
+                    ...studentCert.certificates[index]._doc,
+                    ...studentCertificateData
+                };
+            } else {
+                // CASE 3: Add new certificate (push)
+                studentCert.certificates.push(studentCertificateData);
+            }
+
+            await studentCert.save();
+        }
+
+        fetchStudent.profileCompletion.studentCertificationsData = 1;
+        await fetchStudent.save();
+
+        return {
+            status: 200,
+            message: 'Student certificates saved successfully',
+            jsonData: studentCert
+        };
+
+    } catch (error) {
+        return {
+            status: 500,
+            message: 'An error occurred during student certificates update',
             error: error.message
         };
     }
