@@ -12,5 +12,6 @@ router.post('/resetStudentPassword', studentController.resetStudentPassword);
 router.put('/updateStudentAddress/:studentId', studentController.updateStudentAddress);
 router.put('/updateStudentBasicDetails/:studentId', studentController.updateStudentBasicDetail);
 router.put('/updateStudentBankDetails/:studentId', upload('StudentBankDetails').single('passbookUrl'), studentController.updateStudentBankDetails);
+router.put('/updateStudentBodyDetails/:studentId', studentController.updateStudentBodyDetails);
 
 module.exports = router;

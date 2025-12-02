@@ -5,6 +5,7 @@ const studentModel = require('../models/studentModel');
 const studentAddressModel = require('../models/student/studentAddressModel');
 const studentBasicDetailModel = require('../models/student/studentBasicDetailModel');
 const StudentBankInfo = require('../models/student/studentBankDataModel');
+const StudentBodyDetails = require('../models/student/studentBodyDetailModel');
 const sendEmailOtp = require('../utils/emailOtp');
 
 // STUDENT LIST SERVICE
@@ -497,6 +498,58 @@ exports.updateStudentBankDetails = async (studentId, studentBankData) => {
         return {
             status: 500,
             message: 'An error occurred during student bank detail update',
+            error: error.message
+        };
+    }
+};
+
+// UPDATE STUDENT BODY DETAILS SERVICE
+exports.updateStudentBodyDetails = async (studentId, studentBodyDetailsData) => {
+    try {
+        const fetchStudent = await studentModel.findById(studentId);
+        if (!fetchStudent) {
+            return {
+                status: 404,
+                message: 'Student not found with the provided ID'
+            };
+        }
+
+        const updateStdBodyDetails = await StudentBodyDetails.findOneAndUpdate(
+            { studentId },
+            {
+                heightCm: studentBodyDetailsData.heightCm,
+                weightKg: studentBodyDetailsData.weightKg,
+                bloodGroup: studentBodyDetailsData.bloodGroup,
+                eyeColor: studentBodyDetailsData.eyeColor,
+                hairColor: studentBodyDetailsData.hairColor,
+                identificationMark1: studentBodyDetailsData.identificationMark1,
+                identificationMark2: studentBodyDetailsData.identificationMark2,
+                disability: studentBodyDetailsData.disability,
+                disabilityType: studentBodyDetailsData.disabilityType,
+                disabilityPercentage: studentBodyDetailsData.disabilityPercentage,
+                updatedAt: currentUnixTimeStamp()
+            },
+            {
+                new: true,
+                upsert: true,
+                setDefaultsOnInsert: true
+            }
+        );
+
+        if (studentId) {
+            fetchStudent.profileCompletion.studentBodyData = 1;
+            await fetchStudent.save();
+        }
+
+        return {
+            status: 200,
+            message: 'Student body detail saved successfully',
+            jsonData: updateStdBodyDetails
+        };
+    } catch (error) {
+        return {
+            status: 500,
+            message: 'An error occurred during student body detail update',
             error: error.message
         };
     }

@@ -102,3 +102,15 @@ exports.updateStudentBankDetails = async (req, res) => {
         return res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
     }
 };
+
+// UPDATE STUDENT BODY DETAILS CONTROLLER
+exports.updateStudentBodyDetails = async (req, res) => {
+    try {
+        const studentId = req.params.studentId;
+        const studentBodyData = req.body;
+        const result = await studentService.updateStudentBodyDetails(studentId, studentBodyData);
+        return res.status(result.status).json(result);
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
+    }
+};
