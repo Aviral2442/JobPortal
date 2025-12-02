@@ -7,24 +7,24 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 const Dashboard = lazy(() => import('@/views/dashboard'));
 const AuthLogIn = lazy(() => import('@/views/auth/login'));
 const Error404 = lazy(() => import('@/views/error/404'));
-const Category = lazy(() => import('@/views/pages/Category')); // single category component
-const AddCategory = lazy(() => import('@/views/pages/Category/components/AddCategory'));
-const AddSubCategory = lazy(() => import('@/views/pages/Category/components/AddSubCategory'));
-const AddJobType = lazy(() => import('@/views/pages/Category/components/AddJobType'));
-const AddSector = lazy(() => import('@/views/pages/Category/components/AddSector'));
-const EditSubCategory = lazy(() => import('@/views/pages/Category/components/EditSubCategory'));
-const Jobs = lazy(() => import('@/views/pages/jobs')); 
-const EditJob = lazy(() => import('@/views/pages/jobs/components/EditJob'));
-const AddJob = lazy(() => import('@/views/pages/jobs/components/AddJob'));
-const ViewJob = lazy(() => import('@/views/pages/jobs/components/ViewJob'));
-const AdmitCard = lazy(() => import('@/views/pages/admit-card'));
-const AddAdmitCard = lazy(() => import('@/views/pages/admit-card/components/AddAdmitCard'));
-const Results = lazy(() => import('@/views/pages/results'));
-const AddResult = lazy(() => import('@/views/pages/results/components/AddResult'));
-const AnswerKey = lazy(() => import('@/views/pages/answer-key'));
-const AddAnswerKey = lazy(() => import('@/views/pages/answer-key/components/AddAnswerKey'));
-const Documents = lazy(() => import('@/views/pages/documents'));
-const Admissions = lazy(() => import('@/views/pages/admission'));
+const Category = lazy(() => import('@/views/pages/Manage-Jobs/Category')); // single category component
+const AddCategory = lazy(() => import('@/views/pages/Manage-Jobs/Category/components/AddCategory'));
+const AddSubCategory = lazy(() => import('@/views/pages/Manage-Jobs/Category/components/AddSubCategory'));
+const AddJobType = lazy(() => import('@/views/pages/Manage-Jobs/Category/components/AddJobType'));
+const AddSector = lazy(() => import('@/views/pages/Manage-Jobs/Category/components/AddSector'));
+const EditSubCategory = lazy(() => import('@/views/pages/Manage-Jobs/Category/components/EditSubCategory'));
+const Jobs = lazy(() => import('@/views/pages/Manage-Jobs/jobs')); 
+const EditJob = lazy(() => import('@/views/pages/Manage-Jobs/jobs/components/EditJob'));
+const AddJob = lazy(() => import('@/views/pages/Manage-Jobs/jobs/components/AddJob'));
+const ViewJob = lazy(() => import('@/views/pages/Manage-Jobs/jobs/components/ViewJob'));
+const AdmitCard = lazy(() => import('@/views/pages/Manage-Jobs/admit-card'));
+const AddAdmitCard = lazy(() => import('@/views/pages/Manage-Jobs/admit-card/components/AddAdmitCard'));
+const Results = lazy(() => import('@/views/pages/Manage-Jobs/results'));
+const AddResult = lazy(() => import('@/views/pages/Manage-Jobs/results/components/AddResult'));
+const AnswerKey = lazy(() => import('@/views/pages/Manage-Jobs/answer-key'));
+const AddAnswerKey = lazy(() => import('@/views/pages/Manage-Jobs/answer-key/components/AddAnswerKey'));
+const Documents = lazy(() => import('@/views/pages/Manage-Jobs/documents'));
+const Admissions = lazy(() => import('@/views/pages/Manage-Jobs/admission'));
 
 
 
