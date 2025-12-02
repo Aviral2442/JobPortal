@@ -1,6 +1,8 @@
 const { buildDateFilter } = require('../utils/dateFilters');
 const { buildPagination } = require('../utils/paginationFilters');
+const {currentUnixTimeStamp} = require('../utils/currentUnixTimeStamp');
 const studentModel = require('../models/studentModel');
+const studentAddressModel = require('../models/student/studentAddressModel');
 const sendEmailOtp = require('../utils/emailOtp');
 
 // STUDENT LIST SERVICE
@@ -226,7 +228,7 @@ exports.studentForgetPassword = async (studentForgetData) => {
 
         if (student.studentEmail === forgetEmailOrMobileNo) {
             console.log('email');
-            
+
             await sendEmailOtp(student.studentEmail, otp);
 
             return {
@@ -239,7 +241,7 @@ exports.studentForgetPassword = async (studentForgetData) => {
             };
         } else {
             console.log('mobile');
-            
+
             return {
                 status: 200,
                 message: 'OTP sent to registered mobile number successfully',
@@ -344,6 +346,56 @@ exports.resetStudentPassword = async (studentPasswordData) => {
         return {
             status: 500,
             message: 'An error occurred during password update',
+            error: error.message
+        };
+    }
+};
+
+// UPDATE STUDENT ADDRESS SERVICE
+exports.updateStudentAddress = async (studentId, studentAddressData) => {
+    try {
+        const fetchStudent = await studentModel.findById(studentId);
+        if (!fetchStudent) {
+            return {
+                status: 404,
+                message: 'Student not found with the provided ID'
+            };
+        }
+
+        if (studentAddressData.isPermanentSameAsCurrent === true) {
+            studentAddressData.permanent = studentAddressData.current;
+        }
+
+        const updatedAddress = await studentAddressModel.findOneAndUpdate(
+            { studentId },
+            {
+                current: studentAddressData.current,
+                permanent: studentAddressData.permanent,
+                isPermanentSameAsCurrent: studentAddressData.isPermanentSameAsCurrent,
+                updatedAt: currentUnixTimeStamp()
+            },
+            {
+                new: true,
+                upsert: true,
+                setDefaultsOnInsert: true
+            }
+        );
+
+        if(studentId){
+            fetchStudent.profileCompletion.studentAddressData = 1;
+            await fetchStudent.save();
+        }
+
+        return {
+            status: 200,
+            message: 'Student address saved successfully',
+            jsonData: updatedAddress
+        };
+
+    } catch (error) {
+        return {
+            status: 500,
+            message: 'An error occurred during student address update',
             error: error.message
         };
     }
