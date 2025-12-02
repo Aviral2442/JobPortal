@@ -1,22 +1,22 @@
-// models/StudentBankInfo.js
 const mongoose = require("mongoose");
+const {currentUnixTimeStamp} = require("../../utils/currentUnixTimeStamp");
 
 const StudentBankInfoSchema = new mongoose.Schema({
   studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true, index: true },
 
-  bankHolderName: String,
-  bankName: String,
-  accountNumber: String,
-  ifscCode: String,
-  branchName: String,
-  passbookUrl: String,
+  bankHolderName: { type: String, required: true },
+  bankName: { type: String, required: true },
+  accountNumber: { type: String, required: true },
+  ifscCode: { type: String, required: true },
+  branchName: { type: String, required: true },
+  passbookUrl: { type: String, default: null },
 
-  createdAt: { type: Number, default: () => Date.now() },
-  updatedAt: { type: Number, default: () => Date.now() }
+  createdAt: { type: Number, default: () => currentUnixTimeStamp() },
+  updatedAt: { type: Number, default: () => currentUnixTimeStamp() }
 });
 
-StudentBankInfoSchema.pre("save", function(next){
-  this.updatedAt = Date.now();
+StudentBankInfoSchema.pre("save", function (next) {
+  this.updatedAt = currentUnixTimeStamp();
   next();
 });
 

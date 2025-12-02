@@ -4,6 +4,7 @@ const { currentUnixTimeStamp } = require('../utils/currentUnixTimeStamp');
 const studentModel = require('../models/studentModel');
 const studentAddressModel = require('../models/student/studentAddressModel');
 const studentBasicDetailModel = require('../models/student/studentBasicDetailModel');
+const StudentBankInfo = require('../models/student/studentBankDataModel');
 const sendEmailOtp = require('../utils/emailOtp');
 
 // STUDENT LIST SERVICE
@@ -448,5 +449,55 @@ exports.updateStudentBasicDetail = async (studentId, studentBasicDetailData) => 
             message: 'An error occurred during student basic detail update',
             error: error.message
         }
+    }
+};
+
+// UPDATE STUDENT BANK DETAILS SERVICE
+exports.updateStudentBankDetails = async (studentId, studentBankData) => {
+    try {
+
+        const fetchStudent = await studentModel.findById(studentId);
+        if (!fetchStudent) {
+            return {
+                status: 404,
+                message: 'Student not found with the provided ID'
+            };
+        }
+
+        const updateStdBankData = await StudentBankInfo.findOneAndUpdate(
+            { studentId },
+            {
+                bankHolderName: studentBankData.bankHolderName,
+                bankName: studentBankData.bankName,
+                accountNumber: studentBankData.accountNumber,
+                ifscCode: studentBankData.ifscCode,
+                branchName: studentBankData.branchName,
+                passbookUrl: studentBankData.passbookUrl,
+                updatedAt: currentUnixTimeStamp()
+            },
+            {
+                new: true,
+                upsert: true,
+                setDefaultsOnInsert: true
+            }
+        );
+
+        if (studentId) {
+            fetchStudent.profileCompletion.studentBankData = 1;
+            await fetchStudent.save();
+        }
+
+        return {
+            status: 200,
+            message: 'Student bank detail saved successfully',
+            jsonData: updateStdBankData
+        };
+
+    } catch (error) {
+        return {
+            status: 500,
+            message: 'An error occurred during student bank detail update',
+            error: error.message
+        };
     }
 };
