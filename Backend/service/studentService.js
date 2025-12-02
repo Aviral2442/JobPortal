@@ -113,7 +113,7 @@ exports.studentRegistration = async (studentData) => {
         };
 
         const newStudent = new studentModel({
-            studentProfilePic: studentData.studentProfilePic,
+            studentProfilePic: studentData.studentProfilePic || null,
             studentFirstName: studentData.studentFirstName,
             studentLastName: studentData.studentLastName,
             studentEmail: studentData.studentEmail,
