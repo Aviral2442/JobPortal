@@ -77,3 +77,15 @@ exports.updateStudentAddress = async (req, res) => {
     }
 
 };
+
+// UPDATE STUDENT BASIC DETAIL CONTROLLER
+exports.updateStudentBasicDetail = async (req, res) => {
+    try {
+        const studentId = req.params.studentId;
+        const studentBasicData = req.body;
+        const result = await studentService.updateStudentBasicDetail(studentId, studentBasicData);
+        return res.status(result.status).json(result);
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
+    }
+};

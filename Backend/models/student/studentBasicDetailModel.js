@@ -4,16 +4,15 @@ const mongoose = require("mongoose");
 const StudentBasicInfoSchema = new mongoose.Schema({
   studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true, index: true },
 
-  studentDOB: { type: Number }, // unix ms
-  studentGender: { type: String, enum: ["male","female","other","prefer_not_to_say"], default: "prefer_not_to_say" },
+  studentDOB: { type: String, required: true },
+  studentGender: { type: String, required: true, enum: ["male","female","other","prefer_not_to_say"], default: "prefer_not_to_say" },
 
-  studentAlternateMobileNo: { type: String },
+  studentAlternateMobileNo: { type: String, default: null },
 
-  studentMaritalStatus: { type: String, enum: ["single","married","other","prefer_not_to_say"], default: "single" },
-
-  studentMotherTongue: { type: String },
-  studentNationality: { type: String },
-  studentCitizenship: { type: String },
+  studentMaritalStatus: { type: String, required: true, enum: ["single","married","other","prefer_not_to_say"], default: "single" },
+  studentMotherTongue: { type: String, default: null },
+  studentNationality: { type: String, default: null },
+  studentCitizenship: { type: String, default: null },
 
   studentCreatedAt: { type: Number, default: () => Date.now() },
   studentUpdatedAt: { type: Number, default: () => Date.now() }

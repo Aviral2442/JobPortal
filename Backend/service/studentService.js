@@ -1,8 +1,9 @@
 const { buildDateFilter } = require('../utils/dateFilters');
 const { buildPagination } = require('../utils/paginationFilters');
-const {currentUnixTimeStamp} = require('../utils/currentUnixTimeStamp');
+const { currentUnixTimeStamp } = require('../utils/currentUnixTimeStamp');
 const studentModel = require('../models/studentModel');
 const studentAddressModel = require('../models/student/studentAddressModel');
+const studentBasicDetailModel = require('../models/student/studentBasicDetailModel');
 const sendEmailOtp = require('../utils/emailOtp');
 
 // STUDENT LIST SERVICE
@@ -381,7 +382,7 @@ exports.updateStudentAddress = async (studentId, studentAddressData) => {
             }
         );
 
-        if(studentId){
+        if (studentId) {
             fetchStudent.profileCompletion.studentAddressData = 1;
             await fetchStudent.save();
         }
@@ -398,5 +399,54 @@ exports.updateStudentAddress = async (studentId, studentAddressData) => {
             message: 'An error occurred during student address update',
             error: error.message
         };
+    }
+};
+
+// UPDATE STUDENT BASIC DETAIL SERVICE
+exports.updateStudentBasicDetail = async (studentId, studentBasicDetailData) => {
+    try {
+        const fetchStudent = await studentModel.findById(studentId);
+        if (!fetchStudent) {
+            return {
+                status: 404,
+                message: 'Student not found with the provided ID'
+            };
+        }
+
+        const updateStdBasicData = await studentBasicDetailModel.findOneAndUpdate(
+            { studentId },
+            {
+                studentDOB: studentBasicDetailData.studentDOB,
+                studentGender: studentBasicDetailData.studentGender,
+                studentAlternateMobileNo: studentBasicDetailData.studentAlternateMobileNo,
+                studentMaritalStatus: studentBasicDetailData.studentMaritalStatus,
+                studentMotherTongue: studentBasicDetailData.studentMotherTongue,
+                studentNationality: studentBasicDetailData.studentNationality,
+                studentCitizenship: studentBasicDetailData.studentCitizenship
+            },
+            {
+                new: true,
+                upsert: true,
+                setDefaultsOnInsert: true
+            }
+        );
+
+        if (studentId) {
+            fetchStudent.profileCompletion.studentBasicData = 1;
+            await fetchStudent.save();
+        }
+
+        return {
+            status: 200,
+            message: 'Student basic detail saved successfully',
+            jsonData: updateStdBasicData
+        };
+
+    } catch (error) {
+        return {
+            status: 500,
+            message: 'An error occurred during student basic detail update',
+            error: error.message
+        }
     }
 };
