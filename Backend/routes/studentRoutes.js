@@ -15,5 +15,6 @@ router.put('/updateStudentBankDetails/:studentId', upload('StudentBankDetails').
 router.put('/updateStudentBodyDetails/:studentId', studentController.updateStudentBodyDetails);
 router.put('/updateStudentCareerPreferences/:studentId', studentController.updateStudentPreferences);
 router.put('/updateStudentCertificates/:studentId', studentController.updateStudentCertificates);
+router.put('/updateStudentDocumentUpload/:studentId', upload('StudentDocuments').any(), studentController.updateStudentDocumentUpload);
 
 module.exports = router;

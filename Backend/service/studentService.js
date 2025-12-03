@@ -8,6 +8,7 @@ const StudentBankInfo = require('../models/student/studentBankDataModel');
 const StudentBodyDetails = require('../models/student/studentBodyDetailModel');
 const StudentPreferences = require('../models/student/studentCareerPreferenceModel');
 const StudentCertifications = require('../models/student/studentCertificatesModel');
+const StudentDocumentUpload = require('../models/student/studentDocumentUploadModel');
 const sendEmailOtp = require('../utils/emailOtp');
 
 // STUDENT LIST SERVICE
@@ -667,6 +668,117 @@ exports.updateStudentCertificates = async (studentId, studentCertificateData) =>
         return {
             status: 500,
             message: 'An error occurred during student certificates update',
+            error: error.message
+        };
+    }
+};
+
+// UPDATE STUDENT DOCUMENT UPLOAD SERVICE
+exports.updateStudentDocumentUpload = async (studentId, data) => {
+    try {
+        // Validate student
+        const student = await studentModel.findById(studentId);
+        if (!student) {
+            return { status: 404, message: "Student not found" };
+        }
+
+        // Fetch existing record or create new
+        let existing = await StudentDocumentUpload.findOne({ studentId });
+
+        if (!existing) {
+            existing = new StudentDocumentUpload({ studentId });
+        }
+
+        /** ------------------------------------------------------
+         * 1️⃣ EDUCATION DOCUMENTS
+         * ------------------------------------------------------ */
+        if (data.education) {
+            const eduArray = JSON.parse(data.education);
+
+            eduArray.forEach(newEdu => {
+                if (newEdu._id) {
+                    // UPDATE EXISTING EDUCATION
+                    const index = existing.education.findIndex(e => e._id.toString() === newEdu._id);
+                    if (index !== -1) {
+                        existing.education[index] = { ...existing.education[index]._doc, ...newEdu };
+                    }
+                } else {
+                    // INSERT NEW EDUCATION
+                    existing.education.push(newEdu);
+                }
+            });
+        }
+
+        /** ------------------------------------------------------
+         * 2️⃣ IDENTITY DOCUMENTS (MERGE)
+         * ------------------------------------------------------ */
+        if (data.identityDocuments) {
+            const identity = JSON.parse(data.identityDocuments);
+
+            existing.identityDocuments = {
+                ...existing.identityDocuments,
+                ...identity
+            };
+        }
+
+        /** ------------------------------------------------------
+         * 3️⃣ OTHER DOCUMENTS
+         * ------------------------------------------------------ */
+        if (data.otherDocuments) {
+            const otherArray = JSON.parse(data.otherDocuments);
+
+            otherArray.forEach(doc => {
+                if (doc._id) {
+                    const index = existing.otherDocuments.findIndex(e => e._id.toString() === doc._id);
+                    if (index !== -1) {
+                        existing.otherDocuments[index] = { ...existing.otherDocuments[index]._doc, ...doc };
+                    }
+                } else {
+                    existing.otherDocuments.push(doc);
+                }
+            });
+        }
+
+        /** ------------------------------------------------------
+         * 4️⃣ FILE FIELDS UPDATE (ONLY IF FILE SENT)
+         * ------------------------------------------------------ */
+        const identityFileFields = [
+            "aadharFrontImg",
+            "aadharBackImg",
+            "panImg",
+            "drivingLicenseFrontImg",
+            "categoryCertificateUrl",
+            "domicileCertificateUrl",
+            "incomeCertificateUrl",
+            "birthCertificateUrl"
+        ];
+
+        identityFileFields.forEach(field => {
+            if (data[field]) {
+                existing.identityDocuments[field] = data[field];
+            }
+        });
+
+        /** ------------------------------------------------------
+         * 5️⃣ UPDATE & SAVE
+         * ------------------------------------------------------ */
+        existing.updatedAt = currentUnixTimeStamp();
+        await existing.save();
+
+        // Set student profile completion
+        student.profileCompletion.studentDocumentsData = 1;
+        await student.save();
+
+        return {
+            status: 200,
+            message: "Student document updated successfully",
+            jsonData: existing
+        };
+
+    } catch (error) {
+        return {
+            status: 500,
+            message: "Error updating student document",
             error: error.message
         };
     }

@@ -1,34 +1,65 @@
 // models/StudentDocuments.js
 const mongoose = require("mongoose");
+const { currentUnixTimeStamp } = require("../../utils/currentUnixTimeStamp");
 
+// Each single education record 
+const EducationSchema = new mongoose.Schema({
+  level: { type: String, required: true },
+  // Examples: "10th", "12th", "UG", "PG", "Diploma", "Certificate", "PhD"
+
+  file: { type: String, required: true },
+  boardName: { type: String, required: true },
+  passingYear: { type: String, required: true },
+  maxMarks: { type: String, required: true },
+  obtainedMarks: { type: String, required: true },
+  percentage: { type: String, required: true }
+}, { _id: true });
+
+
+// Identity documents
+const IdentityDocumentSchema = new mongoose.Schema({
+  aadharNumber: { type: String, unique: true, sparse: true },
+  aadharFrontImg: { type: String },
+  aadharBackImg: { type: String },
+
+  panNumber: { type: String },
+  panImg: { type: String },
+
+  voterId: { type: String },
+
+  passportNumber: { type: String },
+
+  drivingLicenseNo: { type: String },
+  drivingLicenseFrontImg: { type: String },
+
+  categoryCertificateUrl: { type: String },
+  domicileCertificateUrl: { type: String },
+  incomeCertificateUrl: { type: String },
+  birthCertificateUrl: { type: String }
+}, { _id: false });
+
+
+// Additional documents
+const OtherDocumentSchema = new mongoose.Schema({
+  documentName: { type: String, required: true },
+  documentFile: { type: String, required: true }
+}, { _id: true });
+
+
+// FINAL MAIN MODEL
 const StudentDocumentsSchema = new mongoose.Schema({
-  studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true, index: true },
+  studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true, unique: true },
 
-  class10MarksheetUrl: String,
-  class12MarksheetUrl: String,
-  graduationMarksheetUrl: String,
-  pgMarksheetUrl: String,
+  education: { type: [EducationSchema], default: [] },       // All academic docs
+  identityDocuments: { type: IdentityDocumentSchema, default: {} },
+  otherDocuments: { type: [OtherDocumentSchema], default: [] }, // Extra docs
 
-  aadharNumber: String,
-  aadharUrl: String,
-  panNumber: String,
-  panUrl: String,
-
-  voterId: String,
-  passportNumber: String,
-  drivingLicense: String,
-
-  categoryCertificateUrl: String, // SC/ST/OBC/EWS
-  domicileCertificateUrl: String,
-  incomeCertificateUrl: String,
-  birthCertificateUrl: String,
-
-  createdAt: { type: Number, default: () => Date.now() },
-  updatedAt: { type: Number, default: () => Date.now() }
+  createdAt: { type: Number, default: () => currentUnixTimeStamp() },
+  updatedAt: { type: Number, default: () => currentUnixTimeStamp() }
 });
 
-StudentDocumentsSchema.pre("save", function(next){
-  this.updatedAt = Date.now();
+StudentDocumentsSchema.pre("save", function (next) {
+  this.updatedAt = currentUnixTimeStamp();
   next();
 });
 
