@@ -788,6 +788,9 @@ exports.updateStudentEducation = async (studentId, studentEducationData) => {
             { new: true, upsert: true, setDefaultsOnInsert: true }
         );
 
+        fetchStudent.profileCompletion.studentEducationData = 1;
+        await fetchStudent.save();
+
         return {
             status: 200,
             message: 'Student education updated successfully',
@@ -828,6 +831,9 @@ exports.updateStudentEmergencyData = async (studentId, studentEmergencyData) => 
             updatestudentEmergencyData,
             { new: true, upsert: true, setDefaultsOnInsert: true }
         );
+
+        fetchStudent.profileCompletion.studentEmergencyData = 1;
+        await fetchStudent.save();
 
         return {
             status: 200,
@@ -882,6 +888,9 @@ exports.updateStudentParentsInfo = async (studentId, studentParentsData) => {
                 setDefaultsOnInsert: true
             }
         );
+
+        fetchStudent.profileCompletion.studentParentalData = 1;
+        await fetchStudent.save();
 
         return {
             status: 200,
@@ -948,6 +957,9 @@ exports.updateStudentSkills = async (studentId, studentSkillsData) => {
             },
             { new: true, upsert: true, setDefaultsOnInsert: true }
         );
+
+        fetchStudent.profileCompletion.studentSkillsData = 1;
+        await fetchStudent.save();
 
         return {
             status: 200,
