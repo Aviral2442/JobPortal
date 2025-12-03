@@ -12,6 +12,7 @@ const StudentDocumentUpload = require('../models/student/studentDocumentUploadMo
 const StudentEducation = require('../models/student/studentEducationModel');
 const StudentEmergencyContact = require('../models/student/studentEmergencyModel');
 const StudentParentalInfo = require('../models/student/studentParentsModel');
+const StudentSkills = require('../models/student/studentSkillModel');
 const sendEmailOtp = require('../utils/emailOtp');
 
 // STUDENT LIST SERVICE
@@ -892,6 +893,72 @@ exports.updateStudentParentsInfo = async (studentId, studentParentsData) => {
         return {
             status: 500,
             message: 'An error occurred during student parental info update',
+            error: error.message
+        };
+    }
+};
+
+// UPDATE STUDENT SKILLS SERVICE
+exports.updateStudentSkills = async (studentId, studentSkillsData) => {
+    try {
+
+        const fetchStudent = await studentModel.findById(studentId);
+        if (!fetchStudent) {
+            return {
+                status: 404,
+                message: 'Student not found with the provided ID'
+            };
+        }
+
+        let technicalSkills, softSkills, computerKnowledge, languageProficiency = [];
+
+        if (studentSkillsData.technicalSkills) {
+            technicalSkills = Array.isArray(studentSkillsData.technicalSkills)
+                ? studentSkillsData.technicalSkills
+                : [studentSkillsData.technicalSkills];
+        }
+
+        if (studentSkillsData.softSkills) {
+            softSkills = Array.isArray(studentSkillsData.softSkills)
+                ? studentSkillsData.softSkills
+                : [studentSkillsData.softSkills];
+        }
+
+        if (studentSkillsData.computerKnowledge) {
+            computerKnowledge = Array.isArray(studentSkillsData.computerKnowledge)
+                ? studentSkillsData.computerKnowledge
+                : [studentSkillsData.computerKnowledge];
+        }
+
+        if (studentSkillsData.languageProficiency) {
+            languageProficiency = Array.isArray(studentSkillsData.languageProficiency)
+                ? studentSkillsData.languageProficiency
+                : [studentSkillsData.languageProficiency];
+        }
+
+        const updateStdSkillData = await StudentSkills.findOneAndUpdate(
+            { studentId },
+            {
+                technicalSkills: technicalSkills,
+                softSkills: softSkills,
+                computerKnowledge: computerKnowledge,
+                languageProficiency: languageProficiency,
+                hobbies: studentSkillsData.hobbies,
+                updatedAt: currentUnixTimeStamp()
+            },
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
+
+        return {
+            status: 200,
+            message: 'Student skills updated successfully',
+            jsonData: updateStdSkillData
+        };
+
+    } catch (error) {
+        return {
+            status: 500,
+            message: 'An error occurred during student skills update',
             error: error.message
         };
     }

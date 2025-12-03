@@ -195,3 +195,15 @@ exports.updateStudentParentsInfo = async (req, res) => {
         return res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
     }
 };
+
+// UPDATE STUDENT SKILLS MODEL CONTROLLER
+exports.updateStudentSkills = async (req, res) => {
+    try {
+        const studentId = req.params.studentId;
+        const studentSkillsData = req.body;
+        const result = await studentService.updateStudentSkills(studentId, studentSkillsData);
+        return res.status(result.status).json(result);
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
+    }
+};
