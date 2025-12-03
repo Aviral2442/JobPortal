@@ -119,6 +119,63 @@ exports.studentProgressMeter = async (studentId) => {
     }
 }
 
+// STUDENT ALL DETAILS SERVICE
+exports.studentAllDetails = async (studentId) => {
+    try {
+
+        const studentDetails = await studentModel.findById(studentId);
+        if (!studentDetails) {
+            return {
+                result: 404,
+                message: "Student not found"
+            };
+        }
+
+        const studentPrimaryData = await studentModel.findById(studentId);
+        const studentAddressData = await studentAddressModel.findOne({ studentId });
+        const studentBasicData = await studentBasicDetailModel.findOne({ studentId });
+        const studentBankData = await StudentBankInfo.findOne({ studentId });
+        const studentBodyData = await StudentBodyDetails.findOne({ studentId });
+        const studentPreferencesData = await StudentPreferences.findOne({ studentId });
+        const studentCertificatesData = await StudentCertifications.findOne({ studentId });
+        const studentDocumentUploadData = await StudentDocumentUpload.findOne({ studentId });
+        const studentEducationData = await StudentEducation.find({ studentId });
+        const studentEmergencyContactData = await StudentEmergencyContact.findOne({ studentId });
+        const studentParentalInfoData = await StudentParentalInfo.findOne({ studentId });
+        const studentSkillsData = await StudentSkills.findOne({ studentId });
+        const studentSocialLinksData = await StudentSocialLinks.findOne({ studentId });
+        const studentWorkExperienceData = await StudentExperience.findOne({ studentId });
+
+        return {
+            result: 200,
+            message: "Student all details fetched successfully",
+            jsonData: {
+                studentPrimaryData,
+                studentAddressData,
+                studentBasicData,
+                studentBankData,
+                studentBodyData,
+                studentPreferencesData,
+                studentCertificatesData,
+                studentDocumentUploadData,
+                studentEducationData,
+                studentEmergencyContactData,
+                studentParentalInfoData,
+                studentSkillsData,
+                studentSocialLinksData,
+                studentWorkExperienceData
+            }
+        };
+
+    } catch (error) {
+        return {
+            result: 500,
+            message: "Internal server error",
+            error: error.message
+        };
+    }
+};
+
 // STUDENT REGISTRATION SERVICE
 exports.studentRegistration = async (studentData) => {
     try {
@@ -279,9 +336,8 @@ exports.studentForgetPassword = async (studentForgetData) => {
         await student.save();
 
         if (student.studentEmail === forgetEmailOrMobileNo) {
-            console.log('email');
-
-            await sendEmailOtp(student.studentEmail, otp);
+            const lowercaseEmail = student.studentEmail.toLowerCase();
+            await sendEmailOtp(lowercaseEmail, otp);
 
             return {
                 status: 200,

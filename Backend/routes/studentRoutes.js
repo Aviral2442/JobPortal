@@ -5,6 +5,7 @@ const studentController = require('../controllers/studentController');
 
 router.get('/students_list', studentController.studentListService);
 router.put('/studentAccountProgressMeter/:studentId', studentController.studentProgressMeter);
+router.put('/studentAllDetails/:studentId', studentController.studentAllDetails);
 router.post('/student_registration', upload('StudentProfile').single('studentProfilePic'), studentController.studentRegistration);
 router.post('/student_login', studentController.studentLogin);
 router.post('/studentForgetPassword', studentController.studentForgetPassword);

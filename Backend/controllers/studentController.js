@@ -21,6 +21,17 @@ exports.studentRegistration = async (req, res) => {
     }
 };
 
+// STUDENT ALL DETAILS CONTROLLER
+exports.studentAllDetails = async (req, res) => {
+    try {
+        const studentId = req.params.studentId;
+        const result = await studentService.studentAllDetails(studentId);
+        return res.status(200).json(result);
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: 'Internal server error' });
+    }
+};
+
 // STUDENT LOGIN CONTROLLER
 exports.studentLogin = async (req, res) => {
     try {
