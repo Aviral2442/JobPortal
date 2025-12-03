@@ -1,18 +1,36 @@
 const mongoose = require("mongoose");
-const { currentUnixTimestamp } = require("../../utils/currentUnixTimeStamp");
+const { currentUnixTimeStamp } = require("../../utils/currentUnixTimeStamp");
 
 const StudentEducationSchema = new mongoose.Schema({
   studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true, index: true },
 
-  highestQualification: String,
-  currentEducationStatus: { type: String, enum: ["studying", "completed", "dropped", "other"], default: "studying" },
+  highestQualification: {
+    type: String,
+    enum: [
+      "No formal education",
+      "Primary",
+      "Secondary",
+      "Higher Secondary",
+      "Diploma",
+      "ITI",
+      "Polytechnic",
+      "Certificate",
+      "Vocational",
+      "Bachelors",
+      "Masters",
+      "MPhil",
+      "PhD",
+      "Other"
+    ],
+    default: "Higher Secondary"
+  },
 
   tenth: {
     schoolName: String,
     board: String,
     passingYear: Number,
     percentage: Number,
-    marksheetUrl: String
+    marksheetFile: String
   },
 
   twelfth: {
@@ -21,7 +39,7 @@ const StudentEducationSchema = new mongoose.Schema({
     stream: String,
     passingYear: Number,
     percentage: Number,
-    marksheetUrl: String
+    marksheetFile: String
   },
 
   graduation: {
@@ -30,7 +48,7 @@ const StudentEducationSchema = new mongoose.Schema({
     specialization: String,
     passingYear: Number,
     percentage: Number,
-    marksheetUrl: String
+    marksheetFile: String
   },
 
   postGraduation: {
@@ -39,22 +57,28 @@ const StudentEducationSchema = new mongoose.Schema({
     specialization: String,
     passingYear: Number,
     percentage: Number,
-    marksheetUrl: String
+    marksheetFile: String
   },
 
   additionalEducation: {
-    diplomaCourse: String,
-    itiCourse: String,
-    polytechnic: String,
-    vocationalCourse: String
+    type: [
+      {
+        additionalEduName: String,
+        institutionName: String,
+        passingYear: Number,
+        percentage: Number,
+        marksheetFile: String
+      }
+    ],
+    default: []
   },
 
-  createdAt: { type: Number, default: () => currentUnixTimestamp() },
-  updatedAt: { type: Number, default: () => currentUnixTimestamp() }
+  createdAt: { type: Number, default: () => currentUnixTimeStamp() },
+  updatedAt: { type: Number, default: () => currentUnixTimeStamp() }
 });
 
 StudentEducationSchema.pre("save", function (next) {
-  this.updatedAt = currentUnixTimestamp();
+  this.updatedAt = currentUnixTimeStamp();
   next();
 });
 

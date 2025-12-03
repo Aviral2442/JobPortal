@@ -9,6 +9,7 @@ const StudentBodyDetails = require('../models/student/studentBodyDetailModel');
 const StudentPreferences = require('../models/student/studentCareerPreferenceModel');
 const StudentCertifications = require('../models/student/studentCertificatesModel');
 const StudentDocumentUpload = require('../models/student/studentDocumentUploadModel');
+const StudentEducation = require('../models/student/studentEducationModel');
 const sendEmailOtp = require('../utils/emailOtp');
 
 // STUDENT LIST SERVICE
@@ -744,6 +745,56 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
         return {
             status: 500,
             message: "Error updating student document",
+            error: error.message
+        };
+    }
+};
+
+// UPDATE STUDENT EDUCATION SERVICE
+exports.updateStudentEducation = async (studentId, studentEducationData) => {
+    try {
+
+        const fetchStudent = await studentModel.findById(studentId);
+        if (!fetchStudent) {
+            return {
+                status: 404,
+                message: 'Student not found with the provided ID'
+            };
+        }
+
+        let additionalEducation = [];
+
+        if (studentEducationData.additionalEducation) {
+            additionalEducation = Array.isArray(studentEducationData.additionalEducation)
+                ? studentEducationData.additionalEducation
+                : [studentEducationData.additionalEducation];
+        }
+
+        const updatestudentEducationData = {
+            tenth: studentEducationData.tenth,
+            twelfth: studentEducationData.twelfth,
+            graduation: studentEducationData.graduation,
+            postGraduation: studentEducationData.postGraduation,
+            additionalEducation: additionalEducation,
+            updatedAt: currentUnixTimeStamp()
+        };
+
+        const updateStdEducationData = await StudentEducation.findOneAndUpdate(
+            { studentId },
+            updatestudentEducationData,
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
+
+        return {
+            status: 200,
+            message: 'Student education updated successfully',
+            jsonData: updateStdEducationData
+        };
+
+    } catch (error) {
+        return {
+            status: 500,
+            message: 'An error occurred during student education update',
             error: error.message
         };
     }
