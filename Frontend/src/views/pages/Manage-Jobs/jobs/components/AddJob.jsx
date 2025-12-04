@@ -3,7 +3,7 @@ import { Formik, FieldArray } from "formik";
 import * as Yup from "yup";
 import { Form, Button, Row, Col, Card, Table, Alert, Image } from "react-bootstrap";
 import SnowEditor from "@/components/SnowEditor";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ComponentCard from "@/components/ComponentCard";
 import FileUploader from "@/components/FileUploader";
 import { FaRegTrashAlt } from "react-icons/fa";
@@ -115,12 +115,16 @@ const FormInput = ({
 
 export default function AddJob() {
   const navigate = useNavigate();
+  const { id } = useParams(); // Get job ID from URL params for edit mode
+  const isEditMode = Boolean(id);
+
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState("");
   const [message, setMessage] = useState({ text: "", variant: "" });
   const [categoryList, setCategoryList] = useState([]);
   const [subcategoryList, setSubcategoryList] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const requiredSections = [
     "basicDetails", "dates", "fees", "vacancies",
@@ -150,6 +154,146 @@ export default function AddJob() {
     fetchCategories();
   }, []);
 
+  // Fetch job data if in edit mode
+  useEffect(() => {
+    if (isEditMode && id) {
+      fetchJobData(id);
+    }
+  }, [isEditMode, id]);
+
+  const fetchJobData = async (jobId) => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`/jobs/${jobId}`);
+      console.log("Job data fetched for edit:", response.data);
+      const jobData = response.data;
+      if (jobData) {
+        // Transform backend data to form format
+        const transformedData = transformBackendToForm(jobData);
+        // Set initial values will be handled by Formik's enableReinitialize
+        return transformedData;
+      }
+    } catch (error) {
+      console.error("Error fetching job data:", error);
+      setMessage({ text: "Error loading job data", variant: "danger" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const transformBackendToForm = (jobData) => {
+    // Transform backend data structure to match form structure
+    return {
+      _id: jobData._id || "",
+      metaDetails: {
+        job_meta_title: jobData.job_meta_title || "",
+        job_meta_description: jobData.job_meta_description || "",
+        job_meta_keywords: jobData.job_meta_keywords || "",
+        job_meta_schemas: jobData.job_meta_schemas || "",
+      },
+      job_title: jobData.job_title || "",
+      job_organization: jobData.job_organization || "",
+      job_advertisement_no: jobData.job_advertisement_no || "",
+      job_type: jobData.job_type || "Permanent",
+      job_sector: jobData.job_sector || "Central Govt",
+      job_short_desc: jobData.job_short_desc || "",
+      job_category: jobData.job_category || "",
+      job_sub_category: jobData.job_sub_category || "",
+      dates: transformDatesFromBackend(jobData),
+      fees: transformFeesFromBackend(jobData),
+      vacancies: transformVacanciesFromBackend(jobData),
+      eligibility: {
+        qualification: jobData.job_eligibility_qualifications || "",
+        ageMin: jobData.job_eligibility_age_min || 0,
+        ageMax: jobData.job_eligibility_age_max || 0,
+        experience: jobData.job_eligibility_experience || "",
+        extraRequirements: jobData.job_extra_criteria || "",
+      },
+      salary: {
+        min: jobData.job_salary_min || 0,
+        max: jobData.job_salary_max || 0,
+        inHand: jobData.job_salary_inhand || 0,
+        allowances: jobData.job_salary_allowance || "",
+        salaryBondConditions: jobData.job_salary_bond_condition || "",
+      },
+      paymentOptions: {
+        debitCard: jobData.job_pmt_debit_card || false,
+        creditCard: jobData.job_pmt_credit_card || false,
+        netBanking: jobData.job_pmt_net_banking || false,
+        upi: jobData.job_pmt_upi || false,
+        wallets: jobData.job_pmt_wallets || false,
+        eChallen: jobData.job_pmt_e_challan || false,
+      },
+      selection: jobData.selection || ["Shortlisting / Written Test", "Document Verification"],
+      links: transformLinksFromBackend(jobData),
+      howToApply: jobData.howToApply || "",
+      job_logo: jobData.job_logo || "",
+    };
+  };
+
+  const transformDatesFromBackend = (jobData) => {
+    const dateMapping = {
+      "Application Start Date": "job_start_date",
+      "Application End Date": "job_end_date",
+      "Notification Release Date": "job_notification_release_date",
+      "Fee Payment Last Date": "job_fees_pmt_last_date",
+      "Correction Start Date": "job_correction_start_date",
+      "Correction End Date": "job_correction_end_date",
+      "Application Reopen Start Date": "job_reopen_start_date",
+      "Application Reopen End Date": "job_reopen_end_date",
+      "Application Last date Extended": "job_last_date_extended",
+      "Fee Payment Last Date Extended": "job_fees_pmt_last_date_extended",
+      "Exam Date": "job_exam_date",
+      "Exam Date Extended": "job_exam_date_extended",
+      "Admit Card Release Date": "job_admit_card_release_date",
+      "Result Declaration Date": "job_result_declaration_date",
+      "Joining Date": "job_joining_date",
+      "Re-Exam Date": "job_re_exam_date",
+      "Answer Key Release Date": "job_answer_key_release_date",
+    };
+
+    return Object.entries(dateMapping).map(([label, field]) => ({
+      label,
+      date: jobData[field] ? new Date(jobData[field] * 1000).toISOString().split('T')[0] : "",
+    }));
+  };
+
+  const transformFeesFromBackend = (jobData) => {
+    return [
+      { category: "General", fee: jobData.job_fees_general || "" },
+      { category: "OBC", fee: jobData.job_fees_obc || "" },
+      { category: "SC", fee: jobData.job_fees_sc || "" },
+      { category: "ST", fee: jobData.job_fees_st || "" },
+      { category: "EWS", fee: jobData.job_fees_ews || "" },
+      { category: "PWD", fee: jobData.job_fees_pwd || "" },
+      { category: "Ex-Serviceman", fee: jobData.job_fees_ex_serviceman || "" },
+    ];
+  };
+
+  const transformVacanciesFromBackend = (jobData) => {
+    return [{
+      postName: jobData.job_title || "",
+      total: jobData.job_vacancy_total || 0,
+      UR: jobData.job_vacancy_for_general || 0,
+      EWS: jobData.job_vacancy_for_ews || 0,
+      OBC: jobData.job_vacancy_for_obc || 0,
+      SC: jobData.job_vacancy_for_sc || 0,
+      ST: jobData.job_vacancy_for_st || 0,
+      PWD: jobData.job_vacancy_for_pwd || 0,
+      ExService: jobData.job_vacancy_for_ex_serviceman || 0,
+    }];
+  };
+
+  const transformLinksFromBackend = (jobData) => {
+    if (jobData.job_important_links && typeof jobData.job_important_links === 'object') {
+      return Object.entries(jobData.job_important_links).map(([label, url]) => ({
+        type: "Apply Online",
+        label,
+        url,
+      }));
+    }
+    return [{ type: "Apply Online", label: "Apply Online", url: "" }];
+  };
 
   const initialValues = useMemo(() => ({
     _id: "",
@@ -463,10 +607,13 @@ export default function AddJob() {
         return;
       }
 
-      // Send as array of formatted strings instead of object
-      const linksArray = validLinks.map((l) => `${l.label.trim()}: ${l.url.trim()}`);
+      // Convert to object/map format instead of array
+      const linksMap = {};
+      validLinks.forEach((l) => {
+        linksMap[l.label.trim()] = l.url.trim();
+      });
 
-      sectionData = { job_important_links: linksArray };
+      sectionData = { job_important_links: linksMap };
 
     } else if (section === "howToApply") {
       if (!values.howToApply || values.howToApply.trim() === "") {
@@ -590,690 +737,718 @@ export default function AddJob() {
           initialValues={initialValues}
           validationSchema={jobValidationSchema}
           onSubmit={(values) => console.log("Form submitted:", values)}
+          enableReinitialize={true} // Allow form to update when fetching edit data
         >
-          {({ values, errors, touched, handleChange, handleBlur, setFieldValue }) => (
-            <Form onSubmit={(e) => e.preventDefault()}>
-              {/* Basic Details */}
-              <ComponentCard className="mb-3" title="Basic Job Details" isCollapsible defaultOpen={false}>
-                <Card.Body className="">
-                  <Row>
-                    <Col md={4}>
-                      <FormInput
-                        name="job_title"
-                        label="Job Title"
-                        value={values.job_title}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        touched={touched.job_title}
-                        errors={errors.job_title}
-                        required
-                      />
-                    </Col>
-                    <Col md={4}>
-                      <FormInput
-                        name="job_short_desc"
-                        label="Short Description"
-                        as="textarea"
-                        value={values.job_short_desc}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        style={{ height: "37px" }}
-                        required
-                      />
-                    </Col>
-                    <Col md={4}>
-                      <FormInput
-                        name="job_advertisement_no"
-                        label="Advertisement Number"
-                        value={values.job_advertisement_no}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        errors={errors.job_advertisement_no}
-                        required
-                      />
-                    </Col>
-                    <Col md={4}>
-                      <FormInput
-                        name="job_organization"
-                        label="Organization"
-                        value={values.job_organization}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        touched={touched.job_organization}
-                        errors={errors.job_organization}
-                        required
-                      />
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group className="mb-2">
-                        <Form.Label>Job Type</Form.Label>
-                        <Form.Select name="job_type" value={values.job_type} onChange={handleChange}>
-                          <option>Permanent</option>
-                          <option>Contract</option>
-                          <option>Apprentice</option>
-                        </Form.Select>
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group className="mb-2">
-                        <Form.Label>Sector</Form.Label>
-                        <Form.Select name="job_sector" value={values.job_sector} onChange={handleChange}>
-                          <option>Central Govt</option>
-                          <option>State Govt</option>
-                          <option>PSU</option>
-                        </Form.Select>
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group className="mb-2">
-                        <Form.Label>Category</Form.Label>
-                        <Form.Select name="job_category" value={values.job_category} onChange={handleChange}>
-                          <option value="" selected disabled>Select Category</option>
-                          {categoryList.map((cat, index) => {
-                            return <option key={index} value={cat.category_name}>{cat.category_name}</option>
-                          })}
-                        </Form.Select>
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group className="mb-2">
-                        <Form.Label>Sub-Category</Form.Label>
-                        <Form.Select name="job_sub_category" value={values.job_sub_category} onChange={handleChange}>
-                          <option value="" selected disabled>Select SubCategory</option>
-                          {subcategoryList.map((subCat, index) => {
-                            return <option key={index} value={subCat.subcategory_name}>{subCat.subcategory_name}</option>
-                          })}
-                        </Form.Select>
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group className="mb-2">
-                        <Form.Label>Logo</Form.Label>
-                        <div className="d-flex align-items-center gap-3">
-                          <Form.Control
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              setLogoFile(file || null);
-                              setLogoPreview(file ? URL.createObjectURL(file) : "");
-                            }}
-                          />
-                          {logoPreview && <Image src={logoPreview} alt="Logo" height={40} />}
-                          <Button
-                            size="sm"
-                            variant="outline-primary"
-                            onClick={() => uploadLogo(values, setFieldValue)}
-                            disabled={!logoFile}
-                          >
-                            Upload
-                          </Button>
-                        </div>
-                      </Form.Group>
-                    </Col>
-                  </Row>
+          {({ values, errors, touched, handleChange, handleBlur, setFieldValue }) => {
+            // Load job data in edit mode
+            useEffect(() => {
+              if (isEditMode && id && !values._id) {
+                fetchJobData(id).then((data) => {
+                  if (data) {
+                    Object.entries(data).forEach(([key, value]) => {
+                      setFieldValue(key, value);
+                    });
+                    if (data.job_logo) {
+                      setLogoPreview(data.job_logo);
+                    }
+                  }
+                });
+              }
+            }, [isEditMode, id]);
 
-                  <div className="text-end mt-2">
-                    <Button size="sm" onClick={() => saveSection("basicDetails", values, setFieldValue)}>
-                      Save Basic Details
+            return (
+              <Form onSubmit={(e) => e.preventDefault()}>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h4>{isEditMode ? "Edit Job" : "Add New Job"}</h4>
+                  {isEditMode && (
+                    <Button variant="outline-secondary" onClick={() => navigate("/admin/jobs")}>
+                      Cancel
                     </Button>
-                  </div>
-                </Card.Body>
-              </ComponentCard>
+                  )}
+                </div>
 
-              {/* Important Dates */}
-              <ComponentCard className="mb-3" title="Important Dates" isCollapsible>
-                <Card.Body>
-                  <FieldArray name="dates">
-                    {(arrayHelpers) => (
-                      <>
-                        <Table bordered size="sm">
-                          <thead>
-                            <tr>
-                              <th>Label</th>
-                              <th>Date</th>
-                              <th className="text-center" style={{ width: '100px' }}>Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {values.dates.map((field, idx) => (
-                              <tr key={idx}>
-                                <td>
-                                  <span>{field.label}</span>
-                                </td>
-                                <td>
-                                  <Form.Control
-                                    className="border-0 shadow-none"
-                                    type="date"
-                                    name={`dates.${idx}.date`}
-                                    value={field.date}
-                                    onChange={handleChange}
-                                  />
-                                </td>
-                                <td className="text-center">
-                                  <Button
-                                    size="sm"
-                                    variant="light"
-                                    onClick={() => deleteSectionItem("dates", idx, values, arrayHelpers)}
-                                  >
-                                    <FaRegTrashAlt />
-                                  </Button>
-                                </td>
+                {/* Basic Details */}
+                <ComponentCard className="mb-3" title="Basic Job Details" isCollapsible defaultOpen={false}>
+                  <Card.Body className="">
+                    <Row>
+                      <Col md={4}>
+                        <FormInput
+                          name="job_title"
+                          label="Job Title"
+                          value={values.job_title}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          touched={touched.job_title}
+                          errors={errors.job_title}
+                          required
+                        />
+                      </Col>
+                      <Col md={4}>
+                        <FormInput
+                          name="job_short_desc"
+                          label="Short Description"
+                          as="textarea"
+                          value={values.job_short_desc}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          style={{ height: "37px" }}
+                          required
+                        />
+                      </Col>
+                      <Col md={4}>
+                        <FormInput
+                          name="job_advertisement_no"
+                          label="Advertisement Number"
+                          value={values.job_advertisement_no}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          errors={errors.job_advertisement_no}
+                          required
+                        />
+                      </Col>
+                      <Col md={4}>
+                        <FormInput
+                          name="job_organization"
+                          label="Organization"
+                          value={values.job_organization}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          touched={touched.job_organization}
+                          errors={errors.job_organization}
+                          required
+                        />
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-2">
+                          <Form.Label>Job Type</Form.Label>
+                          <Form.Select name="job_type" value={values.job_type} onChange={handleChange}>
+                            <option>Permanent</option>
+                            <option>Contract</option>
+                            <option>Apprentice</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-2">
+                          <Form.Label>Sector</Form.Label>
+                          <Form.Select name="job_sector" value={values.job_sector} onChange={handleChange}>
+                            <option>Central Govt</option>
+                            <option>State Govt</option>
+                            <option>PSU</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-2">
+                          <Form.Label>Category</Form.Label>
+                          <Form.Select name="job_category" value={values.job_category} onChange={handleChange}>
+                            <option value="" selected disabled>Select Category</option>
+                            {categoryList.map((cat, index) => {
+                              return <option key={index} value={cat.category_name}>{cat.category_name}</option>
+                            })}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-2">
+                          <Form.Label>Sub-Category</Form.Label>
+                          <Form.Select name="job_sub_category" value={values.job_sub_category} onChange={handleChange}>
+                            <option value="" selected disabled>Select SubCategory</option>
+                            {subcategoryList.map((subCat, index) => {
+                              return <option key={index} value={subCat.subcategory_name}>{subCat.subcategory_name}</option>
+                            })}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-2">
+                          <Form.Label>Logo</Form.Label>
+                          <div className="d-flex align-items-center gap-3">
+                            <Form.Control
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                setLogoFile(file || null);
+                                setLogoPreview(file ? URL.createObjectURL(file) : "");
+                              }}
+                            />
+                            {logoPreview && <Image src={logoPreview} alt="Logo" height={40} />}
+                            <Button
+                              size="sm"
+                              variant="outline-primary"
+                              onClick={() => uploadLogo(values, setFieldValue)}
+                              disabled={!logoFile}
+                            >
+                              Upload
+                            </Button>
+                          </div>
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
+                    <div className="text-end mt-2">
+                      <Button size="sm" onClick={() => saveSection("basicDetails", values, setFieldValue)}>
+                        Save Basic Details
+                      </Button>
+                    </div>
+                  </Card.Body>
+                </ComponentCard>
+
+                {/* Important Dates */}
+                <ComponentCard className="mb-3" title="Important Dates" isCollapsible>
+                  <Card.Body>
+                    <FieldArray name="dates">
+                      {(arrayHelpers) => (
+                        <>
+                          <Table bordered size="sm">
+                            <thead>
+                              <tr>
+                                <th>Label</th>
+                                <th>Date</th>
+                                <th className="text-center" style={{ width: '100px' }}>Action</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </Table>
-                        <div className="d-flex justify-content-end gap-2 align-items-center mt-2">
-                          <Button size="sm" variant="outline-primary" onClick={() => arrayHelpers.push({ label: "", date: "" })}>
-                            + Add Date
-                          </Button>
-                          <Button size="sm" onClick={() => saveSection("dates", values, setFieldValue)}>
-                            Save Dates
-                          </Button>
-                        </div>
-                      </>
-                    )}
-                  </FieldArray>
-                </Card.Body>
-              </ComponentCard>
-
-              {/* Application Fee */}
-              <ComponentCard className="mb-3" title="Application Fee" isCollapsible>
-                <Card.Body>
-                  <FieldArray name="fees">
-                    {(arrayHelpers) => (
-                      <>
-                        <Table bordered size="sm">
-                          <thead>
-                            <tr>
-                              <th>Category</th>
-                              <th>Fee</th>
-                              <th className="text-center" style={{ width: '100px' }}>Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {values.fees.map((f, idx) => (
-                              <tr key={idx}>
-                                <td>
-                                  <span>{f.category}</span>
-                                </td>
-                                <td>
-                                  <Form.Control
-                                    className="border-0 shadow-none"
-                                    type="number"
-                                    name={`fees.${idx}.fee`}
-                                    value={f.fee}
-                                    onChange={handleChange}
-                                  />
-                                </td>
-                                <td className="text-center">
-                                  <Button
-                                    size="sm"
-                                    variant="light"
-                                    onClick={() => deleteSectionItem("fees", idx, values, arrayHelpers)}
-                                  >
-                                    <FaRegTrashAlt />
-                                  </Button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </Table>
-                        <div className="d-flex justify-content-end gap-2 align-items-center mt-2">
-                          <Button size="sm" variant="outline-primary" onClick={() => arrayHelpers.push({ category: "", fee: "" })}>
-                            + Add Fee
-                          </Button>
-                          <Button size="sm" onClick={() => saveSection("fees", values, setFieldValue)}>
-                            Save Fees
-                          </Button>
-                        </div>
-                      </>
-                    )}
-                  </FieldArray>
-                </Card.Body>
-              </ComponentCard>
-
-              {/* Vacancies */}
-              <ComponentCard className="mb-3" title="Vacancies" isCollapsible>
-                <Card.Body>
-                  <FieldArray name="vacancies">
-                    {(arrayHelpers) => (
-                      <>
-                        <Table bordered size="sm" responsive>
-                          <thead>
-                            <tr>
-                              <th>Post</th>
-                              <th>Total</th>
-                              <th>UR</th>
-                              <th>EWS</th>
-                              <th>OBC</th>
-                              <th>SC</th>
-                              <th>ST</th>
-                              <th>PWD</th>
-                              <th>Ex-Service</th>
-                              <th style={{ width: '100px' }}>Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {values.vacancies.map((v, idx) => (
-                              <tr key={idx}>
-                                {["postName", "total", "UR", "EWS", "OBC", "SC", "ST", "PWD", "ExService"].map((fld) => (
-                                  <td key={fld}>
+                            </thead>
+                            <tbody>
+                              {values.dates.map((field, idx) => (
+                                <tr key={idx}>
+                                  <td>
+                                    <span>{field.label}</span>
+                                  </td>
+                                  <td>
                                     <Form.Control
                                       className="border-0 shadow-none"
-                                      type={fld === "postName" ? "text" : "number"}
-                                      name={`vacancies.${idx}.${fld}`}
-                                      value={v[fld]}
+                                      type="date"
+                                      name={`dates.${idx}.date`}
+                                      value={field.date}
                                       onChange={handleChange}
                                     />
                                   </td>
-                                ))}
-                                <td className="text-center">
-                                  <Button
-                                    size="sm"
-                                    variant="light"
-                                    onClick={() => deleteSectionItem("vacancies", idx, values, arrayHelpers)}
-                                  >
-                                    <FaRegTrashAlt />
-                                  </Button>
-                                </td>
+                                  <td className="text-center">
+                                    <Button
+                                      size="sm"
+                                      variant="light"
+                                      onClick={() => deleteSectionItem("dates", idx, values, arrayHelpers)}
+                                    >
+                                      <FaRegTrashAlt />
+                                    </Button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </Table>
+                          <div className="d-flex justify-content-end gap-2 align-items-center mt-2">
+                            <Button size="sm" variant="outline-primary" onClick={() => arrayHelpers.push({ label: "", date: "" })}>
+                              + Add Date
+                            </Button>
+                            <Button size="sm" onClick={() => saveSection("dates", values, setFieldValue)}>
+                              Save Dates
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </FieldArray>
+                  </Card.Body>
+                </ComponentCard>
+
+                {/* Application Fee */}
+                <ComponentCard className="mb-3" title="Application Fee" isCollapsible>
+                  <Card.Body>
+                    <FieldArray name="fees">
+                      {(arrayHelpers) => (
+                        <>
+                          <Table bordered size="sm">
+                            <thead>
+                              <tr>
+                                <th>Category</th>
+                                <th>Fee</th>
+                                <th className="text-center" style={{ width: '100px' }}>Action</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </Table>
-                        <div className="d-flex justify-content-end gap-2 align-items-center mt-2">
-                          <Button
-                            size="sm"
-                            variant="outline-primary"
-                            onClick={() => arrayHelpers.push({
-                              postName: "", total: 0, UR: 0, EWS: 0, OBC: 0, SC: 0, ST: 0, PWD: 0, ExService: 0
-                            })}
-                          >
-                            + Add Vacancy
-                          </Button>
-                          <Button size="sm" onClick={() => saveSection("vacancies", values, setFieldValue)}>
-                            Save Vacancies
-                          </Button>
-                        </div>
-                      </>
-                    )}
-                  </FieldArray>
-                </Card.Body>
-              </ComponentCard>
+                            </thead>
+                            <tbody>
+                              {values.fees.map((f, idx) => (
+                                <tr key={idx}>
+                                  <td>
+                                    <span>{f.category}</span>
+                                  </td>
+                                  <td>
+                                    <Form.Control
+                                      className="border-0 shadow-none"
+                                      type="number"
+                                      name={`fees.${idx}.fee`}
+                                      value={f.fee}
+                                      onChange={handleChange}
+                                    />
+                                  </td>
+                                  <td className="text-center">
+                                    <Button
+                                      size="sm"
+                                      variant="light"
+                                      onClick={() => deleteSectionItem("fees", idx, values, arrayHelpers)}
+                                    >
+                                      <FaRegTrashAlt />
+                                    </Button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </Table>
+                          <div className="d-flex justify-content-end gap-2 align-items-center mt-2">
+                            <Button size="sm" variant="outline-primary" onClick={() => arrayHelpers.push({ category: "", fee: "" })}>
+                              + Add Fee
+                            </Button>
+                            <Button size="sm" onClick={() => saveSection("fees", values, setFieldValue)}>
+                              Save Fees
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </FieldArray>
+                  </Card.Body>
+                </ComponentCard>
 
-              {/* Eligibility - Add experience field */}
-              <ComponentCard className="mb-3" title="Eligibility" isCollapsible>
-                <Card.Body>
-                  <Row>
-                    <Col md={4}>
-                      <FormInput
-                        name="eligibility.qualification"
-                        label="Qualification *"
-                        value={values.eligibility.qualification}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        touched={touched.eligibility?.qualification}
-                        errors={errors.eligibility?.qualification}
-                      />
-                    </Col>
-                    <Col md={2}>
-                      <FormInput
-                        name="eligibility.ageMin"
-                        label="Min Age *"
-                        type="number"
-                        value={values.eligibility.ageMin}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        touched={touched.eligibility?.ageMin}
-                        errors={errors.eligibility?.ageMin}
-                      />
-                    </Col>
-                    <Col md={2}>
-                      <FormInput
-                        name="eligibility.ageMax"
-                        label="Max Age *"
-                        type="number"
-                        value={values.eligibility.ageMax}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        touched={touched.eligibility?.ageMax}
-                        errors={errors.eligibility?.ageMax}
-                      />
-                    </Col>
-                    <Col md={4}>
-                      <FormInput
-                        name="eligibility.experience"
-                        label="Experience Required"
-                        value={values.eligibility.experience}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                      />
-                    </Col>
-                    <Col md={12}>
-                      <FormInput
-                        name="eligibility.extraRequirements"
-                        label="Extra Requirements"
-                        as="textarea"
-                        value={values.eligibility.extraRequirements}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        rows={2}
-                      />
-                    </Col>
-                  </Row>
-                  <div className="text-end mt-2">
-                    <Button size="sm" onClick={() => saveSection("eligibility", values, setFieldValue)}>
-                      Save Eligibility
-                    </Button>
-                  </div>
-                </Card.Body>
-              </ComponentCard>
+                {/* Vacancies */}
+                <ComponentCard className="mb-3" title="Vacancies" isCollapsible>
+                  <Card.Body>
+                    <FieldArray name="vacancies">
+                      {(arrayHelpers) => (
+                        <>
+                          <Table bordered size="sm" responsive>
+                            <thead>
+                              <tr>
+                                <th>Post</th>
+                                <th>Total</th>
+                                <th>UR</th>
+                                <th>EWS</th>
+                                <th>OBC</th>
+                                <th>SC</th>
+                                <th>ST</th>
+                                <th>PWD</th>
+                                <th>Ex-Service</th>
+                                <th style={{ width: '100px' }}>Action</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {values.vacancies.map((v, idx) => (
+                                <tr key={idx}>
+                                  {["postName", "total", "UR", "EWS", "OBC", "SC", "ST", "PWD", "ExService"].map((fld) => (
+                                    <td key={fld}>
+                                      <Form.Control
+                                        className="border-0 shadow-none"
+                                        type={fld === "postName" ? "text" : "number"}
+                                        name={`vacancies.${idx}.${fld}`}
+                                        value={v[fld]}
+                                        onChange={handleChange}
+                                      />
+                                    </td>
+                                  ))}
+                                  <td className="text-center">
+                                    <Button
+                                      size="sm"
+                                      variant="light"
+                                      onClick={() => deleteSectionItem("vacancies", idx, values, arrayHelpers)}
+                                    >
+                                      <FaRegTrashAlt />
+                                    </Button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </Table>
+                          <div className="d-flex justify-content-end gap-2 align-items-center mt-2">
+                            <Button
+                              size="sm"
+                              variant="outline-primary"
+                              onClick={() => arrayHelpers.push({
+                                postName: "", total: 0, UR: 0, EWS: 0, OBC: 0, SC: 0, ST: 0, PWD: 0, ExService: 0
+                              })}
+                            >
+                              + Add Vacancy
+                            </Button>
+                            <Button size="sm" onClick={() => saveSection("vacancies", values, setFieldValue)}>
+                              Save Vacancies
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </FieldArray>
+                  </Card.Body>
+                </ComponentCard>
 
-              {/* Salary - Add bond condition field */}
-              <ComponentCard className="mb-3" title="Salary & Benefits" isCollapsible>
-                <Card.Body>
-                  <Row className="">
-                    <Col md={3}>
-                      <FormInput
-                        name="salary.min"
-                        label="Min Salary *"
-                        type="number"
-                        value={values.salary.min}
-                        onChange={handleChange}
-                        touched={touched.salary?.min}
-                        errors={errors.salary?.min}
-                      />
-                    </Col>
-                    <Col md={3}>
-                      <FormInput
-                        name="salary.max"
-                        label="Max Salary *"
-                        type="number"
-                        value={values.salary.max}
-                        onChange={handleChange}
-                        touched={touched.salary?.max}
-                        errors={errors.salary?.max}
-                      />
-                    </Col>
-                    <Col md={3}>
-                      <FormInput
-                        name="salary.inHand"
-                        label="In Hand *"
-                        type="number"
-                        value={values.salary.inHand}
-                        onChange={handleChange}
-                        touched={touched.salary?.inHand}
-                        errors={errors.salary?.inHand}
-                      />
-                    </Col>
-                    <Col md={3}>
-                      <FormInput
-                        name="salary.allowances"
-                        label="Allowances"
-                        type="number"
-                        value={values.salary.allowances}
-                        onChange={handleChange}
-                      />
-                    </Col>
-                    <Col md={12}>
-                      <Form.Label>Bond Condition</Form.Label>
-                      <SnowEditor value={values.salaryBondConditions} onChange={(v) => setFieldValue("salaryBondConditions", v)} />
-                    </Col>
-                  </Row>
-                  <div className="text-end mt-2">
-                    <Button size="sm" onClick={() => saveSection("salary", values, setFieldValue)}>
-                      Save Salary
-                    </Button>
-                  </div>
-                </Card.Body>
-              </ComponentCard>
+                {/* Eligibility - Add experience field */}
+                <ComponentCard className="mb-3" title="Eligibility" isCollapsible>
+                  <Card.Body>
+                    <Row>
+                      <Col md={4}>
+                        <FormInput
+                          name="eligibility.qualification"
+                          label="Qualification *"
+                          value={values.eligibility.qualification}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          touched={touched.eligibility?.qualification}
+                          errors={errors.eligibility?.qualification}
+                        />
+                      </Col>
+                      <Col md={2}>
+                        <FormInput
+                          name="eligibility.ageMin"
+                          label="Min Age *"
+                          type="number"
+                          value={values.eligibility.ageMin}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          touched={touched.eligibility?.ageMin}
+                          errors={errors.eligibility?.ageMin}
+                        />
+                      </Col>
+                      <Col md={2}>
+                        <FormInput
+                          name="eligibility.ageMax"
+                          label="Max Age *"
+                          type="number"
+                          value={values.eligibility.ageMax}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          touched={touched.eligibility?.ageMax}
+                          errors={errors.eligibility?.ageMax}
+                        />
+                      </Col>
+                      <Col md={4}>
+                        <FormInput
+                          name="eligibility.experience"
+                          label="Experience Required"
+                          value={values.eligibility.experience}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                        />
+                      </Col>
+                      <Col md={12}>
+                        <FormInput
+                          name="eligibility.extraRequirements"
+                          label="Extra Requirements"
+                          as="textarea"
+                          value={values.eligibility.extraRequirements}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          rows={2}
+                        />
+                      </Col>
+                    </Row>
+                    <div className="text-end mt-2">
+                      <Button size="sm" onClick={() => saveSection("eligibility", values, setFieldValue)}>
+                        Save Eligibility
+                      </Button>
+                    </div>
+                  </Card.Body>
+                </ComponentCard>
 
-              {/* Payment Options - NEW SECTION */}
-              <ComponentCard className="mb-3" title="Payment Options" isCollapsible>
-                <Card.Body>
-                  <Row>
-                    <Col >
-                      <Form.Check
-                        type="checkbox"
-                        id="paymentOptions.debitCard"
-                        name="paymentOptions.debitCard"
-                        label="Debit Card"
-                        checked={values.paymentOptions.debitCard}
-                        onChange={handleChange}
-                      />
-                    </Col>
-                    <Col >
-                      <Form.Check
-                        type="checkbox"
-                        id="paymentOptions.creditCard"
-                        name="paymentOptions.creditCard"
-                        label="Credit Card"
-                        checked={values.paymentOptions.creditCard}
-                        onChange={handleChange}
-                      />
-                    </Col>
-                    <Col>
-                      <Form.Check
-                        type="checkbox"
-                        id="paymentOptions.netBanking"
-                        name="paymentOptions.netBanking"
-                        label="Net Banking"
-                        checked={values.paymentOptions.netBanking}
-                        onChange={handleChange}
-                      />
-                    </Col>
-                    <Col >
-                      <Form.Check
-                        type="checkbox"
-                        id="paymentOptions.upi"
-                        name="paymentOptions.upi"
-                        label="UPI"
-                        checked={values.paymentOptions.upi}
-                        onChange={handleChange}
-                      />
-                    </Col>
-                    <Col >
-                      <Form.Check
-                        type="checkbox"
-                        id="paymentOptions.wallets"
-                        name="paymentOptions.wallets"
-                        label="Wallets (Paytm, PhonePe, etc.)"
-                        checked={values.paymentOptions.wallets}
-                        onChange={handleChange}
-                      />
-                    </Col>
-                    <Col>
-                      <Form.Check
-                        type="checkbox"
-                        id="paymentOptions.eChallen"
-                        name="paymentOptions.eChallen"
-                        label="E-Challan"
-                        checked={values.paymentOptions.eChallen}
-                        onChange={handleChange}
-                      />
-                    </Col>
-                  </Row>
-                  <div className="text-end mt-2">
-                    <Button size="sm" onClick={() => saveSection("paymentOptions", values, setFieldValue)}>
-                      Save Payment Options
-                    </Button>
-                  </div>
-                </Card.Body>
-              </ComponentCard>
+                {/* Salary - Add bond condition field */}
+                <ComponentCard className="mb-3" title="Salary & Benefits" isCollapsible>
+                  <Card.Body>
+                    <Row className="">
+                      <Col md={3}>
+                        <FormInput
+                          name="salary.min"
+                          label="Min Salary *"
+                          type="number"
+                          value={values.salary.min}
+                          onChange={handleChange}
+                          touched={touched.salary?.min}
+                          errors={errors.salary?.min}
+                        />
+                      </Col>
+                      <Col md={3}>
+                        <FormInput
+                          name="salary.max"
+                          label="Max Salary *"
+                          type="number"
+                          value={values.salary.max}
+                          onChange={handleChange}
+                          touched={touched.salary?.max}
+                          errors={errors.salary?.max}
+                        />
+                      </Col>
+                      <Col md={3}>
+                        <FormInput
+                          name="salary.inHand"
+                          label="In Hand *"
+                          type="number"
+                          value={values.salary.inHand}
+                          onChange={handleChange}
+                          touched={touched.salary?.inHand}
+                          errors={errors.salary?.inHand}
+                        />
+                      </Col>
+                      <Col md={3}>
+                        <FormInput
+                          name="salary.allowances"
+                          label="Allowances"
+                          type="number"
+                          value={values.salary.allowances}
+                          onChange={handleChange}
+                        />
+                      </Col>
+                      <Col md={12}>
+                        <Form.Label>Bond Condition</Form.Label>
+                        <SnowEditor value={values.salaryBondConditions} onChange={(v) => setFieldValue("salaryBondConditions", v)} />
+                      </Col>
+                    </Row>
+                    <div className="text-end mt-2">
+                      <Button size="sm" onClick={() => saveSection("salary", values, setFieldValue)}>
+                        Save Salary
+                      </Button>
+                    </div>
+                  </Card.Body>
+                </ComponentCard>
 
-              {/* Selection Process */}
-              <ComponentCard className="mb-3" title="Selection Process" isCollapsible>
-                <Card.Body>
-                  <FieldArray name="selection">
-                    {(arrayHelpers) => (
-                      <>
-                        {values.selection.map((s, idx) => (
-                          <Row key={idx} className="mb-2">
-                            <Col md={10}>
-                              <Form.Control name={`selection.${idx}`} value={s} onChange={handleChange} />
-                            </Col>
-                            <Col md={2} className="d-flex justify-content-center">
-                              <Button
-                                size="sm"
-                                variant="light"
-                                onClick={() => deleteSectionItem("selection", idx, values, arrayHelpers)}
-                              >
-                                <FaRegTrashAlt />
-                              </Button>
-                            </Col>
-                          </Row>
-                        ))}
-                        <div className="d-flex justify-content-end gap-2 align-items-center mt-2">
-                          <Button size="sm" variant="outline-primary" onClick={() => arrayHelpers.push("")}>
-                            + Add Step
-                          </Button>
-                          <Button size="sm" onClick={() => saveSection("selection", values, setFieldValue)}>
-                            Save Selection
-                          </Button>
-                        </div>
-                      </>
-                    )}
-                  </FieldArray>
-                </Card.Body>
-              </ComponentCard>
+                {/* Payment Options - NEW SECTION */}
+                <ComponentCard className="mb-3" title="Payment Options" isCollapsible>
+                  <Card.Body>
+                    <Row>
+                      <Col >
+                        <Form.Check
+                          type="checkbox"
+                          id="paymentOptions.debitCard"
+                          name="paymentOptions.debitCard"
+                          label="Debit Card"
+                          checked={values.paymentOptions.debitCard}
+                          onChange={handleChange}
+                        />
+                      </Col>
+                      <Col >
+                        <Form.Check
+                          type="checkbox"
+                          id="paymentOptions.creditCard"
+                          name="paymentOptions.creditCard"
+                          label="Credit Card"
+                          checked={values.paymentOptions.creditCard}
+                          onChange={handleChange}
+                        />
+                      </Col>
+                      <Col>
+                        <Form.Check
+                          type="checkbox"
+                          id="paymentOptions.netBanking"
+                          name="paymentOptions.netBanking"
+                          label="Net Banking"
+                          checked={values.paymentOptions.netBanking}
+                          onChange={handleChange}
+                        />
+                      </Col>
+                      <Col >
+                        <Form.Check
+                          type="checkbox"
+                          id="paymentOptions.upi"
+                          name="paymentOptions.upi"
+                          label="UPI"
+                          checked={values.paymentOptions.upi}
+                          onChange={handleChange}
+                        />
+                      </Col>
+                      <Col >
+                        <Form.Check
+                          type="checkbox"
+                          id="paymentOptions.wallets"
+                          name="paymentOptions.wallets"
+                          label="Wallets (Paytm, PhonePe, etc.)"
+                          checked={values.paymentOptions.wallets}
+                          onChange={handleChange}
+                        />
+                      </Col>
+                      <Col>
+                        <Form.Check
+                          type="checkbox"
+                          id="paymentOptions.eChallen"
+                          name="paymentOptions.eChallen"
+                          label="E-Challan"
+                          checked={values.paymentOptions.eChallen}
+                          onChange={handleChange}
+                        />
+                      </Col>
+                    </Row>
+                    <div className="text-end mt-2">
+                      <Button size="sm" onClick={() => saveSection("paymentOptions", values, setFieldValue)}>
+                        Save Payment Options
+                      </Button>
+                    </div>
+                  </Card.Body>
+                </ComponentCard>
 
-              {/* Important Links */}
-              <ComponentCard className="mb-3" title="Important Links" isCollapsible>
-                <Card.Body>
-                  <FieldArray name="links">
-                    {(arrayHelpers) => (
-                      <>
-                        {values.links.map((l, idx) => (
-                          <Row key={idx} className="mb-2">
-                            <Col md={3}>
-                              <Form.Control
-                                name={`links.${idx}.type`}
-                                value={l.type}
-                                onChange={handleChange}
-                                placeholder="Type"
-                              />
-                            </Col>
-                            <Col md={3}>
-                              <Form.Control
-                                name={`links.${idx}.label`}
-                                value={l.label}
-                                onChange={handleChange}
-                                placeholder="Label"
-                              />
-                            </Col>
-                            <Col md={4}>
-                              <Form.Control
-                                name={`links.${idx}.url`}
-                                value={l.url}
-                                onChange={handleChange}
-                                placeholder="URL"
-                                type="url"
-                              />
-                            </Col>
-                            <Col md={2} className="d-flex justify-content-center">
-                              <Button
-                                size="sm"
-                                variant="light"
-                                onClick={() => deleteSectionItem("links", idx, values, arrayHelpers)}
-                              >
-                                <FaRegTrashAlt />
-                              </Button>
-                            </Col>
-                          </Row>
-                        ))}
-                        <div className="d-flex justify-content-end gap-2 align-items-center mt-2">
-                          <Button size="sm" variant="outline-primary" onClick={() => arrayHelpers.push({ type: "", label: "", url: "" })}>
-                            + Add Link
-                          </Button>
-                          <Button size="sm" onClick={() => saveSection("links", values, setFieldValue)}>
-                            Save Links
-                          </Button>
-                        </div>
-                      </>
-                    )}
-                  </FieldArray>
-                </Card.Body>
-              </ComponentCard>
+                {/* Selection Process */}
+                <ComponentCard className="mb-3" title="Selection Process" isCollapsible>
+                  <Card.Body>
+                    <FieldArray name="selection">
+                      {(arrayHelpers) => (
+                        <>
+                          {values.selection.map((s, idx) => (
+                            <Row key={idx} className="mb-2">
+                              <Col md={10}>
+                                <Form.Control name={`selection.${idx}`} value={s} onChange={handleChange} />
+                              </Col>
+                              <Col md={2} className="d-flex justify-content-center">
+                                <Button
+                                  size="sm"
+                                  variant="light"
+                                  onClick={() => deleteSectionItem("selection", idx, values, arrayHelpers)}
+                                >
+                                  <FaRegTrashAlt />
+                                </Button>
+                              </Col>
+                            </Row>
+                          ))}
+                          <div className="d-flex justify-content-end gap-2 align-items-center mt-2">
+                            <Button size="sm" variant="outline-primary" onClick={() => arrayHelpers.push("")}>
+                              + Add Step
+                            </Button>
+                            <Button size="sm" onClick={() => saveSection("selection", values, setFieldValue)}>
+                              Save Selection
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </FieldArray>
+                  </Card.Body>
+                </ComponentCard>
 
-              {/* How To Apply */}
-              <ComponentCard className="mb-3" title="How To Apply" isCollapsible>
-                <Card.Body>
-                  <SnowEditor value={values.howToApply} onChange={(v) => setFieldValue("howToApply", v)} />
-                  <div className="text-end mt-2">
-                    <Button size="sm" onClick={() => saveSection("howToApply", values, setFieldValue)}>
-                      Save How To Apply
-                    </Button>
-                  </div>
-                </Card.Body>
-              </ComponentCard>
+                {/* Important Links */}
+                <ComponentCard className="mb-3" title="Important Links" isCollapsible>
+                  <Card.Body>
+                    <FieldArray name="links">
+                      {(arrayHelpers) => (
+                        <>
+                          {values.links.map((l, idx) => (
+                            <Row key={idx} className="mb-2">
+                              <Col md={3}>
+                                <Form.Control
+                                  name={`links.${idx}.type`}
+                                  value={l.type}
+                                  onChange={handleChange}
+                                  placeholder="Type"
+                                />
+                              </Col>
+                              <Col md={3}>
+                                <Form.Control
+                                  name={`links.${idx}.label`}
+                                  value={l.label}
+                                  onChange={handleChange}
+                                  placeholder="Label"
+                                />
+                              </Col>
+                              <Col md={4}>
+                                <Form.Control
+                                  name={`links.${idx}.url`}
+                                  value={l.url}
+                                  onChange={handleChange}
+                                  placeholder="URL"
+                                  type="url"
+                                />
+                              </Col>
+                              <Col md={2} className="d-flex justify-content-center">
+                                <Button
+                                  size="sm"
+                                  variant="light"
+                                  onClick={() => deleteSectionItem("links", idx, values, arrayHelpers)}
+                                >
+                                  <FaRegTrashAlt />
+                                </Button>
+                              </Col>
+                            </Row>
+                          ))}
+                          <div className="d-flex justify-content-end gap-2 align-items-center mt-2">
+                            <Button size="sm" variant="outline-primary" onClick={() => arrayHelpers.push({ type: "", label: "", url: "" })}>
+                              + Add Link
+                            </Button>
+                            <Button size="sm" onClick={() => saveSection("links", values, setFieldValue)}>
+                              Save Links
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </FieldArray>
+                  </Card.Body>
+                </ComponentCard>
 
-              {/* Files */}
-              <ComponentCard className="mb-3" title="Files" isCollapsible>
-                <Card.Body>
-                  <FileUploader files={uploadedFiles} setFiles={setUploadedFiles} multiple maxFileCount={12} />
-                  <div className="text-end mt-2">
-                    <Button size="sm" onClick={() => saveSection("files", values, setFieldValue)}>
-                      Upload Files
-                    </Button>
-                  </div>
-                </Card.Body>
-              </ComponentCard>
+                {/* How To Apply */}
+                <ComponentCard className="mb-3" title="How To Apply" isCollapsible>
+                  <Card.Body>
+                    <SnowEditor value={values.howToApply} onChange={(v) => setFieldValue("howToApply", v)} />
+                    <div className="text-end mt-2">
+                      <Button size="sm" onClick={() => saveSection("howToApply", values, setFieldValue)}>
+                        Save How To Apply
+                      </Button>
+                    </div>
+                  </Card.Body>
+                </ComponentCard>
 
-              {/* SEO & Meta */}
-              <ComponentCard className="mb-3" title="SEO & Meta Info" isCollapsible>
-                <Card.Body>
-                  <Row>
-                    <Col md={6}>
-                      <FormInput
-                        name="metaDetails.job_meta_title"
-                        label="Meta Title"
-                        sublabel="Max 60 characters"
-                        value={values.metaDetails.job_meta_title}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        touched={touched.metaDetails?.job_meta_title}
-                        errors={errors.metaDetails?.job_meta_title}
-                      />
-                    </Col>
-                    <Col md={6}>
-                      <FormInput
-                        name="metaDetails.job_meta_description"
-                        label="Meta Description"
-                        sublabel="Max 160 characters"
-                        value={values.metaDetails.job_meta_description}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                      />
-                    </Col>
-                    <Col md={6}>
-                      <FormInput
-                        name="metaDetails.job_meta_keywords"
-                        label="Meta Keywords"
-                        sublabel="Comma separated, max 10 keywords"
-                        value={values.metaDetails.job_meta_keywords}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                      />
-                    </Col>
-                    <Col md={6}>
-                      <FormInput
-                        name="metaDetails.job_meta_schemas"
-                        label="Meta Schemas"
-                        value={values.metaDetails.job_meta_schemas}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                      />
-                    </Col>
-                  </Row>
-                  <div className="text-end mt-2">
-                    <Button size="sm" onClick={() => saveSection("metaDetails", values, setFieldValue)}>
-                      Save Meta Details
-                    </Button>
-                  </div>
-                </Card.Body>
-              </ComponentCard>
-            </Form>
-          )}
+                {/* Files */}
+                <ComponentCard className="mb-3" title="Files" isCollapsible>
+                  <Card.Body>
+                    <FileUploader files={uploadedFiles} setFiles={setUploadedFiles} multiple maxFileCount={12} />
+                    <div className="text-end mt-2">
+                      <Button size="sm" onClick={() => saveSection("files", values, setFieldValue)}>
+                        Upload Files
+                      </Button>
+                    </div>
+                  </Card.Body>
+                </ComponentCard>
+
+                {/* SEO & Meta */}
+                <ComponentCard className="mb-3" title="SEO & Meta Info" isCollapsible>
+                  <Card.Body>
+                    <Row>
+                      <Col md={6}>
+                        <FormInput
+                          name="metaDetails.job_meta_title"
+                          label="Meta Title"
+                          sublabel="Max 60 characters"
+                          value={values.metaDetails.job_meta_title}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          touched={touched.metaDetails?.job_meta_title}
+                          errors={errors.metaDetails?.job_meta_title}
+                        />
+                      </Col>
+                      <Col md={6}>
+                        <FormInput
+                          name="metaDetails.job_meta_description"
+                          label="Meta Description"
+                          sublabel="Max 160 characters"
+                          value={values.metaDetails.job_meta_description}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                        />
+                      </Col>
+                      <Col md={6}>
+                        <FormInput
+                          name="metaDetails.job_meta_keywords"
+                          label="Meta Keywords"
+                          sublabel="Comma separated, max 10 keywords"
+                          value={values.metaDetails.job_meta_keywords}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                        />
+                      </Col>
+                      <Col md={6}>
+                        <FormInput
+                          name="metaDetails.job_meta_schemas"
+                          label="Meta Schemas"
+                          value={values.metaDetails.job_meta_schemas}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                        />
+                      </Col>
+                    </Row>
+                    <div className="text-end mt-2">
+                      <Button size="sm" onClick={() => saveSection("metaDetails", values, setFieldValue)}>
+                        Save Meta Details
+                      </Button>
+                    </div>
+                  </Card.Body>
+                </ComponentCard>
+              </Form>
+            );
+          }}
         </Formik>
       </Card.Body>
     </div>

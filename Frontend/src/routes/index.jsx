@@ -14,7 +14,6 @@ const AddJobType = lazy(() => import('@/views/pages/Manage-Jobs/Category/compone
 const AddSector = lazy(() => import('@/views/pages/Manage-Jobs/Category/components/AddSector'));
 const EditSubCategory = lazy(() => import('@/views/pages/Manage-Jobs/Category/components/EditSubCategory'));
 const Jobs = lazy(() => import('@/views/pages/Manage-Jobs/jobs')); 
-const EditJob = lazy(() => import('@/views/pages/Manage-Jobs/jobs/components/EditJob'));
 const AddJob = lazy(() => import('@/views/pages/Manage-Jobs/jobs/components/AddJob'));
 const ViewJob = lazy(() => import('@/views/pages/Manage-Jobs/jobs/components/ViewJob'));
 const AdmitCard = lazy(() => import('@/views/pages/Manage-Jobs/admit-card'));
@@ -91,7 +90,7 @@ const jobRoutes=[{
 },
 {
    path: '/admin/jobs/edit/:id',
-    element: <EditJob/>,
+    element: <AddJob/>,
 },
 {
   path:'/admin/jobs/view/:id',

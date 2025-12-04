@@ -202,8 +202,29 @@ const saveJobSection = async (req, res) => {
         break;
 
       case "links":
+        // Convert array of link objects or formatted strings to a proper Map
+        let linksMap = {};
+        
+        if (Array.isArray(data.job_important_links)) {
+          data.job_important_links.forEach((link, index) => {
+            if (typeof link === 'string') {
+              // If it's a formatted string like "Label: URL"
+              const [label, url] = link.split(': ');
+              if (label && url) {
+                linksMap[label.trim()] = url.trim();
+              }
+            } else if (link && link.label && link.url) {
+              // If it's an object with label and url
+              linksMap[link.label.trim()] = link.url.trim();
+            }
+          });
+        } else if (typeof data.job_important_links === 'object') {
+          // If it's already an object/map
+          linksMap = data.job_important_links;
+        }
+
         updateDoc.$set = {
-          job_important_links: data.job_important_links || {},
+          job_important_links: linksMap,
           job_last_updated_date: Math.floor(Date.now() / 1000),
         };
         break;
