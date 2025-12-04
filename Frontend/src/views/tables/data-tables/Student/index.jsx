@@ -127,7 +127,17 @@ const StudentList = ({ refreshFlag }) => {
       orderable: false,
       searchable: false,
       render: (data, type, row, meta) => {
-        return meta.row + 1;
+        // Determine total records (handles client/server-side)
+        const totalRecords =
+          (typeof meta.settings.fnRecordsDisplay === "function"
+            ? meta.settings.fnRecordsDisplay()
+            : meta.settings._iRecordsDisplay) || meta.settings._iRecordsTotal || 0;
+
+        // Calculate current global index (0-based)
+        const currentIndex = meta.settings._iDisplayStart + meta.row;
+
+        // Return reversed serial number (descending)
+        return totalRecords - currentIndex;
       },
     },
     {
