@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Container, Nav, NavItem, NavLink, TabContainer, TabPane } from 'react-bootstrap';
 import ComponentCard from '@/components/ComponentCard';
 import { Link } from 'react-router-dom';
-import StudentList from '@/views/tables/data-tables/Student/';
+import StudentList from '@/views/tables/data-tables/student-data/';
 
 const StudentManagement = () => {
   const [refreshFlag, setRefreshFlag] = useState(0);
