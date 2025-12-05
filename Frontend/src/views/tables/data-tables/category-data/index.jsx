@@ -5,10 +5,6 @@ import {
   DropdownMenu,
   DropdownItem,
   DropdownToggle,
-  Form,
-  FormControl,
-  Row,
-  Col,
 } from "react-bootstrap";
 
 import DT from "datatables.net-bs5";
@@ -24,8 +20,6 @@ import {
   TbChevronsRight,
   TbDotsVertical,
   TbEdit,
-  TbTrash,
-  TbSearch,
 } from "react-icons/tb";
 
 import jszip from "jszip";
