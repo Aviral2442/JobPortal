@@ -41,7 +41,7 @@ const StudentDetail = () => {
     studentLastName: studentData.studentPrimaryData?.studentLastName,
     studentEmail: studentData.studentPrimaryData?.studentEmail,
     studentMobileNo: studentData.studentPrimaryData?.studentMobileNo,
-    studentJobType: studentData.studentPrimaryData?.studentJobType,
+    studentJobType: studentData.studentPrimaryData?.studentJobType?.job_type_name,
     studentResumeFile: studentData.studentPrimaryData?.studentResumeFile,
     studentReferralCode: studentData.studentPrimaryData?.studentReferralCode,
     studentReferralByCode: studentData.studentPrimaryData?.studentReferralByCode,

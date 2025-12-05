@@ -22,6 +22,7 @@ import "datatables.net-buttons-bs5";
 import "datatables.net-buttons/js/buttons.html5";
 import jszip from "jszip";
 import pdfmake from "pdfmake";
+import { formatDate } from "@/components/DateFormat";
 
 DataTable.use(DT);
 DT.Buttons.jszip(jszip);
@@ -99,13 +100,6 @@ const StudentList = ({ refreshFlag }) => {
     }
   };
 
-  // Format date
-  const formatDate = (timestamp) => {
-    if (!timestamp) return "N/A";
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleDateString('en-IN');
-  };
-
   // Get status badge
   const getStatusBadge = (status) => {
     switch (status) {
@@ -171,7 +165,7 @@ const StudentList = ({ refreshFlag }) => {
     {
       title: "Job Type",
       data: "studentJobType",
-      render: (data) => data || "N/A",
+      render: (data) => data?.job_type_name || "N/A",
     },
     {
         title: "Date Created",
