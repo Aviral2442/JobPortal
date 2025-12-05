@@ -17,6 +17,7 @@ const StudentSkills = require('../models/student/studentSkillModel');
 const StudentSocialLinks = require('../models/student/studentSocialLinkModel');
 const StudentExperience = require('../models/student/studentWorkExprienceModel');
 const loginHistory = require('../models/LoginHistoryModel');
+const JobType = require('../models/JobTypeModel');
 const sendEmailOtp = require('../utils/emailOtp');
 
 // STUDENT LIST SERVICE
@@ -58,6 +59,7 @@ exports.studentListService = async (query) => {
 
         const totalCount = await studentModel.countDocuments(filter);
         const students = await studentModel.find(filter)
+            .populate({ path: 'studentJobType', model: 'JobType', select: 'job_type_name' })
             .sort({ studentCreatedAt: -1 })
             .skip(skip)
             .limit(finalLimit);
