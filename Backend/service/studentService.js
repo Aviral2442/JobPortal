@@ -16,6 +16,7 @@ const StudentParentalInfo = require('../models/student/studentParentsModel');
 const StudentSkills = require('../models/student/studentSkillModel');
 const StudentSocialLinks = require('../models/student/studentSocialLinkModel');
 const StudentExperience = require('../models/student/studentWorkExprienceModel');
+const loginHistory = require('../models/LoginHistoryModel');
 const sendEmailOtp = require('../utils/emailOtp');
 
 // STUDENT LIST SERVICE
@@ -69,6 +70,61 @@ exports.studentListService = async (query) => {
             totalPages: Math.ceil(totalCount / finalLimit),
             jsonData: {
                 students: students
+            }
+        };
+    } catch (error) {
+        return {
+            result: 500,
+            message: "Internal server error",
+            error: error.message
+        };
+    }
+};
+
+// STUDENT LOGIN LOGOUT HISTORY SERVICE
+exports.studentLoginLogoutHistory = async (query) => {
+    try {
+        const {
+            dateFilter,
+            fromDate,
+            toDate,
+            searchFilter,
+            page,
+            limit
+        } = query;
+
+        const dateQuery = buildDateFilter({
+            dateFilter,
+            fromDate,
+            toDate,
+            dateField: "createdAt"
+        });
+
+        filter = {...dateQuery };
+
+        const { skip, limit: finalLimit, currentPage } = buildPagination({
+            dateFilter,
+            fromDate,
+            toDate,
+            searchFilter,
+            page,
+            limit
+        });
+
+        const totalCount = await loginHistory.countDocuments(filter);
+        const loginLogoutHistory = await loginHistory.find(filter)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(finalLimit);
+
+        return {
+            result: 200,
+            message: "Student login/logout history fetched successfully",
+            totalCount,
+            currentPage,
+            totalPages: Math.ceil(totalCount / finalLimit),
+            jsonData: {
+                loginLogoutHistory: loginLogoutHistory
             }
         };
     } catch (error) {
@@ -281,6 +337,16 @@ exports.studentLogin = async (studentLoginData) => {
             };
         }
 
+        student.lastLoginAt = currentUnixTimeStamp();
+        await student.save();
+
+        const saveLoginHistory = await loginHistory({
+            studentId: student._id,
+            loginAt: currentUnixTimeStamp()
+        })
+
+        await saveLoginHistory.save();
+
         return {
             status: 200,
             message: 'Student logged in successfully',
@@ -304,6 +370,44 @@ exports.studentLogin = async (studentLoginData) => {
         };
     }
 };
+
+// STUDENT LOGOUT SERVICE
+exports.studentLogout = async (studentId) => {
+    try {
+
+        const student = await studentModel.findById(studentId);
+        if (!student) {
+            return {
+                status: 404,
+                message: 'Student not found with the provided ID'
+            };
+        }
+
+        student.lastLogoutAt = currentUnixTimeStamp();
+        await student.save();
+
+        const updateLoginHistory = await loginHistory(
+            {
+                studentId: studentId,
+                logoutAt: currentUnixTimeStamp()
+            }
+        );
+
+        await updateLoginHistory.save();
+
+        return {
+            status: 200,
+            message: 'Student logged out successfully'
+        };
+
+    } catch (error) {
+        return {
+            status: 500,
+            message: 'An error occurred during student logout',
+            error: error.message
+        };
+    }
+}
 
 // STUDENT FORGET PASSWORD SERVICE
 exports.studentForgetPassword = async (studentForgetData) => {

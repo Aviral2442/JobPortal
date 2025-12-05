@@ -9,7 +9,7 @@ const StudentSchema = new mongoose.Schema({
     studentEmail: { type: String, required: true, unique: true, lowercase: true, trim: true },
     studentMobileNo: { type: String, required: true, unique: true },
     studentPassword: { type: String, required: true },
-    studentJobType: { type: String, required: true }, // select from the job types table , id will be pass here
+    studentJobType: { type: mongoose.Schema.Types.ObjectId, ref: 'jobType', required: true },
     studentResumeFile: { type: String },
     studentReferralCode: { type: String },
     studentReferralById: { type: mongoose.Schema.Types.ObjectId, ref: 'student', default: null },
@@ -35,8 +35,8 @@ const StudentSchema = new mongoose.Schema({
         studentResume: { type: Number, default: 0 }
     },
 
-    lastLoginAt: { type: Number },
-    lastLoginIP: { type: String },
+    lastLoginAt: { type: Number, default: null },
+    lastLogoutAt: { type: Number, default: null },
 
     accountStatus: { type: String, enum: ["active", "inactive", "blocked"], default: "active" },
 

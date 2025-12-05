@@ -10,6 +10,16 @@ exports.studentListService = async (req, res) => {
     }
 };
 
+// STUDENT LOGIN LOGOUT HISTORY CONTROLLER
+exports.studentLoginLogoutHistory = async (req, res) => {
+    try {
+        const result = await studentService.studentLoginLogoutHistory(req.query);
+        return res.status(200).json(result);
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: 'Internal server error' });
+    }
+};
+
 // STUDENT REGISTRATION CONTROLLER
 exports.studentRegistration = async (req, res) => {
     try {
@@ -36,6 +46,17 @@ exports.studentAllDetails = async (req, res) => {
 exports.studentLogin = async (req, res) => {
     try {
         const result = await studentService.studentLogin(req.body);
+        return res.status(result.status).json(result);
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: 'Internal server error' });
+    }
+};
+
+// STUDENT LOGOUT CONTROLLER
+exports.studentLogout = async (req, res) => {
+    try {
+        const studentId = req.params.studentId;
+        const result = await studentService.studentLogout(studentId);
         return res.status(result.status).json(result);
     } catch (error) {
         return res.status(500).json({ status: 500, message: 'Internal server error' });

@@ -4,10 +4,12 @@ const upload = require('../middleware/JobCategoryUploadMidd');
 const studentController = require('../controllers/studentController');
 
 router.get('/students_list', studentController.studentListService);
+router.get('/studentLoginLogoutHistory', studentController.studentLoginLogoutHistory);
 router.put('/studentAccountProgressMeter/:studentId', studentController.studentProgressMeter);
 router.get('/studentAllDetails/:studentId', studentController.studentAllDetails);
 router.post('/student_registration', upload('StudentProfile').single('studentProfilePic'), studentController.studentRegistration);
 router.post('/student_login', studentController.studentLogin);
+router.post('/studentLogout/:studentId', studentController.studentLogout);
 router.post('/studentForgetPassword', studentController.studentForgetPassword);
 router.post('/verifyStudentOtp', studentController.verifyStudentOtp);
 router.post('/resetStudentPassword', studentController.resetStudentPassword);
