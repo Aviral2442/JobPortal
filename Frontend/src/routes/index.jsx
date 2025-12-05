@@ -25,7 +25,7 @@ const AddAnswerKey = lazy(() => import('@/views/pages/Manage-Jobs/answer-key/com
 const Documents = lazy(() => import('@/views/pages/Manage-Jobs/documents'));
 const Admissions = lazy(() => import('@/views/pages/Manage-Jobs/admission'));
 const Students = lazy(() => import('@/views/pages/Manage-Students/Student'));
-const StudentDetail = lazy(() => import('@/views/tables/data-tables/Student/components/StudentDetail'));
+const StudentDetail = lazy(() => import('@/views/pages/Manage-Students/Student/components/StudentDetail'));
 
 
 
