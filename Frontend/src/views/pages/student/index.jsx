@@ -15,7 +15,7 @@ const StudentManagement = () => {
                     title="Students"
                     className="py-2"
                     isLink={
-                        <Link to="/admin/students/add" className="btn btn-sm btn-primary">
+                        <Link to="/admin/student/registration" className="btn btn-sm btn-primary">
                             + Add Student
                         </Link>
                     }
