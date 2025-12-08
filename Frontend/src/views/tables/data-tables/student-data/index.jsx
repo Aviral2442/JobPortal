@@ -67,39 +67,6 @@ const StudentList = ({ refreshFlag }) => {
     navigate(`/admin/students/view/${student._id}`);
   };
 
-  // Handle edit student
-  const handleEdit = (student) => {
-    navigate(`/admin/students/edit/${student._id}`);
-  };
-
-  // Handle delete student
-  const handleDelete = async (student) => {
-    if (window.confirm(`Are you sure you want to delete ${student.studentFirstName} ${student.studentLastName}?`)) {
-      try {
-        await axios.delete(`/student/${student._id}`);
-        toast.success("Student deleted successfully");
-        fetchStudents(); // Refresh the list
-      } catch (error) {
-        console.error("Error deleting student:", error);
-        toast.error("Failed to delete student");
-      }
-    }
-  };
-
-  // Handle account status change
-  const handleStatusChange = async (student, newStatus) => {
-    try {
-      await axios.put(`/student/updateStatus/${student._id}`, {
-        accountStatus: newStatus
-      });
-      toast.success(`Student ${newStatus} successfully`);
-      fetchStudents(); // Refresh the list
-    } catch (error) {
-      console.error("Error updating status:", error);
-      toast.error("Failed to update status");
-    }
-  };
-
   // Get status badge
   const getStatusBadge = (status) => {
     switch (status) {
@@ -197,17 +164,6 @@ const StudentList = ({ refreshFlag }) => {
               <Dropdown.Item onClick={() => handleView(rowData)}>
                 <TbEye className="me-2" />
                 View Details
-              </Dropdown.Item>
-              <Dropdown.Item onClick={() => handleEdit(rowData)}>
-                <TbEdit className="me-2" />
-                Edit
-              </Dropdown.Item>
-              <Dropdown.Item 
-                onClick={() => handleDelete(rowData)}
-                className="text-danger"
-              >
-                <TbTrash className="me-2" />
-                Delete
               </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>

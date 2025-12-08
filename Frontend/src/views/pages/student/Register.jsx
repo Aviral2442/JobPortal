@@ -39,7 +39,6 @@ const studentValidationSchema = Yup.object({
     .optional(),
 });
 
-// Update the FormInput component to handle Form.Text properly
 const FormInput = ({
   name,
   label,
@@ -94,7 +93,6 @@ const Register = () => {
     studentReferralByCode: '',
   };
 
-  // Fetch Job Types
   const fetchJobTypes = async () => {
     try {
       const response = await axios.get('/job-categories/get_job_type_list');
@@ -116,7 +114,6 @@ const Register = () => {
   const handleProfilePicChange = (e, setFieldValue) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
       const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       if (!validTypes.includes(file.type)) {
         setMessage({
@@ -126,7 +123,6 @@ const Register = () => {
         return;
       }
 
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setMessage({
           text: 'Image size should not exceed 5MB',
@@ -148,12 +144,10 @@ const Register = () => {
     try {
       const formData = new FormData();
 
-      // Append profile picture if exists
       if (profilePicFile) {
         formData.append('studentProfilePic', profilePicFile);
       }
 
-      // Append other fields
       formData.append('studentFirstName', values.studentFirstName.trim());
       formData.append('studentLastName', values.studentLastName.trim());
       formData.append('studentEmail', values.studentEmail.toLowerCase().trim());
@@ -176,12 +170,10 @@ const Register = () => {
         variant: 'success',
       });
 
-      // Reset form and preview
       resetForm();
       setProfilePicFile(null);
       setProfilePicPreview('');
 
-      // Redirect to students list after 2 seconds
       setTimeout(() => {
         navigate('/admin/students');
       }, 2000);
