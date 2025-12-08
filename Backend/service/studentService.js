@@ -1132,6 +1132,8 @@ exports.updateStudentParentsInfo = async (studentId, studentParentsData) => {
 };
 
 // UPDATE STUDENT SKILLS SERVICE
+
+// UPDATE STUDENT SKILLS SERVICE
 exports.updateStudentSkills = async (studentId, studentSkillsData) => {
     try {
 
@@ -1143,40 +1145,35 @@ exports.updateStudentSkills = async (studentId, studentSkillsData) => {
             };
         }
 
-        let technicalSkills, softSkills, computerKnowledge, languageProficiency = [];
+        // Ensure arrays
+        const technicalSkills = Array.isArray(studentSkillsData.technicalSkills)
+            ? studentSkillsData.technicalSkills
+            : (studentSkillsData.technicalSkills ? [studentSkillsData.technicalSkills] : []);
 
-        if (studentSkillsData.technicalSkills) {
-            technicalSkills = Array.isArray(studentSkillsData.technicalSkills)
-                ? studentSkillsData.technicalSkills
-                : [studentSkillsData.technicalSkills];
-        }
+        const softSkills = Array.isArray(studentSkillsData.softSkills)
+            ? studentSkillsData.softSkills
+            : (studentSkillsData.softSkills ? [studentSkillsData.softSkills] : []);
 
-        if (studentSkillsData.softSkills) {
-            softSkills = Array.isArray(studentSkillsData.softSkills)
-                ? studentSkillsData.softSkills
-                : [studentSkillsData.softSkills];
-        }
+        const computerKnowledge = Array.isArray(studentSkillsData.computerKnowledge)
+            ? studentSkillsData.computerKnowledge
+            : (studentSkillsData.computerKnowledge ? [studentSkillsData.computerKnowledge] : []);
 
-        if (studentSkillsData.computerKnowledge) {
-            computerKnowledge = Array.isArray(studentSkillsData.computerKnowledge)
-                ? studentSkillsData.computerKnowledge
-                : [studentSkillsData.computerKnowledge];
-        }
+        const hobbies = Array.isArray(studentSkillsData.hobbies)
+            ? studentSkillsData.hobbies
+            : (studentSkillsData.hobbies ? [studentSkillsData.hobbies] : []);
 
-        if (studentSkillsData.languageProficiency) {
-            languageProficiency = Array.isArray(studentSkillsData.languageProficiency)
-                ? studentSkillsData.languageProficiency
-                : [studentSkillsData.languageProficiency];
-        }
+        const languageProficiency = Array.isArray(studentSkillsData.languageProficiency)
+            ? studentSkillsData.languageProficiency
+            : (studentSkillsData.languageProficiency ? [studentSkillsData.languageProficiency] : []);
 
         const updateStdSkillData = await StudentSkills.findOneAndUpdate(
             { studentId },
             {
-                technicalSkills: technicalSkills,
-                softSkills: softSkills,
-                computerKnowledge: computerKnowledge,
-                languageProficiency: languageProficiency,
-                hobbies: studentSkillsData.hobbies,
+                technicalSkills,
+                softSkills,
+                computerKnowledge,
+                hobbies,
+                languageProficiency,
                 updatedAt: currentUnixTimeStamp()
             },
             { new: true, upsert: true, setDefaultsOnInsert: true }

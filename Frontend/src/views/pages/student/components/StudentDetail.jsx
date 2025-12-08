@@ -1,7 +1,7 @@
 import axios from '@/api/axios';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Container, Spinner, Alert } from 'react-bootstrap';
+import { Container, Spinner, Alert, Button } from 'react-bootstrap';
 import DetailPage from '@/components/DetailPage';
 
 const StudentDetail = () => {
@@ -9,6 +9,8 @@ const StudentDetail = () => {
   const [studentData, setStudentData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [message, setMessage] = useState({ text: '', variant: '' });
+  const [sectionData, setSectionData] = useState({});
 
   const fetchstudentDetail = async () => {
     try {
@@ -16,6 +18,10 @@ const StudentDetail = () => {
       const res = await axios.get(`/student/studentAllDetails/${id}`);
       console.log("Fetched student detail:", res.data);
       setStudentData(res.data.jsonData);
+
+      // Initialize section data
+      const initialData = flattenData(res.data.jsonData);
+      setSectionData(initialData);
     } catch (error) {
       console.error("Error fetching student detail:", error);
       setError("Failed to fetch student details");
@@ -28,105 +34,414 @@ const StudentDetail = () => {
     fetchstudentDetail();
   }, [id]);
 
-  const handleUpdate = async (field, value) => {
-    console.log("Updating field:", field, "with value:", value);
-    // Implement update logic here based on field
+  const flattenData = (data) => {
+    if (!data) return {};
+
+    return {
+      // Primary Data
+      studentProfilePic: data.studentPrimaryData?.studentProfilePic,
+      studentFirstName: data.studentPrimaryData?.studentFirstName,
+      studentLastName: data.studentPrimaryData?.studentLastName,
+      studentEmail: data.studentPrimaryData?.studentEmail,
+      studentMobileNo: data.studentPrimaryData?.studentMobileNo,
+      studentJobType: data.studentPrimaryData?.studentJobType?.job_type_name,
+      studentResumeFile: data.studentPrimaryData?.studentResumeFile,
+      studentReferralCode: data.studentPrimaryData?.studentReferralCode,
+      studentReferralByCode: data.studentPrimaryData?.studentReferralByCode,
+      accountStatus: data.studentPrimaryData?.accountStatus,
+      studentCreatedAt: data.studentPrimaryData?.studentCreatedAt,
+      studentUpdatedAt: data.studentPrimaryData?.studentUpdatedAt,
+
+      // Basic Data
+      studentDOB: data.studentBasicData?.studentDOB,
+      studentGender: data.studentBasicData?.studentGender,
+      studentAlternateMobileNo: data.studentBasicData?.studentAlternateMobileNo,
+      studentMaritalStatus: data.studentBasicData?.studentMaritalStatus,
+      studentMotherTongue: data.studentBasicData?.studentMotherTongue,
+      studentNationality: data.studentBasicData?.studentNationality,
+      studentCitizenship: data.studentBasicData?.studentCitizenship,
+
+      // Current Address
+      currentAddressLine1: data.studentAddressData?.current?.addressLine1,
+      currentAddressLine2: data.studentAddressData?.current?.addressLine2,
+      currentCity: data.studentAddressData?.current?.city,
+      currentState: data.studentAddressData?.current?.state,
+      currentDistrict: data.studentAddressData?.current?.district,
+      currentCountry: data.studentAddressData?.current?.country,
+      currentPincode: data.studentAddressData?.current?.pincode,
+
+      // Permanent Address
+      permanentAddressLine1: data.studentAddressData?.permanent?.addressLine1,
+      permanentAddressLine2: data.studentAddressData?.permanent?.addressLine2,
+      permanentCity: data.studentAddressData?.permanent?.city,
+      permanentState: data.studentAddressData?.permanent?.state,
+      permanentDistrict: data.studentAddressData?.permanent?.district,
+      permanentCountry: data.studentAddressData?.permanent?.country,
+      permanentPincode: data.studentAddressData?.permanent?.pincode,
+      isPermanentSameAsCurrent: data.studentAddressData?.isPermanentSameAsCurrent,
+
+      // Bank Data
+      bankHolderName: data.studentBankData?.bankHolderName,
+      bankName: data.studentBankData?.bankName,
+      accountNumber: data.studentBankData?.accountNumber,
+      ifscCode: data.studentBankData?.ifscCode,
+      branchName: data.studentBankData?.branchName,
+      passbookUrl: data.studentBankData?.passbookUrl,
+
+      // Body Details
+      heightCm: data.studentBodyData?.heightCm,
+      weightKg: data.studentBodyData?.weightKg,
+      bloodGroup: data.studentBodyData?.bloodGroup,
+      eyeColor: data.studentBodyData?.eyeColor,
+      hairColor: data.studentBodyData?.hairColor,
+      identificationMark1: data.studentBodyData?.identificationMark1,
+      identificationMark2: data.studentBodyData?.identificationMark2,
+      disability: data.studentBodyData?.disability,
+      disabilityType: data.studentBodyData?.disabilityType,
+      disabilityPercentage: data.studentBodyData?.disabilityPercentage,
+
+      // Emergency Contact
+      emergencyContactName: data.studentEmergencyContactData?.emergencyContactName,
+      emergencyRelation: data.studentEmergencyContactData?.emergencyRelation,
+      emergencyPhoneNumber: data.studentEmergencyContactData?.emergencyPhoneNumber,
+      emergencyAddress: data.studentEmergencyContactData?.emergencyAddress,
+
+      // Parental Info
+      fatherName: data.studentParentalInfoData?.fatherName,
+      fatherContactNumber: data.studentParentalInfoData?.fatherContactNumber,
+      fatherOccupation: data.studentParentalInfoData?.fatherOccupation,
+      fatherEmail: data.studentParentalInfoData?.fatherEmail,
+      fatherAnnualIncome: data.studentParentalInfoData?.fatherAnnualIncome,
+      motherName: data.studentParentalInfoData?.motherName,
+      motherContactNumber: data.studentParentalInfoData?.motherContactNumber,
+      motherOccupation: data.studentParentalInfoData?.motherOccupation,
+      motherEmail: data.studentParentalInfoData?.motherEmail,
+      motherAnnualIncome: data.studentParentalInfoData?.motherAnnualIncome,
+      guardianName: data.studentParentalInfoData?.guardianName,
+      guardianRelation: data.studentParentalInfoData?.guardianRelation,
+      guardianContactNumber: data.studentParentalInfoData?.guardianContactNumber,
+      numberOfFamilyMembers: data.studentParentalInfoData?.numberOfFamilyMembers,
+      familyType: data.studentParentalInfoData?.familyType,
+
+      // Documents
+      aadharNumber: data.studentDocumentUploadData?.identityDocuments?.aadharNumber,
+      panNumber: data.studentDocumentUploadData?.identityDocuments?.panNumber,
+      voterId: data.studentDocumentUploadData?.identityDocuments?.voterId,
+      passportNumber: data.studentDocumentUploadData?.identityDocuments?.passportNumber,
+      drivingLicenseNo: data.studentDocumentUploadData?.identityDocuments?.drivingLicenseNo,
+
+      // Career Preferences
+      preferredJobCategory: data.studentCareerPreferencesData?.preferredJobCategory || [],
+      preferredJobLocation: data.studentCareerPreferencesData?.preferredJobLocation || [],
+      expectedSalaryMin: data.studentCareerPreferencesData?.expectedSalaryMin,
+      expectedSalaryMax: data.studentCareerPreferencesData?.expectedSalaryMax,
+      employmentType: data.studentCareerPreferencesData?.employmentType || [],
+      willingToRelocate: data.studentCareerPreferencesData?.willingToRelocate,
+
+      // Education Details
+      highestQualification: data.studentEducationData?.highestQualification,
+      tenthSchoolName: data.studentEducationData?.tenth?.schoolName,
+      tenthBoard: data.studentEducationData?.tenth?.board,
+      tenthPassingYear: data.studentEducationData?.tenth?.passingYear,
+      tenthPercentage: data.studentEducationData?.tenth?.percentage,
+      twelfthSchoolCollegeName: data.studentEducationData?.twelfth?.schoolCollegeName,
+      twelfthBoard: data.studentEducationData?.twelfth?.board,
+      twelfthStream: data.studentEducationData?.twelfth?.stream,
+      twelfthPassingYear: data.studentEducationData?.twelfth?.passingYear,
+      twelfthPercentage: data.studentEducationData?.twelfth?.percentage,
+      graduationCollegeName: data.studentEducationData?.graduation?.collegeName,
+      graduationCourseName: data.studentEducationData?.graduation?.courseName,
+      graduationSpecialization: data.studentEducationData?.graduation?.specialization,
+      graduationPassingYear: data.studentEducationData?.graduation?.passingYear,
+      graduationPercentage: data.studentEducationData?.graduation?.percentage,
+      postGraduationCollegeName: data.studentEducationData?.postGraduation?.collegeName,
+      postGraduationCourseName: data.studentEducationData?.postGraduation?.courseName,
+      postGraduationSpecialization: data.studentEducationData?.postGraduation?.specialization,
+      postGraduationPassingYear: data.studentEducationData?.postGraduation?.passingYear,
+      postGraduationPercentage: data.studentEducationData?.postGraduation?.percentage,
+
+      // Skills
+      hobbies: Array.isArray(data.studentSkillsData?.hobbies)
+        ? data.studentSkillsData.hobbies.join(', ')
+        : (data.studentSkillsData?.hobbies || ''),
+
+      technicalSkills: Array.isArray(data.studentSkillsData?.technicalSkills)
+        ? data.studentSkillsData.technicalSkills.join(', ')
+        : (data.studentSkillsData?.technicalSkills || ''),
+
+      softSkills: Array.isArray(data.studentSkillsData?.softSkills)
+        ? data.studentSkillsData.softSkills.join(', ')
+        : (data.studentSkillsData?.softSkills || ''),
+
+      computerKnowledge: Array.isArray(data.studentSkillsData?.computerKnowledge)
+        ? data.studentSkillsData.computerKnowledge.join(', ')
+        : (data.studentSkillsData?.computerKnowledge || ''),
+
+      // Social Links
+      linkedInUrl: data.studentSocialLinksData?.linkedInUrl,
+      githubUrl: data.studentSocialLinksData?.githubUrl,
+      portfolioUrl: data.studentSocialLinksData?.portfolioUrl,
+      facebookUrl: data.studentSocialLinksData?.facebookUrl,
+      instagramUrl: data.studentSocialLinksData?.instagramUrl,
+
+      // Work Experience
+      totalExperienceMonths: data.studentWorkExperienceData?.totalExperienceMonths,
+    };
   };
 
-  // Flatten data for DetailPage component
-  const flattenedData = studentData ? {
-    // Primary Data
-    studentProfilePic: studentData.studentPrimaryData?.studentProfilePic,
-    studentFirstName: studentData.studentPrimaryData?.studentFirstName,
-    studentLastName: studentData.studentPrimaryData?.studentLastName,
-    studentEmail: studentData.studentPrimaryData?.studentEmail,
-    studentMobileNo: studentData.studentPrimaryData?.studentMobileNo,
-    studentJobType: studentData.studentPrimaryData?.studentJobType?.job_type_name,
-    studentResumeFile: studentData.studentPrimaryData?.studentResumeFile,
-    studentReferralCode: studentData.studentPrimaryData?.studentReferralCode,
-    studentReferralByCode: studentData.studentPrimaryData?.studentReferralByCode,
-    accountStatus: studentData.studentPrimaryData?.accountStatus,
-    studentCreatedAt: studentData.studentPrimaryData?.studentCreatedAt,
-    studentUpdatedAt: studentData.studentPrimaryData?.studentUpdatedAt,
+  const handleUpdate = async (field, value) => {
+    console.log("Updating field:", field, "with value:", value);
+    setSectionData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
-    // Basic Data
-    studentDOB: studentData.studentBasicData?.studentDOB,
-    studentGender: studentData.studentBasicData?.studentGender,
-    studentAlternateMobileNo: studentData.studentBasicData?.studentAlternateMobileNo,
-    studentMaritalStatus: studentData.studentBasicData?.studentMaritalStatus,
-    studentMotherTongue: studentData.studentBasicData?.studentMotherTongue,
-    studentNationality: studentData.studentBasicData?.studentNationality,
-    studentCitizenship: studentData.studentBasicData?.studentCitizenship,
+  const saveBasicDetails = async () => {
+    try {
+      const payload = {
+        studentDOB: sectionData.studentDOB,
+        studentGender: sectionData.studentGender,
+        studentAlternateMobileNo: sectionData.studentAlternateMobileNo,
+        studentMaritalStatus: sectionData.studentMaritalStatus,
+        studentMotherTongue: sectionData.studentMotherTongue,
+        studentNationality: sectionData.studentNationality,
+        studentCitizenship: sectionData.studentCitizenship,
+      };
 
-    // Current Address
-    currentAddressLine1: studentData.studentAddressData?.current?.addressLine1,
-    currentAddressLine2: studentData.studentAddressData?.current?.addressLine2,
-    currentCity: studentData.studentAddressData?.current?.city,
-    currentState: studentData.studentAddressData?.current?.state,
-    currentDistrict: studentData.studentAddressData?.current?.district,
-    currentCountry: studentData.studentAddressData?.current?.country,
-    currentPincode: studentData.studentAddressData?.current?.pincode,
+      const res = await axios.put(`/student/updateStudentBasicDetails/${id}`, payload);
+      setMessage({ text: 'Basic details updated successfully!', variant: 'success' });
+      await fetchstudentDetail();
+    } catch (error) {
+      console.error("Error updating basic details:", error);
+      setMessage({ text: error.response?.data?.message || 'Error updating basic details', variant: 'danger' });
+    }
+  };
 
-    // Permanent Address
-    permanentAddressLine1: studentData.studentAddressData?.permanent?.addressLine1,
-    permanentAddressLine2: studentData.studentAddressData?.permanent?.addressLine2,
-    permanentCity: studentData.studentAddressData?.permanent?.city,
-    permanentState: studentData.studentAddressData?.permanent?.state,
-    permanentDistrict: studentData.studentAddressData?.permanent?.district,
-    permanentCountry: studentData.studentAddressData?.permanent?.country,
-    permanentPincode: studentData.studentAddressData?.permanent?.pincode,
-    isPermanentSameAsCurrent: studentData.studentAddressData?.isPermanentSameAsCurrent,
+  const saveAddressDetails = async () => {
+    try {
+      const payload = {
+        current: {
+          addressLine1: sectionData.currentAddressLine1,
+          addressLine2: sectionData.currentAddressLine2,
+          city: sectionData.currentCity,
+          district: sectionData.currentDistrict,
+          state: sectionData.currentState,
+          country: sectionData.currentCountry,
+          pincode: sectionData.currentPincode,
+        },
+        permanent: {
+          addressLine1: sectionData.permanentAddressLine1,
+          addressLine2: sectionData.permanentAddressLine2,
+          city: sectionData.permanentCity,
+          district: sectionData.permanentDistrict,
+          state: sectionData.permanentState,
+          country: sectionData.permanentCountry,
+          pincode: sectionData.permanentPincode,
+        },
+        isPermanentSameAsCurrent: sectionData.isPermanentSameAsCurrent,
+      };
 
-    // Bank Data
-    bankHolderName: studentData.studentBankData?.bankHolderName,
-    bankName: studentData.studentBankData?.bankName,
-    accountNumber: studentData.studentBankData?.accountNumber,
-    ifscCode: studentData.studentBankData?.ifscCode,
-    branchName: studentData.studentBankData?.branchName,
-    passbookUrl: studentData.studentBankData?.passbookUrl,
+      const res = await axios.put(`/student/updateStudentAddress/${id}`, payload);
+      setMessage({ text: 'Address details updated successfully!', variant: 'success' });
+      await fetchstudentDetail();
+    } catch (error) {
+      console.error("Error updating address:", error);
+      setMessage({ text: error.response?.data?.message || 'Error updating address', variant: 'danger' });
+    }
+  };
 
-    // Body Details
-    heightCm: studentData.studentBodyData?.heightCm,
-    weightKg: studentData.studentBodyData?.weightKg,
-    bloodGroup: studentData.studentBodyData?.bloodGroup,
-    eyeColor: studentData.studentBodyData?.eyeColor,
-    hairColor: studentData.studentBodyData?.hairColor,
-    identificationMark1: studentData.studentBodyData?.identificationMark1,
-    identificationMark2: studentData.studentBodyData?.identificationMark2,
-    disability: studentData.studentBodyData?.disability,
-    disabilityType: studentData.studentBodyData?.disabilityType,
-    disabilityPercentage: studentData.studentBodyData?.disabilityPercentage,
+  const saveBankDetails = async () => {
+    try {
+      const payload = {
+        bankHolderName: sectionData.bankHolderName,
+        bankName: sectionData.bankName,
+        accountNumber: sectionData.accountNumber,
+        ifscCode: sectionData.ifscCode,
+        branchName: sectionData.branchName,
+      };
 
-    // Emergency Contact
-    emergencyContactName: studentData.studentEmergencyContactData?.emergencyContactName,
-    emergencyRelation: studentData.studentEmergencyContactData?.emergencyRelation,
-    emergencyPhoneNumber: studentData.studentEmergencyContactData?.emergencyPhoneNumber,
-    emergencyAddress: studentData.studentEmergencyContactData?.emergencyAddress,
+      const res = await axios.put(`/student/updateStudentBankDetails/${id}`, payload);
+      setMessage({ text: 'Bank details updated successfully!', variant: 'success' });
+      await fetchstudentDetail();
+    } catch (error) {
+      console.error("Error updating bank details:", error);
+      setMessage({ text: error.response?.data?.message || 'Error updating bank details', variant: 'danger' });
+    }
+  };
 
-    // Parental Info
-    fatherName: studentData.studentParentalInfoData?.fatherName,
-    fatherContactNumber: studentData.studentParentalInfoData?.fatherContactNumber,
-    fatherOccupation: studentData.studentParentalInfoData?.fatherOccupation,
-    fatherEmail: studentData.studentParentalInfoData?.fatherEmail,
-    fatherAnnualIncome: studentData.studentParentalInfoData?.fatherAnnualIncome,
-    motherName: studentData.studentParentalInfoData?.motherName,
-    motherContactNumber: studentData.studentParentalInfoData?.motherContactNumber,
-    motherOccupation: studentData.studentParentalInfoData?.motherOccupation,
-    motherEmail: studentData.studentParentalInfoData?.motherEmail,
-    motherAnnualIncome: studentData.studentParentalInfoData?.motherAnnualIncome,
-    guardianName: studentData.studentParentalInfoData?.guardianName,
-    guardianRelation: studentData.studentParentalInfoData?.guardianRelation,
-    guardianContactNumber: studentData.studentParentalInfoData?.guardianContactNumber,
-    numberOfFamilyMembers: studentData.studentParentalInfoData?.numberOfFamilyMembers,
-    familyType: studentData.studentParentalInfoData?.familyType,
+  const saveBodyDetails = async () => {
+    try {
+      const payload = {
+        heightCm: sectionData.heightCm,
+        weightKg: sectionData.weightKg,
+        bloodGroup: sectionData.bloodGroup,
+        eyeColor: sectionData.eyeColor,
+        hairColor: sectionData.hairColor,
+        identificationMark1: sectionData.identificationMark1,
+        identificationMark2: sectionData.identificationMark2,
+        disability: sectionData.disability,
+        disabilityType: sectionData.disabilityType,
+        disabilityPercentage: sectionData.disabilityPercentage,
+      };
 
-    // Documents
-    aadharNumber: studentData.studentDocumentUploadData?.identityDocuments?.aadharNumber,
-    panNumber: studentData.studentDocumentUploadData?.identityDocuments?.panNumber,
-    voterId: studentData.studentDocumentUploadData?.identityDocuments?.voterId,
-    passportNumber: studentData.studentDocumentUploadData?.identityDocuments?.passportNumber,
-    drivingLicenseNo: studentData.studentDocumentUploadData?.identityDocuments?.drivingLicenseNo,
-  } : {};
+      const res = await axios.put(`/student/updateStudentBodyDetails/${id}`, payload);
+      setMessage({ text: 'Body details updated successfully!', variant: 'success' });
+      await fetchstudentDetail();
+    } catch (error) {
+      console.error("Error updating body details:", error);
+      setMessage({ text: error.response?.data?.message || 'Error updating body details', variant: 'danger' });
+    }
+  };
+
+  const saveEmergencyContact = async () => {
+    try {
+      const payload = {
+        emergencyContactName: sectionData.emergencyContactName,
+        emergencyRelation: sectionData.emergencyRelation,
+        emergencyPhoneNumber: sectionData.emergencyPhoneNumber,
+        emergencyAddress: sectionData.emergencyAddress,
+      };
+
+      const res = await axios.put(`/student/updateStudentEmergencyContact/${id}`, payload);
+      setMessage({ text: 'Emergency contact updated successfully!', variant: 'success' });
+      await fetchstudentDetail();
+    } catch (error) {
+      console.error("Error updating emergency contact:", error);
+      setMessage({ text: error.response?.data?.message || 'Error updating emergency contact', variant: 'danger' });
+    }
+  };
+
+  const saveParentalInfo = async () => {
+    try {
+      const payload = {
+        fatherName: sectionData.fatherName,
+        fatherContactNumber: sectionData.fatherContactNumber,
+        fatherOccupation: sectionData.fatherOccupation,
+        fatherEmail: sectionData.fatherEmail,
+        fatherAnnualIncome: sectionData.fatherAnnualIncome,
+        motherName: sectionData.motherName,
+        motherContactNumber: sectionData.motherContactNumber,
+        motherOccupation: sectionData.motherOccupation,
+        motherEmail: sectionData.motherEmail,
+        motherAnnualIncome: sectionData.motherAnnualIncome,
+        guardianName: sectionData.guardianName,
+        guardianRelation: sectionData.guardianRelation,
+        guardianContactNumber: sectionData.guardianContactNumber,
+        numberOfFamilyMembers: sectionData.numberOfFamilyMembers,
+        familyType: sectionData.familyType,
+      };
+
+      const res = await axios.put(`/student/updateStudentParentalInfo/${id}`, payload);
+      setMessage({ text: 'Parental information updated successfully!', variant: 'success' });
+      await fetchstudentDetail();
+    } catch (error) {
+      console.error("Error updating parental info:", error);
+      setMessage({ text: error.response?.data?.message || 'Error updating parental information', variant: 'danger' });
+    }
+  };
+
+  const saveCareerPreferences = async () => {
+    try {
+      const payload = {
+        preferredJobCategory: sectionData.preferredJobCategory?.split(',').map(s => s.trim()).filter(Boolean) || [],
+        preferredJobLocation: sectionData.preferredJobLocation?.split(',').map(s => s.trim()).filter(Boolean) || [],
+        expectedSalaryMin: sectionData.expectedSalaryMin,
+        expectedSalaryMax: sectionData.expectedSalaryMax,
+        employmentType: sectionData.employmentType?.split(',').map(s => s.trim()).filter(Boolean) || [],
+        willingToRelocate: sectionData.willingToRelocate,
+      };
+
+      await axios.put(`/student/updateStudentCareerPreferences/${id}`, payload);
+      setMessage({ text: 'Career preferences updated successfully!', variant: 'success' });
+      await fetchstudentDetail();
+    } catch (error) {
+      console.error("Error updating career preferences:", error);
+      setMessage({ text: error.response?.data?.message || 'Error updating career preferences', variant: 'danger' });
+    }
+  };
+
+
+  const saveEducationDetails = async () => {
+    try {
+      const payload = {
+        highestQualification: sectionData.highestQualification,
+        tenth: {
+          schoolName: sectionData.tenthSchoolName,
+          board: sectionData.tenthBoard,
+          passingYear: sectionData.tenthPassingYear,
+          percentage: sectionData.tenthPercentage,
+        },
+        twelfth: {
+          schoolCollegeName: sectionData.twelfthSchoolCollegeName,
+          board: sectionData.twelfthBoard,
+          stream: sectionData.twelfthStream,
+          passingYear: sectionData.twelfthPassingYear,
+          percentage: sectionData.twelfthPercentage,
+        },
+        graduation: {
+          collegeName: sectionData.graduationCollegeName,
+          courseName: sectionData.graduationCourseName,
+          specialization: sectionData.graduationSpecialization,
+          passingYear: sectionData.graduationPassingYear,
+          percentage: sectionData.graduationPercentage,
+        },
+        postGraduation: {
+          collegeName: sectionData.postGraduationCollegeName,
+          courseName: sectionData.postGraduationCourseName,
+          specialization: sectionData.postGraduationSpecialization,
+          passingYear: sectionData.postGraduationPassingYear,
+          percentage: sectionData.postGraduationPercentage,
+        },
+      };
+
+      await axios.put(`/student/updateStudentEducationDetails/${id}`, payload);
+      setMessage({ text: 'Education details updated successfully!', variant: 'success' });
+      await fetchstudentDetail();
+    } catch (error) {
+      console.error("Error updating education details:", error);
+      setMessage({ text: error.response?.data?.message || 'Error updating education details', variant: 'danger' });
+    }
+  };
+
+  const saveSkills = async () => {
+    try {
+      const payload = {
+        hobbies: sectionData.hobbies?.split(',').map(s => s.trim()).filter(Boolean) || [],
+        technicalSkills: sectionData.technicalSkills?.split(',').map(s => s.trim()).filter(Boolean) || [],
+        softSkills: sectionData.softSkills?.split(',').map(s => s.trim()).filter(Boolean) || [],
+        computerKnowledge: sectionData.computerKnowledge?.split(',').map(s => s.trim()).filter(Boolean) || [],
+      };
+
+      await axios.put(`/student/updateStudentSkills/${id}`, payload);
+      setMessage({ text: 'Skills updated successfully!', variant: 'success' });
+      await fetchstudentDetail();
+    } catch (error) {
+      console.error("Error updating skills:", error);
+      setMessage({ text: error.response?.data?.message || 'Error updating skills', variant: 'danger' });
+    }
+  };
+
+  const saveSocialLinks = async () => {
+    try {
+      const payload = {
+        linkedInUrl: sectionData.linkedInUrl,
+        githubUrl: sectionData.githubUrl,
+        portfolioUrl: sectionData.portfolioUrl,
+        facebookUrl: sectionData.facebookUrl,
+        instagramUrl: sectionData.instagramUrl,
+      };
+
+      await axios.put(`/student/updateStudentSocialLinks/${id}`, payload);
+      setMessage({ text: 'Social links updated successfully!', variant: 'success' });
+      await fetchstudentDetail();
+    } catch (error) {
+      console.error("Error updating social links:", error);
+      setMessage({ text: error.response?.data?.message || 'Error updating social links', variant: 'danger' });
+    }
+  };
+
+  // ...existing code...
 
   const sections = [
     {
@@ -138,38 +453,46 @@ const StudentDetail = () => {
         { label: "Email", name: "studentEmail", type: "email", editable: false, cols: 4 },
         { label: "Mobile Number", name: "studentMobileNo", type: "tel", editable: false, cols: 4 },
         { label: "Job Type", name: "studentJobType", editable: false, cols: 4 },
-        { label: "Account Status", name: "accountStatus", type: "select", options: [
-          { value: "active", label: "Active" },
-          { value: "inactive", label: "Inactive" },
-          { value: "blocked", label: "Blocked" },
-        ], editable: true, cols: 4 },
+        {
+          label: "Account Status", name: "accountStatus", type: "select", options: [
+            { value: "active", label: "Active" },
+            { value: "inactive", label: "Inactive" },
+            { value: "blocked", label: "Blocked" },
+          ], editable: true, cols: 4
+        },
         { label: "Referral Code", name: "studentReferralCode", editable: false, cols: 4 },
         { label: "Referred By Code", name: "studentReferralByCode", editable: false, cols: 4 },
         { label: "Created At", name: "studentCreatedAt", type: "date", editable: false, cols: 4 },
       ],
+      saveButton: null,
     },
     {
       title: "Basic Details",
       titleColor: "info",
       fields: [
         { label: "Date of Birth", name: "studentDOB", type: "date", editable: true, cols: 4 },
-        { label: "Gender", name: "studentGender", type: "select", options: [
-          { value: "male", label: "Male" },
-          { value: "female", label: "Female" },
-          { value: "other", label: "Other" },
-          { value: "prefer_not_to_say", label: "Prefer Not to Say" },
-        ], editable: true, cols: 4 },
+        {
+          label: "Gender", name: "studentGender", type: "select", options: [
+            { value: "male", label: "Male" },
+            { value: "female", label: "Female" },
+            { value: "other", label: "Other" },
+            { value: "prefer_not_to_say", label: "Prefer Not to Say" },
+          ], editable: true, cols: 4
+        },
         { label: "Alternate Mobile", name: "studentAlternateMobileNo", type: "tel", editable: true, cols: 4 },
-        { label: "Marital Status", name: "studentMaritalStatus", type: "select", options: [
-          { value: "single", label: "Single" },
-          { value: "married", label: "Married" },
-          { value: "other", label: "Other" },
-          { value: "prefer_not_to_say", label: "Prefer Not to Say" },
-        ], editable: true, cols: 4 },
+        {
+          label: "Marital Status", name: "studentMaritalStatus", type: "select", options: [
+            { value: "single", label: "Single" },
+            { value: "married", label: "Married" },
+            { value: "other", label: "Other" },
+            { value: "prefer_not_to_say", label: "Prefer Not to Say" },
+          ], editable: true, cols: 4
+        },
         { label: "Mother Tongue", name: "studentMotherTongue", editable: true, cols: 4 },
         { label: "Nationality", name: "studentNationality", editable: true, cols: 4 },
         { label: "Citizenship", name: "studentCitizenship", editable: true, cols: 4 },
       ],
+      saveButton: saveBasicDetails,
     },
     {
       title: "Current Address",
@@ -183,11 +506,12 @@ const StudentDetail = () => {
         { label: "Country", name: "currentCountry", editable: true, cols: 4 },
         { label: "Pincode", name: "currentPincode", editable: true, cols: 4 },
       ],
+      saveButton: null,
     },
     {
       title: "Permanent Address",
       titleColor: "success",
-      show: !flattenedData.isPermanentSameAsCurrent,
+      show: !sectionData.isPermanentSameAsCurrent,
       fields: [
         { label: "Same as Current", name: "isPermanentSameAsCurrent", type: "boolean", editable: false, cols: 12 },
         { label: "Address Line 1", name: "permanentAddressLine1", editable: true, cols: 6 },
@@ -198,6 +522,7 @@ const StudentDetail = () => {
         { label: "Country", name: "permanentCountry", editable: true, cols: 4 },
         { label: "Pincode", name: "permanentPincode", editable: true, cols: 4 },
       ],
+      saveButton: saveAddressDetails,
     },
     {
       title: "Bank Details",
@@ -209,6 +534,7 @@ const StudentDetail = () => {
         { label: "IFSC Code", name: "ifscCode", editable: true, cols: 4 },
         { label: "Branch Name", name: "branchName", editable: true, cols: 4 },
       ],
+      saveButton: saveBankDetails,
     },
     {
       title: "Body Details",
@@ -225,6 +551,7 @@ const StudentDetail = () => {
         { label: "Disability Type", name: "disabilityType", editable: true, cols: 4 },
         { label: "Disability %", name: "disabilityPercentage", type: "number", editable: true, cols: 4 },
       ],
+      saveButton: saveBodyDetails,
     },
     {
       title: "Emergency Contact",
@@ -235,6 +562,7 @@ const StudentDetail = () => {
         { label: "Phone Number", name: "emergencyPhoneNumber", type: "tel", editable: true, cols: 4 },
         { label: "Address", name: "emergencyAddress", type: "textarea", rows: 2, editable: true, cols: 12 },
       ],
+      saveButton: saveEmergencyContact,
     },
     {
       title: "Father's Information",
@@ -246,6 +574,7 @@ const StudentDetail = () => {
         { label: "Email", name: "fatherEmail", type: "email", editable: true, cols: 4 },
         { label: "Annual Income", name: "fatherAnnualIncome", type: "number", editable: true, cols: 4 },
       ],
+      saveButton: null,
     },
     {
       title: "Mother's Information",
@@ -257,6 +586,7 @@ const StudentDetail = () => {
         { label: "Email", name: "motherEmail", type: "email", editable: true, cols: 4 },
         { label: "Annual Income", name: "motherAnnualIncome", type: "number", editable: true, cols: 4 },
       ],
+      saveButton: null,
     },
     {
       title: "Guardian Information",
@@ -266,12 +596,114 @@ const StudentDetail = () => {
         { label: "Relation", name: "guardianRelation", editable: true, cols: 4 },
         { label: "Contact Number", name: "guardianContactNumber", type: "tel", editable: true, cols: 4 },
         { label: "Family Members", name: "numberOfFamilyMembers", type: "number", editable: true, cols: 4 },
-        { label: "Family Type", name: "familyType", type: "select", options: [
-          { value: "joint", label: "Joint" },
-          { value: "nuclear", label: "Nuclear" },
-          { value: "other", label: "Other" },
-        ], editable: true, cols: 4 },
+        {
+          label: "Family Type", name: "familyType", type: "select", options: [
+            { value: "joint", label: "Joint" },
+            { value: "nuclear", label: "Nuclear" },
+            { value: "other", label: "Other" },
+          ], editable: true, cols: 4
+        },
       ],
+      saveButton: saveParentalInfo,
+    },
+    {
+      title: "Career Preferences",
+      titleColor: "primary",
+      fields: [
+        { label: "Preferred Job Category (comma separated)", name: "preferredJobCategory", type: "textarea", rows: 2, editable: true, cols: 6 },
+        { label: "Preferred Job Location (comma separated)", name: "preferredJobLocation", type: "textarea", rows: 2, editable: true, cols: 6 },
+        { label: "Expected Salary Min", name: "expectedSalaryMin", type: "number", editable: true, cols: 4 },
+        { label: "Expected Salary Max", name: "expectedSalaryMax", type: "number", editable: true, cols: 4 },
+        { label: "Employment Type (comma separated)", name: "employmentType", type: "textarea", rows: 2, editable: true, cols: 6 },
+        { label: "Willing to Relocate", name: "willingToRelocate", type: "boolean", editable: true, cols: 4 },
+      ],
+      saveButton: saveCareerPreferences,
+    },
+    {
+      title: "Education Details",
+      titleColor: "info",
+      fields: [
+        {
+          label: "Highest Qualification", name: "highestQualification", type: "select", options: [
+            { value: "No formal education", label: "No formal education" },
+            { value: "Primary", label: "Primary" },
+            { value: "Secondary", label: "Secondary" },
+            { value: "Higher Secondary", label: "Higher Secondary" },
+            { value: "Diploma", label: "Diploma" },
+            { value: "ITI", label: "ITI" },
+            { value: "Polytechnic", label: "Polytechnic" },
+            { value: "Certificate", label: "Certificate" },
+            { value: "Vocational", label: "Vocational" },
+            { value: "Bachelors", label: "Bachelors" },
+            { value: "Masters", label: "Masters" },
+            { value: "MPhil", label: "MPhil" },
+            { value: "PhD", label: "PhD" },
+            { value: "Other", label: "Other" },
+          ], editable: true, cols: 12
+        },
+        // 10th Standard
+        { label: "10th Standard", type: "divider", cols: 12 },
+        { label: "School Name", name: "tenthSchoolName", editable: true, cols: 6 },
+        { label: "Board", name: "tenthBoard", editable: true, cols: 6 },
+        { label: "Passing Year", name: "tenthPassingYear", type: "number", editable: true, cols: 6 },
+        { label: "Percentage", name: "tenthPercentage", type: "number", editable: true, cols: 6 },
+
+        // 12th Standard
+        { label: "12th Standard", type: "divider", cols: 12 },
+        { label: "School/College Name", name: "twelfthSchoolCollegeName", editable: true, cols: 6 },
+        { label: "Board", name: "twelfthBoard", editable: true, cols: 6 },
+        { label: "Stream", name: "twelfthStream", editable: true, cols: 4 },
+        { label: "Passing Year", name: "twelfthPassingYear", type: "number", editable: true, cols: 4 },
+        { label: "Percentage", name: "twelfthPercentage", type: "number", editable: true, cols: 4 },
+
+        // Graduation
+        { label: "Graduation", type: "divider", cols: 12 },
+        { label: "College Name", name: "graduationCollegeName", editable: true, cols: 6 },
+        { label: "Course Name", name: "graduationCourseName", editable: true, cols: 6 },
+        { label: "Specialization", name: "graduationSpecialization", editable: true, cols: 4 },
+        { label: "Passing Year", name: "graduationPassingYear", type: "number", editable: true, cols: 4 },
+        { label: "Percentage", name: "graduationPercentage", type: "number", editable: true, cols: 4 },
+
+        // Post Graduation
+        { label: "Post Graduation", type: "divider", cols: 12 },
+        { label: "College Name", name: "postGraduationCollegeName", editable: true, cols: 6 },
+        { label: "Course Name", name: "postGraduationCourseName", editable: true, cols: 6 },
+        { label: "Specialization", name: "postGraduationSpecialization", editable: true, cols: 4 },
+        { label: "Passing Year", name: "postGraduationPassingYear", type: "number", editable: true, cols: 4 },
+        { label: "Percentage", name: "postGraduationPercentage", type: "number", editable: true, cols: 4 },
+      ],
+      saveButton: saveEducationDetails,
+    },
+    {
+      title: "Skills & Knowledge",
+      titleColor: "success",
+      fields: [
+        { label: "Hobbies (comma separated)", name: "hobbies", type: "textarea", rows: 2, editable: true, cols: 12 },
+        { label: "Technical Skills (comma separated)", name: "technicalSkills", type: "textarea", rows: 2, editable: true, cols: 12 },
+        { label: "Soft Skills (comma separated)", name: "softSkills", type: "textarea", rows: 2, editable: true, cols: 12 },
+        { label: "Computer Knowledge (comma separated)", name: "computerKnowledge", type: "textarea", rows: 2, editable: true, cols: 12 },
+      ],
+      saveButton: saveSkills,
+    },
+    {
+      title: "Social Media Links",
+      titleColor: "primary",
+      fields: [
+        { label: "LinkedIn URL", name: "linkedInUrl", type: "url", editable: true, cols: 6 },
+        { label: "GitHub URL", name: "githubUrl", type: "url", editable: true, cols: 6 },
+        { label: "Portfolio URL", name: "portfolioUrl", type: "url", editable: true, cols: 6 },
+        { label: "Facebook URL", name: "facebookUrl", type: "url", editable: true, cols: 6 },
+        { label: "Instagram URL", name: "instagramUrl", type: "url", editable: true, cols: 6 },
+      ],
+      saveButton: saveSocialLinks,
+    },
+    {
+      title: "Work Experience",
+      titleColor: "warning",
+      fields: [
+        { label: "Total Experience (Months)", name: "totalExperienceMonths", type: "number", editable: true, cols: 4 },
+      ],
+      saveButton: null,
     },
     {
       title: "Identity Documents",
@@ -283,8 +715,11 @@ const StudentDetail = () => {
         { label: "Passport Number", name: "passportNumber", editable: false, cols: 4 },
         { label: "Driving License No", name: "drivingLicenseNo", editable: false, cols: 4 },
       ],
+      saveButton: null,
     },
   ];
+
+  // ...existing code...
 
   if (loading) {
     return (
@@ -305,8 +740,19 @@ const StudentDetail = () => {
   return (
     <Container fluid className="py-4">
       <h4 className="mb-4">Student Details</h4>
+
+      {message.text && (
+        <Alert
+          variant={message.variant}
+          onClose={() => setMessage({ text: '', variant: '' })}
+          dismissible
+        >
+          {message.text}
+        </Alert>
+      )}
+
       <DetailPage
-        data={flattenedData}
+        data={sectionData}
         sections={sections}
         onUpdate={handleUpdate}
         editable={true}

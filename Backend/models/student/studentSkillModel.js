@@ -4,29 +4,13 @@ const { currentUnixTimeStamp } = require("../../utils/currentUnixTimeStamp");
 const StudentSkillsSchema = new mongoose.Schema({
   studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true, index: true },
 
-  hobbies: [String],
+  hobbies: { type: [String], default: [] },
 
-  technicalSkills: [
-    {
-      techSkillsName: { type: String, unique: true },
-    }
-  ],
+  technicalSkills: { type: [String], default: [] },
 
-  softSkills: {
-    type: [
-      {
-        softSkillsName: { type: String, unique: true },
-      }
-    ],
-    default: []
-  },
+  softSkills: { type: [String], default: [] },
 
-  computerKnowledge: {
-    type: [{
-      computerSkillName: { type: String, unique: true },
-    }],
-    default: []
-  },
+  computerKnowledge: { type: [String], default: [] },
 
   languageProficiency: {
     type: [
@@ -36,7 +20,8 @@ const StudentSkillsSchema = new mongoose.Schema({
         write: { type: Boolean, default: false },
         speak: { type: Boolean, default: false }
       }
-    ]
+    ],
+    default: []
   },
 
   createdAt: { type: Number, default: () => currentUnixTimeStamp() },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, Row, Col, Form } from "react-bootstrap";
+import { Card, Row, Col, Form, Button } from "react-bootstrap";
 import { TbPencil, TbCheck, TbX } from "react-icons/tb";
 import DateConversion from "../DateConversion";
 
@@ -9,7 +9,6 @@ const Section = ({ title, children, titleColor = "primary" }) => (
     {children}
   </div>
 );
-
 
 const Field = ({
   label,
@@ -202,6 +201,15 @@ const DetailPage = ({ data, sections, onUpdate, editable = true }) => {
                     );
                   })}
                 </Row>
+                
+                {/* Save Button for Section */}
+                {section.saveButton && (
+                  <div className="text-end mt-3">
+                    <Button size="sm" variant="primary" onClick={section.saveButton}>
+                      Save {section.title}
+                    </Button>
+                  </div>
+                )}
               </Section>
             </Card.Body>
           </Card>
