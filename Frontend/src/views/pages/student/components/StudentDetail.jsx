@@ -482,6 +482,7 @@ const StudentDetail = () => {
       setMessage({ text: error.response?.data?.message || 'Error updating social links', variant: 'danger' });
     }
   };
+  
 
   const saveWorkExperience = async () => {
     try {
