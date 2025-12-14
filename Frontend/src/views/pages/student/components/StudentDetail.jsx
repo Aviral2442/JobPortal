@@ -12,6 +12,8 @@ const StudentDetail = () => {
   const [message, setMessage] = useState({ text: '', variant: '' });
   const [sectionData, setSectionData] = useState({});
   const [uploadFiles, setUploadFiles] = useState({}); // For file uploads
+  const [certificates, setCertificates] = useState([]); // Store all certificates
+  const [editingCertificateIndex, setEditingCertificateIndex] = useState(null); // Track which certificate is being edited
 
   const fetchstudentDetail = async () => {
     try {
@@ -53,11 +55,15 @@ const StudentDetail = () => {
     const certificatesData = Array.isArray(data.studentCertificatesData) ? data.studentCertificatesData[0] : data.studentCertificatesData;
     const basicData = Array.isArray(data.studentBasicData) ? data.studentBasicData[0] : data.studentBasicData;
 
+    // Filter out null values from certificates array
+    const validCertificates = (certificatesData?.certificates || []).filter(cert => cert !== null);
+    setCertificates(validCertificates);
+
     // Get the first experience if exists (for single experience display)
     const firstExperience = workExperienceData?.experiences?.[0] || {};
-    
-    // Get the first certificate if exists
-    const firstCertificate = certificatesData?.certificates?.[0] || {};
+
+    // Get the first valid certificate if exists
+    const firstCertificate = validCertificates[0] || {};
 
     return {
       // Primary Data
@@ -151,7 +157,7 @@ const StudentDetail = () => {
       voterId: documentData?.identityDocuments?.voterId,
       passportNumber: documentData?.identityDocuments?.passportNumber,
       drivingLicenseNo: documentData?.identityDocuments?.drivingLicenseNo,
-      
+
       // Documents - Identity Document Files
       aadharFrontImg: documentData?.identityDocuments?.aadharFrontImg,
       aadharBackImg: documentData?.identityDocuments?.aadharBackImg,
@@ -249,7 +255,7 @@ const StudentDetail = () => {
 
   const handleUpdate = async (field, value) => {
     console.log("Updating field:", field, "with value:", value);
-    
+
     // Handle file uploads
     if (value instanceof File) {
       setUploadFiles(prev => ({
@@ -541,7 +547,7 @@ const StudentDetail = () => {
       setMessage({ text: error.response?.data?.message || 'Error updating social links', variant: 'danger' });
     }
   };
-  
+
 
   const saveWorkExperience = async () => {
     try {
@@ -568,37 +574,95 @@ const StudentDetail = () => {
     }
   };
 
+  // Add new certificate - clear form
+  const addNewCertificate = () => {
+    setSectionData(prev => ({
+      ...prev,
+      certificationName: '',
+      issuingOrganization: '',
+      issueDate: '',
+      expirationDate: '',
+      credentialId: '',
+      certificateUrl: '',
+      certificateFile: '',
+    }));
+    setEditingCertificateIndex(null);
+    setUploadFiles(prev => ({ ...prev, certificateFile: null }));
+    setMessage({ text: 'Fill in new certificate details and click Save', variant: 'info' });
+  };
+  
+  // Edit existing certificate
+  const editCertificate = (index) => {
+    const cert = certificates[index];
+    console.log("Editing certificate:", cert); // Debug log
+    setSectionData(prev => ({
+      ...prev,
+      certificationName: cert.certificationName || '',
+      issuingOrganization: cert.issuingOrganization || '',
+      issueDate: cert.issueDate ? cert.issueDate.split('T')[0] : '', // Format date properly
+      expirationDate: cert.expirationDate ? cert.expirationDate.split('T')[0] : '',
+      credentialId: cert.credentialId || '',
+      certificateUrl: cert.certificateUrl || '',
+      certificateFile: cert.certificateFile || '',
+    }));
+    setEditingCertificateIndex(index);
+    setMessage({ text: `Editing certificate: ${cert.certificationName}`, variant: 'info' });
+  };
+
   const saveCertificates = async () => {
     try {
-      const formData = new FormData();
+      // Validate required fields
+      if (!sectionData.certificationName || !sectionData.issuingOrganization || !sectionData.issueDate) {
+        setMessage({ text: 'Please fill in Certification Name, Issuing Organization, and Issue Date', variant: 'warning' });
+        return;
+      }
 
-      // Add certificate data
-      const certificates = [{
+      // Prepare certificate data
+      const certificateData = {
         certificationName: sectionData.certificationName,
         issuingOrganization: sectionData.issuingOrganization,
         issueDate: sectionData.issueDate,
         expirationDate: sectionData.expirationDate || null,
         credentialId: sectionData.credentialId || null,
         certificateUrl: sectionData.certificateUrl || null,
-      }];
+      };
 
-      formData.append('certificates', JSON.stringify(certificates));
-
-      // Add certificate file if uploaded
-      if (uploadFiles.certificateFile) {
-        formData.append('certificateFile', uploadFiles.certificateFile);
+      // If editing existing certificate, include the certificate ID
+      if (editingCertificateIndex !== null) {
+        const existingCert = certificates[editingCertificateIndex];
+        console.log("Existing certificate being edited:", existingCert); // Debug log
+        
+        if (existingCert && existingCert._id) {
+          certificateData.certificateId = existingCert._id.toString();
+          console.log("Certificate ID being sent:", certificateData.certificateId); // Debug log
+        }
       }
 
-      await axios.put(`/student/updateStudentCertificates/${id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      console.log("Saving certificate data:", certificateData); // Debug log
 
-      setMessage({ text: 'Certificates updated successfully!', variant: 'success' });
+      await axios.put(`/student/updateStudentCertificates/${id}`, certificateData);
+
+      setMessage({ text: 'Certificate saved successfully!', variant: 'success' });
       setUploadFiles(prev => ({ ...prev, certificateFile: null }));
+      setEditingCertificateIndex(null);
+      
+      // Clear form after save
+      setSectionData(prev => ({
+        ...prev,
+        certificationName: '',
+        issuingOrganization: '',
+        issueDate: '',
+        expirationDate: '',
+        credentialId: '',
+        certificateUrl: '',
+        certificateFile: '',
+      }));
+      
       await fetchstudentDetail();
     } catch (error) {
-      console.error("Error updating certificates:", error);
-      setMessage({ text: error.response?.data?.message || 'Error updating certificates', variant: 'danger' });
+      console.error("Error saving certificate:", error);
+      console.error("Error response:", error.response?.data); // Debug log
+      setMessage({ text: error.response?.data?.message || 'Error saving certificate', variant: 'danger' });
     }
   };
 
@@ -918,6 +982,37 @@ const StudentDetail = () => {
       ],
       saveButton: saveWorkExperience,
     },
+    // {
+    //   title: "Certifications",
+    //   titleColor: "success",
+    //   fields: [
+    //     { label: "Certification Name", name: "certificationName", editable: true, cols: 6 },
+    //     { label: "Issuing Organization", name: "issuingOrganization", editable: true, cols: 6 },
+    //     { label: "Issue Date", name: "issueDate", type: "date", editable: true, cols: 4 },
+    //     { label: "Expiration Date", name: "expirationDate", type: "date", editable: true, cols: 4 },
+    //     { label: "Credential ID", name: "credentialId", editable: true, cols: 4 },
+    //     { label: "Certificate URL", name: "certificateUrl", type: "url", editable: true, cols: 6 },
+    //     { label: "Certificate File", name: "certificateFile", type: "file", accept: ".pdf,.jpg,.jpeg,.png", editable: true, cols: 6 },
+    //   ],
+    //   saveButton: saveCertificates,
+    // },
+    {
+      title: "Document Uploads",
+      titleColor: "info",
+      fields: [
+        { label: "Aadhar Front Image", name: "aadharFrontImg", type: "file", accept: "image/*", editable: true, cols: 6 },
+        { label: "Aadhar Back Image", name: "aadharBackImg", type: "file", accept: "image/*", editable: true, cols: 6 },
+        { label: "PAN Image", name: "panImg", type: "file", accept: "image/*", editable: true, cols: 6 },
+        { label: "Driving License Front", name: "drivingLicenseFrontImg", type: "file", accept: "image/*", editable: true, cols: 6 },
+
+        { label: "Aadhar Number", name: "aadharNumber", editable: true, cols: 4 },
+        { label: "PAN Number", name: "panNumber", editable: true, cols: 4 },
+        { label: "Voter ID", name: "voterId", editable: true, cols: 4 },
+        { label: "Passport Number", name: "passportNumber", editable: true, cols: 4 },
+        { label: "Driving License No", name: "drivingLicenseNo", editable: true, cols: 4 },
+      ],
+      saveButton: saveDocumentUploads,
+    },
     {
       title: "Certifications",
       titleColor: "success",
@@ -931,40 +1026,53 @@ const StudentDetail = () => {
         { label: "Certificate File", name: "certificateFile", type: "file", accept: ".pdf,.jpg,.jpeg,.png", editable: true, cols: 6 },
       ],
       saveButton: saveCertificates,
-    },
-    {
-      title: "Document Uploads",
-      titleColor: "info",
-      fields: [
-        { label: "Identity Documents", type: "divider", cols: 12 },
-        { label: "Aadhar Front Image", name: "aadharFrontImg", type: "file", accept: "image/*", editable: true, cols: 6 },
-        { label: "Aadhar Back Image", name: "aadharBackImg", type: "file", accept: "image/*", editable: true, cols: 6 },
-        { label: "PAN Image", name: "panImg", type: "file", accept: "image/*", editable: true, cols: 6 },
-        { label: "Driving License Front", name: "drivingLicenseFrontImg", type: "file", accept: "image/*", editable: true, cols: 6 },
-        
-        { label: "Other Certificates", type: "divider", cols: 12 },
-        { label: "Category Certificate", name: "categoryCertificateImg", type: "file", accept: "image/*", editable: true, cols: 6 },
-        { label: "Domicile Certificate", name: "domicileCertificateImg", type: "file", accept: "image/*", editable: true, cols: 6 },
-        { label: "Income Certificate", name: "incomeCertificateImg", type: "file", accept: "image/*", editable: true, cols: 6 },
-        { label: "Birth Certificate", name: "birthCertificateImg", type: "file", accept: "image/*", editable: true, cols: 6 },
-
-        { label: "Additional Documents", type: "divider", cols: 12 },
-        { label: "Document Name", name: "otherDocumentName", editable: true, cols: 6 },
-        { label: "Document File", name: "otherDocumentFile", type: "file", accept: ".pdf,.jpg,.jpeg,.png", editable: true, cols: 6 },
+      additionalButtons: [
+        {
+          label: "Add Certificate",
+          variant: "primary",
+          onClick: addNewCertificate,
+          icon: "plus"
+        }
       ],
-      saveButton: saveDocumentUploads,
-    },
-    {
-      title: "Identity Documents",
-      titleColor: "dark",
-      fields: [
-        { label: "Aadhar Number", name: "aadharNumber", editable: false, cols: 4 },
-        { label: "PAN Number", name: "panNumber", editable: false, cols: 4 },
-        { label: "Voter ID", name: "voterId", editable: false, cols: 4 },
-        { label: "Passport Number", name: "passportNumber", editable: false, cols: 4 },
-        { label: "Driving License No", name: "drivingLicenseNo", editable: false, cols: 4 },
-      ],
-      saveButton: null,
+      customContent: certificates.length > 0 && (
+        <div className="mt-3 mb-3">
+          <h6 className="mb-3">Existing Certificates ({certificates.filter(cert => cert !== null).length})</h6>
+          <div className="table-responsive">
+            <table className="table table-bordered table-hover">
+              <thead className="table-light">
+                <tr>
+                  <th style={{ width: '5%' }}>#</th>
+                  <th style={{ width: '30%' }}>Name</th>
+                  <th style={{ width: '30%' }}>Organization</th>
+                  <th style={{ width: '15%' }}>Issue Date</th>
+                  <th style={{ width: '10%' }}>Expiration</th>
+                  <th style={{ width: '10%' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {certificates.filter(cert => cert !== null).map((cert, index) => (
+                  <tr key={index} className={editingCertificateIndex === index ? 'table-active' : ''}>
+                    <td>{index + 1}</td>
+                    <td>{cert.certificationName}</td>
+                    <td>{cert.issuingOrganization}</td>
+                    <td>{cert.issueDate ? new Date(cert.issueDate).toLocaleDateString() : 'N/A'}</td>
+                    <td>{cert.expirationDate ? new Date(cert.expirationDate).toLocaleDateString() : 'N/A'}</td>
+                    <td>
+                      <Button
+                        size="sm"
+                        variant="outline-primary"
+                        onClick={() => editCertificate(index)}
+                      >
+                        <i className="bi bi-pencil"></i> Edit
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ),
     },
   ];
 

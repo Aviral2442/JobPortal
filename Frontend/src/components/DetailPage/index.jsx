@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, Row, Col, Form, Button } from "react-bootstrap";
+import { Card, CardHeader, CardBody, Row, Col, Form, Button } from "react-bootstrap";
 import { TbPencil, TbCheck, TbX } from "react-icons/tb";
 import DateConversion from "../DateConversion";
 
@@ -179,64 +179,78 @@ const DetailPage = ({ data, sections, onUpdate, editable = false }) => {
   };
 
   return (
-    <div>
-      {sections.map((section, sectionIndex) => {
-        // Skip section if show is explicitly false
-        if (section.show === false) return null;
+    <>
+      {sections.map((section, idx) => (
+        <Card key={idx} className="mb-4">
+          <CardHeader>
+            <h5 className={`mb-0 text-${section.titleColor || 'primary'}`}>{section.title}</h5>
+          </CardHeader>
+          <CardBody>
+            {/* Existing certificates list (if any) */}
+            {section.customContent && (
+              <Row className="mb-3">
+                <Col xs={12}>{section.customContent}</Col>
+              </Row>
+            )}
 
-        return (
-          <Card className="mb-3" key={sectionIndex}>
-            <Card.Body>
-              <Section title={section.title} titleColor={section.titleColor}>
-                <Row>
-                  {section.fields.map((field, fieldIndex) => {
-                    const colSize = field.cols || 4;
-                    const mdSize = field.type === "textarea" ? 12 : 6;
+            {/* Form fields */}
+            <Row>
+              {section.fields.map((field, fieldIdx) => {
+                const colSize = field.cols || 4;
+                const mdSize = field.type === "textarea" ? 12 : 6;
 
-                    // Handle divider type
-                    if (field.type === "divider") {
-                      return (
-                        <Col xs={12} key={fieldIndex}>
-                          <Divider label={field.label} />
-                        </Col>
-                      );
-                    }
+                // Handle divider type
+                if (field.type === "divider") {
+                  return (
+                    <Col xs={12} key={fieldIdx}>
+                      <Divider label={field.label} />
+                    </Col>
+                  );
+                }
 
-                    return (
-                      <Col lg={colSize} md={mdSize} key={fieldIndex}>
-                        <Field
-                          label={field.label}
-                          value={data?.[field.name]}
-                          fieldName={field.name}
-                          editable={editable && field.editable !== false}
-                          onEdit={(value) => handleFieldUpdate(field.name, value)}
-                          type={field.type}
-                          rows={field.rows}
-                          options={field.options}
-                        />
-                      </Col>
-                    );
-                  })}
-                </Row>
-                
-                {/* Save Button for Section */}
-                {section.saveButton && (
-                  <div className="text-end mt-3">
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={section.saveButton}
-                    >
-                      Save {section.title}
+                return (
+                  <Col lg={colSize} md={mdSize} key={fieldIdx}>
+                    <Field
+                      label={field.label}
+                      value={data?.[field.name]}
+                      fieldName={field.name}
+                      editable={editable && field.editable !== false}
+                      onEdit={(value) => handleFieldUpdate(field.name, value)}
+                      type={field.type}
+                      rows={field.rows}
+                      options={field.options}
+                    />
+                  </Col>
+                );
+              })}
+            </Row>
+            
+            {/* Action buttons */}
+            {(section.saveButton || section.additionalButtons) && (
+              <Row className="mt-3">
+                <Col className="d-flex gap-2 d-flex justify-content-end">
+                {section.additionalButtons?.map((btn, btnIdx) => (
+                  <Button
+                    key={btnIdx}
+                    variant={btn.variant || 'secondary'}
+                    onClick={btn.onClick}
+                  >
+                    {btn.icon && <i className={`bi bi-${btn.icon} me-2`}></i>}
+                    {btn.label}
+                  </Button>
+                ))}
+                  {section.saveButton && (
+                    <Button variant="success" onClick={section.saveButton}>
+                      <i className="bi bi-save"></i> Save {section.title}
                     </Button>
-                  </div>
-                )}
-              </Section>
-            </Card.Body>
-          </Card>
-        );
-      })}
-    </div>
+                  )}
+                </Col>
+              </Row>
+            )}
+          </CardBody>
+        </Card>
+      ))}
+    </>
   );
 };
 
