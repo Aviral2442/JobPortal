@@ -56,12 +56,8 @@ exports.updateJobSector = async (req, res) => {
 // JOB PREFERENCES LIST CONTROLLER
 exports.getCareerPreferencesList = async (req, res) => {
     try {
-        const result = await JobSectorService.getCareerPreferencesList(req.query);
-        res.status(200).json({
-            status: 200,
-            message: 'Job preferences list fetched successfully',
-            jsonData: result,
-        });
+        const result = await JobSectorService.getCareerPreferencesList();
+        res.status(200).json(result);
     } catch (error) {
         console.error('Error in getJobPreferencesList Controller:', error);
         res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });

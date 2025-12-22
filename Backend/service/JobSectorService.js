@@ -107,62 +107,13 @@ exports.updateJobSector = async (id, data) => {
 };
 
 // JOB PREFERENCES LIST SERVICE
-exports.getCareerPreferencesList = async (query) => {
-    const { dateFilter, fromDate, toDate, searchFilter, page = 1, limit = 10 } = query;
+exports.getCareerPreferencesList = async () => {
 
-    const skip = (page - 1) * limit;
-    const filter = {};
-
-    if (searchFilter) {
-        filter.careerPreferenceName = { $regex: searchFilter, $options: 'i' };
-    }
-
-    if (dateFilter) {
-        const today = moment().startOf('day');
-        const now = moment().endOf('day');
-        let startDate, endDate;
-
-        switch (dateFilter) {
-            case 'today':
-                startDate = today.unix();
-                endDate = now.unix();
-                break;
-            case 'yesterday':
-                startDate = today.subtract(1, 'days').unix();
-                endDate = now.subtract(1, 'days').unix();
-                break;
-            case 'this_week':
-                startDate = moment().startOf('week').unix();
-                endDate = moment().endOf('week').unix();
-                break;
-            case 'this_month':
-                startDate = moment().startOf('month').unix();
-                endDate = moment().endOf('month').unix();
-                break;
-            case 'custom':
-                if (fromDate && toDate) {
-                    startDate = moment(fromDate, 'YYYY-MM-DD').startOf('day').unix();
-                    endDate = moment(toDate, 'YYYY-MM-DD').endOf('day').unix();
-                }
-                break;
-        }
-
-        if (startDate && endDate) {
-            filter.careerPreferenceCreatedAt = { $gte: startDate, $lte: endDate };
-        }
-    }
-
-    const total = await CareerPreferencesModel.countDocuments(filter);
-    const data = await CareerPreferencesModel.find(filter)
-        .skip(skip)
-        .limit(limit)
-        .sort({ careerPreferenceCreatedAt: -1 });
+    const data = await CareerPreferencesModel.find();
 
     return {
-        total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(total / limit),
+        status: 200,
+        message: 'Career preferences fetched successfully',
         jsonData: {
             career_preferences: data
         },
