@@ -1,4 +1,5 @@
 const JobSectorModel = require('../models/JobSectorModel');
+const CareerPreferencesModel = require('../models/CareerPreferencesModel');
 const moment = require('moment');
 
 // JOB SECTOR LIST SERVICE
@@ -103,4 +104,67 @@ exports.updateJobSector = async (id, data) => {
     }
 
     return { updatedSector };
+};
+
+// JOB PREFERENCES LIST SERVICE
+exports.getJobPreferencesList = async (query) => {
+    const { dateFilter, fromDate, toDate, searchFilter, page = 1, limit = 10 } = query;
+
+    const skip = (page - 1) * limit;
+    const filter = {};
+
+    if (searchFilter) {
+        filter.careerPreferenceName = { $regex: searchFilter, $options: 'i' };
+    }
+
+    if (dateFilter) {
+        const today = moment().startOf('day');
+        const now = moment().endOf('day');
+        let startDate, endDate;
+
+        switch (dateFilter) {
+            case 'today':
+                startDate = today.unix();
+                endDate = now.unix();
+                break;
+            case 'yesterday':
+                startDate = today.subtract(1, 'days').unix();
+                endDate = now.subtract(1, 'days').unix();
+                break;
+            case 'this_week':
+                startDate = moment().startOf('week').unix();
+                endDate = moment().endOf('week').unix();
+                break;
+            case 'this_month':
+                startDate = moment().startOf('month').unix();
+                endDate = moment().endOf('month').unix();
+                break;
+            case 'custom':
+                if (fromDate && toDate) {
+                    startDate = moment(fromDate, 'YYYY-MM-DD').startOf('day').unix();
+                    endDate = moment(toDate, 'YYYY-MM-DD').endOf('day').unix();
+                }
+                break;
+        }
+
+        if (startDate && endDate) {
+            filter.careerPreferenceCreatedAt = { $gte: startDate, $lte: endDate };
+        }
+    }
+
+    const total = await CareerPreferencesModel.countDocuments(filter);
+    const data = await CareerPreferencesModel.find(filter)
+        .skip(skip)
+        .limit(limit)
+        .sort({ careerPreferenceCreatedAt: -1 });
+
+    return {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit),
+        jsonData: {
+            career_preferences: data
+        },
+    };
 };

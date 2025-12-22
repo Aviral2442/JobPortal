@@ -52,3 +52,18 @@ exports.updateJobSector = async (req, res) => {
         res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
     }
 };
+
+// JOB PREFERENCES LIST CONTROLLER
+exports.getJobPreferencesList = async (req, res) => {
+    try {
+        const result = await JobSectorService.getJobPreferencesList(req.query);
+        res.status(200).json({
+            status: 200,
+            message: 'Job preferences list fetched successfully',
+            jsonData: result,
+        });
+    } catch (error) {
+        console.error('Error in getJobPreferencesList Controller:', error);
+        res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
+    }
+};
