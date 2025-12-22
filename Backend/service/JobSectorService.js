@@ -107,7 +107,7 @@ exports.updateJobSector = async (id, data) => {
 };
 
 // JOB PREFERENCES LIST SERVICE
-exports.getJobPreferencesList = async (query) => {
+exports.getCareerPreferencesList = async (query) => {
     const { dateFilter, fromDate, toDate, searchFilter, page = 1, limit = 10 } = query;
 
     const skip = (page - 1) * limit;
@@ -167,4 +167,24 @@ exports.getJobPreferencesList = async (query) => {
             career_preferences: data
         },
     };
+};
+
+// ADD CAREER PREFERENCE SERVICE
+exports.addCareerPreference = async (data) => {
+    try {
+        const newPreference = new CareerPreferencesModel({
+            careerPreferenceName: data.careerPreferenceName,
+            careerPreferenceDescription: data.careerPreferenceDescription,
+        });
+
+        await newPreference.save();
+
+        return {
+            status: 200,
+            message: 'Career preference added successfully',
+        };
+    } catch (error) {
+        console.error('Error in addCareerPreference Service:', error);
+        throw error;
+    }
 };
