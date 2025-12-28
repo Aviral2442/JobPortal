@@ -52,3 +52,29 @@ exports.updateJobSector = async (req, res) => {
         res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
     }
 };
+
+// JOB PREFERENCES LIST CONTROLLER
+exports.getCareerPreferencesList = async (req, res) => {
+    try {
+        const result = await JobSectorService.getCareerPreferencesList();
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error in getJobPreferencesList Controller:', error);
+        res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
+    }
+};
+
+// ADD CAREER PREFERENCE CONTROLLER
+exports.addCareerPreference = async (req, res) => {
+    try {
+        const { careerPreferenceName, careerPreferenceDescription } = req.body;
+        if (!careerPreferenceName) {
+            return res.status(400).json({ status: false, message: 'Career preference name is required' });
+        }
+        const result = await JobSectorService.addCareerPreference({ careerPreferenceName, careerPreferenceDescription });
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error in addCareerPreference Controller:', error);
+        res.status(500).json({ status: false, message: 'Internal server error' });
+    }
+};

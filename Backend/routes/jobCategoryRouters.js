@@ -25,4 +25,8 @@ router.get('/get_job_type_list', JobTypeController.getJobTypeList);
 router.post('/create_job_type', JobTypeController.createJobType);
 router.put('/update_job_type/:id', JobTypeController.updateJobType);
 
+// CAREER PREFERENCES ROUTE
+router.get('/get_career_preferences_list', JobSectorController.getCareerPreferencesList);
+router.post('/add_career_preference', JobSectorController.addCareerPreference);
+
 module.exports = router;

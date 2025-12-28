@@ -77,7 +77,6 @@ exports.getJobCategoryList = async (query) => {
     };
 };
 
-
 // Job Category Service
 exports.createJobCategory = async (data) => {
     try {
@@ -111,7 +110,6 @@ exports.createJobCategory = async (data) => {
         throw error;
     }
 };
-
 
 // Update Job Category Service
 exports.updateJobCategory = async (categoryId, data) => {
@@ -150,7 +148,6 @@ exports.updateJobCategory = async (categoryId, data) => {
         throw error;
     }
 };
-
 
 // Job SubCategory List Service with Filters and Pagination
 exports.getJobSubCategoryList = async (query) => {
@@ -232,7 +229,6 @@ exports.getJobSubCategoryList = async (query) => {
     };
 };
 
-
 // Create Job Sub Category Service
 exports.createJobSubCategory = async (data) => {
     try {
@@ -266,7 +262,6 @@ exports.createJobSubCategory = async (data) => {
         throw error;
     }
 };
-
 
 // Update Job Sub Category Service
 exports.updateJobSubCategory = async (subcategoryId, data) => {

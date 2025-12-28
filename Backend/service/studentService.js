@@ -1132,8 +1132,6 @@ exports.updateStudentParentsInfo = async (studentId, studentParentsData) => {
 };
 
 // UPDATE STUDENT SKILLS SERVICE
-
-// UPDATE STUDENT SKILLS SERVICE
 exports.updateStudentSkills = async (studentId, studentSkillsData) => {
     try {
 

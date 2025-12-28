@@ -1,4 +1,5 @@
 const JobSectorModel = require('../models/JobSectorModel');
+const CareerPreferencesModel = require('../models/CareerPreferencesModel');
 const moment = require('moment');
 
 // JOB SECTOR LIST SERVICE
@@ -103,4 +104,38 @@ exports.updateJobSector = async (id, data) => {
     }
 
     return { updatedSector };
+};
+
+// JOB PREFERENCES LIST SERVICE
+exports.getCareerPreferencesList = async () => {
+
+    const data = await CareerPreferencesModel.find();
+
+    return {
+        status: 200,
+        message: 'Career preferences fetched successfully',
+        jsonData: {
+            career_preferences: data
+        },
+    };
+};
+
+// ADD CAREER PREFERENCE SERVICE
+exports.addCareerPreference = async (data) => {
+    try {
+        const newPreference = new CareerPreferencesModel({
+            careerPreferenceName: data.careerPreferenceName,
+            careerPreferenceDescription: data.careerPreferenceDescription,
+        });
+
+        await newPreference.save();
+
+        return {
+            status: 200,
+            message: 'Career preference added successfully',
+        };
+    } catch (error) {
+        console.error('Error in addCareerPreference Service:', error);
+        throw error;
+    }
 };
