@@ -682,6 +682,8 @@ const StudentDetail = () => {
         certificateUrl: '',
         certificateFile: '',
       }));
+
+      
       
       await fetchstudentDetail();
     } catch (error) {
