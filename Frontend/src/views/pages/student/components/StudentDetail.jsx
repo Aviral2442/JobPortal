@@ -662,7 +662,6 @@ const StudentDetail = () => {
           console.log("Certificate ID being sent:", certificateData.certificateId); // Debug log
         }
       }
-
       console.log("Saving certificate data:", certificateData); // Debug log
 
       await axios.put(`/student/updateStudentCertificates/${id}`, certificateData);
