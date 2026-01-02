@@ -470,6 +470,8 @@ exports.studentForgetPassword = async (studentForgetData) => {
         // 🔹 Send EMAIL OTP
         if (isEmail) {
             const lowercaseEmail = student.studentEmail.toLowerCase();
+            console.log(`Sending OTP to email: ${lowercaseEmail}`, otp); // For testing purposes
+            
             await sendEmailOtp(lowercaseEmail, otp);
 
             return {
@@ -493,6 +495,8 @@ exports.studentForgetPassword = async (studentForgetData) => {
         };
 
     } catch (error) {
+        console.log(error);
+        
         return {
             status: 500,
             message: 'An error occurred during password reset',

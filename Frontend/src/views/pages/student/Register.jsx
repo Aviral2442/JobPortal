@@ -125,59 +125,59 @@ const Register = () => {
     setConfirmPasswordVisible(!confirmPasswordVisible);
   }
 
-const handleProfilePicChange = (e, setFieldValue) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+  const handleProfilePicChange = (e, setFieldValue) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  if (!file.type.startsWith("image/")) {
-    alert("Only image files are allowed");
-    return;
-  }
+    if (!file.type.startsWith("image/")) {
+      alert("Only image files are allowed");
+      return;
+    }
 
-  const reader = new FileReader();
-  reader.readAsDataURL(file);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
 
-  reader.onload = () => {
-    const base64Image = reader.result;
-    setFieldValue("studentProfilePic", base64Image);
-    setProfilePicPreview(base64Image);
+    reader.onload = () => {
+      const base64Image = reader.result;
+      setFieldValue("studentProfilePic", base64Image);
+      setProfilePicPreview(base64Image);
+    };
+
+    reader.onerror = () => {
+      console.error("Error converting image to Base64");
+    };
   };
-
-  reader.onerror = () => {
-    console.error("Error converting image to Base64");
-  };
-};
 
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     setLoading(true);
     setMessage({ text: '', variant: '' });
-    console.log('Submitting registration with values:', values);
+
     try {
-      const formData = new FormData();
+      const payload = {
+        studentProfilePic: values.studentProfilePic || null, // base64 string
+        studentFirstName: values.studentFirstName.trim(),
+        studentLastName: values.studentLastName.trim(),
+        studentEmail: values.studentEmail.toLowerCase().trim(),
+        studentMobileNo: values.studentMobileNo.trim(),
+        studentPassword: values.studentPassword,
+        studentJobType: values.studentJobType,
+        studentReferralByCode: values.studentReferralByCode
+          ? values.studentReferralByCode.trim().toUpperCase()
+          : null,
+      };
 
-      if (base64) {
-        formData.append('studentProfilePic', base64);
-      } else if (profilePicFile) {
-        formData.append('studentProfilePic', profilePicFile);
-      }
+      console.log('SENDING JSON:', payload);
 
-      formData.append('studentFirstName', values.studentFirstName.trim());
-      formData.append('studentLastName', values.studentLastName.trim());
-      formData.append('studentEmail', values.studentEmail.toLowerCase().trim());
-      formData.append('studentMobileNo', values.studentMobileNo.trim());
-      formData.append('studentPassword', values.studentPassword);
-      formData.append('studentJobType', values.studentJobType);
-
-      if (values.studentReferralByCode) {
-        formData.append('studentReferralByCode', values.studentReferralByCode.trim().toUpperCase());
-      }
-
-      const response = await axios.post('/student/student_registration', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      console.log('Registration response:', response.data);
+      const response = await axios.post(
+        '/student/student_registration',
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       setMessage({
         text: response.data.message || 'Student registered successfully!',
@@ -185,7 +185,6 @@ const handleProfilePicChange = (e, setFieldValue) => {
       });
 
       resetForm();
-      setProfilePicFile(null);
       setProfilePicPreview('');
 
       setTimeout(() => {
@@ -195,7 +194,7 @@ const handleProfilePicChange = (e, setFieldValue) => {
     } catch (error) {
       console.error('Registration error:', error);
       setMessage({
-        text: error.response?.data?.message || 'Error registering student. Please try again.',
+        text: error.response?.data?.message || 'Error registering student',
         variant: 'danger',
       });
     } finally {
