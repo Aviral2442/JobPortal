@@ -23,11 +23,13 @@ exports.studentLoginLogoutHistory = async (req, res) => {
 // STUDENT REGISTRATION CONTROLLER
 exports.studentRegistration = async (req, res) => {
     try {
-        const studentProfilePic = req.file ? `/uploads/StudentProfile/${req.file.filename}` : null;
-        const result = await studentService.studentRegistration({ ...req.body, studentProfilePic: studentProfilePic });
+        const result = await studentService.studentRegistration(req.body);
         return res.status(result.status).json(result);
     } catch (error) {
-        return res.status(500).json({ status: 500, message: 'Internal server error' });
+        return res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+        });
     }
 };
 

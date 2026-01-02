@@ -2,6 +2,7 @@ const { buildDateFilter } = require('../utils/dateFilters');
 const { buildPagination } = require('../utils/paginationFilters');
 const { currentUnixTimeStamp } = require('../utils/currentUnixTimeStamp');
 const { convertIntoUnixTimeStamp } = require('../utils/convertIntoUnixTimeStamp');
+const { saveBase64File } = require('../middleware/base64FileUpload');
 const studentModel = require('../models/studentModel');
 const studentAddressModel = require('../models/student/studentAddressModel');
 const studentBasicDetailModel = require('../models/student/studentBasicDetailModel');
@@ -236,82 +237,88 @@ exports.studentAllDetails = async (studentId) => {
 
 // STUDENT REGISTRATION SERVICE
 exports.studentRegistration = async (studentData) => {
-    try {
-
-        const emailExists = await studentModel.findOne({ studentEmail: studentData.studentEmail });
-        if (emailExists) {
-            return { status: 409, message: 'Student Entered Email is already registered' };
-        }
-
-        const mobileExists = await studentModel.findOne({ studentMobileNo: studentData.studentMobileNo });
-        if (mobileExists) {
-            return { status: 409, message: 'Student Entered Mobile No. is already registered' };
-        }
-
-        if (studentData.studentReferralByCode) {
-            const studentReferralCodeExists = await studentModel.findOne({
-                studentReferralCode: studentData.studentReferralByCode
-            });
-
-            if (!studentReferralCodeExists) {
-                return { status: 400, message: 'Invalid referral code provided' };
-            }
-
-            studentData.studentReferralById = studentReferralCodeExists._id;
-            studentData.studentReferralByCode = studentReferralCodeExists.studentReferralCode;
-        }
-
-        const generateRandomReferralCode = async () => {
-            const prefix = "CW"; // CW = CareerWave
-            const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            let code = prefix;
-
-            for (let i = 0; i < 6; i++) {
-                code += characters[Math.floor(Math.random() * characters.length)];
-            }
-
-            const exists = await studentModel.findOne({ studentReferralCode: code });
-            if (exists) {
-                return await generateRandomReferralCode();
-            }
-
-            return code;
-        };
-
-        const newStudent = new studentModel({
-            studentProfilePic: studentData.studentProfilePic || null,
-            studentFirstName: studentData.studentFirstName,
-            studentLastName: studentData.studentLastName,
-            studentEmail: studentData.studentEmail,
-            studentMobileNo: studentData.studentMobileNo,
-            studentPassword: studentData.studentPassword,
-            studentJobType: studentData.studentJobType,
-            studentReferralCode: await generateRandomReferralCode(),
-            studentReferralById: studentData.studentReferralById || null,
-            studentReferralByCode: studentData.studentReferralByCode || null
-        });
-
-        await newStudent.save();
-
-        return {
-            status: 200,
-            message: 'Student registered successfully',
-            jsonData: {
-                studentId: newStudent._id,
-                studentFirstName: newStudent.studentFirstName,
-                studentLastName: newStudent.studentLastName,
-                studentEmail: newStudent.studentEmail,
-                studentMobileNo: newStudent.studentMobileNo,
-                studentJobType: newStudent.studentJobType,
-                studentReferralCode: newStudent.studentReferralCode
-            }
-        };
-
-    } catch (error) {
-        console.error('Error in studentRegistration:', error);
-        return { status: 500, message: 'An error occurred during student registration' };
+  try {
+    const emailExists = await studentModel.findOne({ studentEmail: studentData.studentEmail });
+    if (emailExists) {
+      return { status: 409, message: 'Student Entered Email is already registered' };
     }
+
+    const mobileExists = await studentModel.findOne({ studentMobileNo: studentData.studentMobileNo });
+    if (mobileExists) {
+      return { status: 409, message: 'Student Entered Mobile No. is already registered' };
+    }
+
+    // Referral logic (unchanged)
+    if (studentData.studentReferralByCode) {
+      const refStudent = await studentModel.findOne({
+        studentReferralCode: studentData.studentReferralByCode
+      });
+
+      if (!refStudent) {
+        return { status: 400, message: 'Invalid referral code provided' };
+      }
+
+      studentData.studentReferralById = refStudent._id;
+      studentData.studentReferralByCode = refStudent.studentReferralCode;
+    }
+
+    // ✅ Handle base64 profile image
+    let studentProfilePic = null;
+    if (studentData.studentProfilePic) {
+      studentProfilePic = saveBase64File(
+        studentData.studentProfilePic,
+        'StudentProfile',
+        'student'
+      );
+    }
+
+    const generateRandomReferralCode = async () => {
+      const prefix = 'CW';
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = prefix;
+      for (let i = 0; i < 6; i++) {
+        code += chars[Math.floor(Math.random() * chars.length)];
+      }
+
+      const exists = await studentModel.findOne({ studentReferralCode: code });
+      if (exists) return generateRandomReferralCode();
+      return code;
+    };
+
+    const newStudent = new studentModel({
+      studentProfilePic,
+      studentFirstName: studentData.studentFirstName,
+      studentLastName: studentData.studentLastName,
+      studentEmail: studentData.studentEmail,
+      studentMobileNo: studentData.studentMobileNo,
+      studentPassword: studentData.studentPassword,
+      studentJobType: studentData.studentJobType,
+      studentReferralCode: await generateRandomReferralCode(),
+      studentReferralById: studentData.studentReferralById || null,
+      studentReferralByCode: studentData.studentReferralByCode || null,
+    });
+
+    await newStudent.save();
+
+    return {
+      status: 200,
+      message: 'Student registered successfully',
+      jsonData: {
+        studentId: newStudent._id,
+        studentFirstName: newStudent.studentFirstName,
+        studentLastName: newStudent.studentLastName,
+        studentEmail: newStudent.studentEmail,
+        studentMobileNo: newStudent.studentMobileNo,
+        studentJobType: newStudent.studentJobType,
+        studentReferralCode: newStudent.studentReferralCode,
+      },
+    };
+  } catch (error) {
+    console.error('Error in studentRegistration:', error);
+    return { status: 500, message: 'An error occurred during student registration' };
+  }
 };
+
 
 // STUDENT LOGIN SERVICE
 exports.studentLogin = async (studentLoginData) => {
