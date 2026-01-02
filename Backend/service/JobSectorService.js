@@ -115,7 +115,7 @@ exports.getCareerPreferencesList = async () => {
         status: 200,
         message: 'Career preferences fetched successfully',
         jsonData: {
-            career_preferences: data
+            data: data
         },
     };
 };
