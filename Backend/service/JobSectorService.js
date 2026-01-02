@@ -139,3 +139,24 @@ exports.addCareerPreference = async (data) => {
         throw error;
     }
 };
+
+// UPDATE CAREER PREFERENCE SERVICE
+exports.updateCareerPreference = async (data) => {
+    try {
+        const careerPreference = await CareerPreferencesModel.findById(data.id);
+        if (!careerPreference) {
+            return { status: 404, message: 'Career Preference not found' };
+        }
+        careerPreference.careerPreferenceName = data.careerPreferenceName || careerPreference.careerPreferenceName;
+        careerPreference.careerPreferenceDescription = data.careerPreferenceDescription || careerPreference.careerPreferenceDescription;
+
+        const updatedCareerPreference = await careerPreference.save();
+        return {
+            status: 200,
+            message: 'Career Preference updated successfully',
+            jsonData: updatedCareerPreference
+        };
+    } catch (error) {
+        return { status: 500, message: 'Internal server error', error: error.message };
+    }
+};

@@ -130,3 +130,5 @@ export const formatDateCustom = (data, options = {}) => {
         return String(data);
     }
 };
+
+export default formatDate;

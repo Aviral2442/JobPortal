@@ -78,3 +78,23 @@ exports.addCareerPreference = async (req, res) => {
         res.status(500).json({ status: false, message: 'Internal server error' });
     }
 };
+
+// UPDATE CAREER PREFERENCE CONTROLLER
+exports.updateCareerPreference = async (req, res) => {
+    try {
+        const { id } = req.params;  
+        const { careerPreferenceName, careerPreferenceDescription } = req.body;
+        if (!id) {
+            return res.status(400).json({ status: false, message: 'Career Preference ID are required' });
+        }
+        if (!careerPreferenceName) {
+            return res.status(400).json({ status: false, message: 'Career Preference Name are required' });
+        }
+        const result = await JobSectorService.updateCareerPreference({ id, careerPreferenceName, careerPreferenceDescription });
+
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error in updateCareerPreference Controller:', error);
+        res.status(500).json({ status: false, message: 'Internal Server Error' });
+    }
+};

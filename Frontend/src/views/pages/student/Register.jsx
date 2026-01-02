@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Formik } from 'formik';
 import * as Yup from 'yup';
-import { Form, Button, Row, Col, Card, Alert, Image } from 'react-bootstrap';
+import { Form, Button, Row, Col, Card, Alert, Image, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from '@/api/axios';
+import { IoEye } from "react-icons/io5";
+import { IoEyeOff } from "react-icons/io5";
 
 const studentValidationSchema = Yup.object({
   studentProfilePic: Yup.string(),
@@ -80,6 +82,10 @@ const Register = () => {
   const [profilePicFile, setProfilePicFile] = useState(null);
   const [profilePicPreview, setProfilePicPreview] = useState('');
   const [loading, setLoading] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+  const [base64, setBase64] = useState(null);
+
 
   const initialValues = {
     studentProfilePic: '',
@@ -111,40 +117,48 @@ const Register = () => {
     fetchJobTypes();
   }, []);
 
-  const handleProfilePicChange = (e, setFieldValue) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-      if (!validTypes.includes(file.type)) {
-        setMessage({
-          text: 'Please upload a valid image file (JPEG, PNG, WEBP)',
-          variant: 'danger',
-        });
-        return;
-      }
+  const handlePasswordVisibility = () => {
+    setPasswordVisible(!passwordVisible);
+  }
 
-      if (file.size > 5 * 1024 * 1024) {
-        setMessage({
-          text: 'Image size should not exceed 5MB',
-          variant: 'danger',
-        });
-        return;
-      }
+  const handleConfirmPasswordVisibility = () => {
+    setConfirmPasswordVisible(!confirmPasswordVisible);
+  }
 
-      setProfilePicFile(file);
-      setProfilePicPreview(URL.createObjectURL(file));
-      setFieldValue('studentProfilePic', file.name);
-    }
+const handleProfilePicChange = (e, setFieldValue) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    alert("Only image files are allowed");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+
+  reader.onload = () => {
+    const base64Image = reader.result;
+    setFieldValue("studentProfilePic", base64Image);
+    setProfilePicPreview(base64Image);
   };
+
+  reader.onerror = () => {
+    console.error("Error converting image to Base64");
+  };
+};
+
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     setLoading(true);
     setMessage({ text: '', variant: '' });
-
+    console.log('Submitting registration with values:', values);
     try {
       const formData = new FormData();
 
-      if (profilePicFile) {
+      if (base64) {
+        formData.append('studentProfilePic', base64);
+      } else if (profilePicFile) {
         formData.append('studentProfilePic', profilePicFile);
       }
 
@@ -311,33 +325,51 @@ const Register = () => {
                       />
                     </Col>
                     <Col md={6}>
-                      <FormInput
-                        name="studentPassword"
-                        label="Password"
-                        type="password"
-                        value={values.studentPassword}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        touched={touched.studentPassword}
-                        errors={errors.studentPassword}
-                        placeholder="Enter password"
-                        helperText="Password must contain at least 8 characters, including uppercase, lowercase, number and special character"
-                        required
-                      />
+                      <Form.Group className="mb-3">
+                        <Form.Label>
+                          Password
+                          <span className="text-danger ms-1">*</span>
+                        </Form.Label>
+                        <InputGroup>
+                          <Form.Control
+                            name="studentPassword"
+                            type={passwordVisible ? 'text' : 'password'}
+                            value={values.studentPassword}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            isInvalid={touched.studentPassword && errors.studentPassword}
+                            placeholder="Enter password"
+                          />
+                          <InputGroup.Text onClick={handlePasswordVisibility} style={{ cursor: 'pointer' }}>
+                            {passwordVisible ? <IoEyeOff /> : <IoEye />}
+                          </InputGroup.Text>
+                          <Form.Control.Feedback type="invalid">{errors.studentPassword}</Form.Control.Feedback>
+                        </InputGroup>
+                        <Form.Text className="text-muted d-block">Password must contain at least 8 characters, including uppercase, lowercase, number and special character</Form.Text>
+                      </Form.Group>
                     </Col>
                     <Col md={6}>
-                      <FormInput
-                        name="confirmPassword"
-                        label="Confirm Password"
-                        type="password"
-                        value={values.confirmPassword}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        touched={touched.confirmPassword}
-                        errors={errors.confirmPassword}
-                        placeholder="Re-enter password"
-                        required
-                      />
+                      <Form.Group className="mb-3">
+                        <Form.Label>
+                          Confirm Password
+                          <span className="text-danger ms-1">*</span>
+                        </Form.Label>
+                        <InputGroup>
+                          <Form.Control
+                            name="confirmPassword"
+                            type={confirmPasswordVisible ? 'text' : 'password'}
+                            value={values.confirmPassword}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            isInvalid={touched.confirmPassword && errors.confirmPassword}
+                            placeholder="Re-enter password"
+                          />
+                          <InputGroup.Text onClick={handleConfirmPasswordVisibility} style={{ cursor: 'pointer' }}>
+                            {confirmPasswordVisible ? <IoEyeOff /> : <IoEye />}
+                          </InputGroup.Text>
+                          <Form.Control.Feedback type="invalid">{errors.confirmPassword}</Form.Control.Feedback>
+                        </InputGroup>
+                      </Form.Group>
                     </Col>
                     <Col md={6}>
                       <Form.Group className="mb-3">

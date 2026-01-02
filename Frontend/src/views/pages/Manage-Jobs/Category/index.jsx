@@ -5,6 +5,7 @@ import AddCategory from "./components/AddCategory";
 import AddSubCategory from "./components/AddSubCategory";
 import AddJobType from "./components/AddJobType";
 import AddSector from "./components/AddSector"; // <-- import to avoid runtime error when rendering sector tab
+import AddCareerPreference from "./components/AddCareerPreference";
 
 const Page = () => {
   const [activeTab, setActiveTab] = React.useState(1);
@@ -17,6 +18,7 @@ const Page = () => {
     { key: 2, label: "Sub Category" },
     { key: 3, label: "Job Type" },
     { key: 4, label: "Sector" },
+    { key: 5, label: "Career Preferences" },
   ];
 
   const handleAddNew = () => {
@@ -67,7 +69,16 @@ const Page = () => {
           );
         case 4:
           return (
-            <AddSector 
+            <AddSector
+              mode={formMode}
+              data={editData}
+              onCancel={() => setShowForm(false)}
+              onDataChanged={triggerRefresh}
+            />
+          );
+        case 5:
+          return (
+            <AddCareerPreference
               mode={formMode}
               data={editData}
               onCancel={() => setShowForm(false)}

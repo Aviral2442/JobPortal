@@ -27,6 +27,7 @@ import pdfmake from "pdfmake";
 import {
   categoryColumns,
   subCategoryColumns,
+  careerPreference,
 } from "./components/category.js";
 
 import { createRoot } from "react-dom/client";
@@ -34,6 +35,7 @@ import axios from "@/api/axios";
 import toast from "react-hot-toast";
 import JobTypeList from "@/views/pages/Manage-Jobs/Category/components/JobTypeList";
 import SectorList from "@/views/pages/Manage-Jobs/Category/components/SectorList";
+
 
 const tableConfig = {
   1: {
@@ -43,6 +45,10 @@ const tableConfig = {
   2: {
     endpoint: "/job-categories/get_job_subcategory_list",
     columns: subCategoryColumns,
+  },
+  5: {
+    endpoint: "/job-categories/get_career_preferences_list",
+    columns: careerPreference,
   },
 };
 

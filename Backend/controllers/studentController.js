@@ -23,6 +23,7 @@ exports.studentLoginLogoutHistory = async (req, res) => {
 // STUDENT REGISTRATION CONTROLLER
 exports.studentRegistration = async (req, res) => {
     try {
+        console.log('Registration result:', req.body);
         const result = await studentService.studentRegistration(req.body);
         return res.status(result.status).json(result);
     } catch (error) {

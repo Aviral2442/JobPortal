@@ -1,13 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Container, Row, Col, Dropdown, Alert, Spinner, Badge } from "react-bootstrap";
-import TableList from "@/components/table/TableList";
 import { createRoot } from "react-dom/client";
 import { useNavigate } from "react-router-dom";
 import ReactDOMServer from "react-dom/server";
 import {
   TbDotsVertical,
-  TbEdit,
-  TbTrash,
   TbChevronLeft,
   TbChevronRight,
   TbChevronsLeft,

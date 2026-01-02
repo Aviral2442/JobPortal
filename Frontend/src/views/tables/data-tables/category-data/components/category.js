@@ -1,3 +1,4 @@
+import formatDate from "@/components/DateFormat"
 const basePath = import.meta.env.VITE_BASE_URL;
 
 export const categoryColumns = [
@@ -51,4 +52,24 @@ export const subCategoryColumns = [
       }
     },
   },
+];
+
+export const careerPreference = [
+  { data: "careerPreferenceName", title: "Name" },
+  { data: "careerPreferenceDescription", title: "Description" },
+    {
+    data: "careerPreferenceStatus",
+    title: "Status",
+    render: (data) => {
+      if (data == 0 || data === "active") {
+        return `<span class="badge badge-label badge-soft-success">Active</span>`;
+      } else if (data == 1 || data === "inactive") {
+        return `<span class="badge badge-label badge-soft-danger">Inactive</span>`;
+      } else {
+        return `<span class="badge badge-label badge-soft-secondary">Deleted</span>`;
+      }
+    },
+  },
+  { title: "Date", data: "careerPreferenceCreatedAt", 
+    render: (data) => { return formatDate(data) } },
 ];

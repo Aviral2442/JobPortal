@@ -47,3 +47,5 @@ exports.updateJobType = async (req, res) => {
         res.status(500).json({ status: false, message: 'Internal Server Error' });
     }
 };
+
+
