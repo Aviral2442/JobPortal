@@ -319,7 +319,6 @@ exports.studentRegistration = async (studentData) => {
   }
 };
 
-
 // STUDENT LOGIN SERVICE
 exports.studentLogin = async (studentLoginData) => {
     try {
