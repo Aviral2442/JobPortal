@@ -430,7 +430,7 @@ exports.studentForgetPassword = async (studentForgetData) => {
             };
         }
 
-        forgetEmailOrMobileNo = forgetEmailOrMobileNo.trim(); // remove spaces
+        forgetEmailOrMobileNo = forgetEmailOrMobileNo.trim();
 
         const isEmail = forgetEmailOrMobileNo.includes("@");
 
@@ -487,7 +487,7 @@ exports.studentForgetPassword = async (studentForgetData) => {
         // 🔹 Mobile case
         return {
             status: 200,
-            message: 'OTP sent to registered mobile number successfully',
+            message: 'WIll INTEGRATE SMS GATEWAY SOON - OTP sent to registered mobile number successfully',
             jsonData: {
                 studentId: student._id,
                 studentMobileNo: student.studentMobileNo
