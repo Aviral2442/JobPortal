@@ -409,7 +409,7 @@ exports.studentLogout = async (studentId) => {
             error: error.message
         };
     }
-}
+};
 
 // STUDENT FORGET PASSWORD SERVICE
 exports.studentForgetPassword = async (studentForgetData) => {
