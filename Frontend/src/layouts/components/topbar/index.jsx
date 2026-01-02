@@ -64,7 +64,7 @@ const Topbar = () => {
                         <LuMenu className="fs-22 align-middle" />
                     </button>
 
-                    <div className="topbar-item d-none d-lg-flex">
+                    {/* <div className="topbar-item d-none d-lg-flex">
                         <Link to="" className="topbar-link btn shadow-none btn-link px-2 disabled">
                             {' '}
                             v1.0.0
@@ -83,7 +83,7 @@ const Topbar = () => {
                             {' '}
                             Contact
                         </Link>
-                    </div>
+                    </div> */}
                     {/* <div className="topbar-item d-none d-md-flex">
                         <Dropdown>
                             <DropdownToggle className="topbar-link btn shadow-none btn-link dropdown-toggle drop-arrow-none px-2">
@@ -103,7 +103,7 @@ const Topbar = () => {
                         </Dropdown>
                     </div> */}
 
-                    <MegaMenu />
+                    {/* <MegaMenu /> */}
                 </div>
 
                 <div className="d-flex align-items-center gap-2">
@@ -112,17 +112,17 @@ const Topbar = () => {
                         <LuSearch className="app-search-icon text-muted" />
                     </div>
 
-                    <SkinDropdown />
+                    {/* <SkinDropdown /> */}
 
-                    <LanguageDropdown />
+                    {/* <LanguageDropdown /> */}
 
-                    <NotificationDropdown />
+                    {/* <NotificationDropdown /> */}
 
-                    <CustomizerToggler />
+                    {/* <CustomizerToggler /> */}
 
                     <ThemeToggler />
 
-                    <MonochromeModeToggler />
+                    {/* <MonochromeModeToggler /> */}
 
                     <UserProfile />
                 </div>
