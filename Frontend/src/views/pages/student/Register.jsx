@@ -413,7 +413,7 @@ const Register = () => {
                 {/* Submit Button */}
                 <div className="d-flex justify-content-end gap-2 mt-4">
                   <Button
-                    variant="secondary"
+                    variant="light"
                     onClick={() => navigate('/admin/students')}
                     disabled={loading || isSubmitting}
                   >

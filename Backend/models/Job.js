@@ -41,7 +41,9 @@ const JobSchema = new mongoose.Schema(
     postName: { type: String, default: "", trim: true },
     organization: { type: String, default: "", trim: true },
     advtNumber: { type: String, default: "", trim: true },
-
+    jobRecommendation: { type: Boolean, default: false },
+    jobFeatured: { type: Boolean, default: false },
+    jobUpcoming: { type: Boolean, default: false },
     jobType: { type: String, default: "", trim: true },
     sector: { type: String, default: "", trim: true },
     jobCategory: { type: String, default: "", trim: true },
