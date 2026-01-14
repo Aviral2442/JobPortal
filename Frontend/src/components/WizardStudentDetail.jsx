@@ -36,6 +36,8 @@ import {
   TbCertificate,
   TbFileText,
   TbLink,
+  TbBodyScan,
+  TbMan,
 } from "react-icons/tb";
 
 /* ---------------------------------------------------
@@ -48,7 +50,8 @@ const Header = ({ withProgress }) => {
     { icon: TbUserCircle, label: "Primary Info", desc: "Basic details" },
     { icon: TbUserCircle, label: "Basic Details", desc: "Personal info" },
     { icon: TbMapPin, label: "Address", desc: "Where you live" },
-    { icon: TbBuildingBank, label: "Bank & Body", desc: "Financial & physical" },
+    { icon: TbBuildingBank, label: "Bank Details", desc: "Financial" },
+    { icon: TbMan, label: "Body Details", desc: "Physical" },
     { icon: TbPhone, label: "Emergency", desc: "Contact details" },
     { icon: TbUsers, label: "Parental Info", desc: "Guardian details" },
     { icon: TbSettings, label: "Preferences", desc: "Career goals" },
@@ -533,7 +536,7 @@ const WizardStudentDetail = () => {
       studentLastName: data.studentPrimaryData?.studentLastName,
       studentEmail: data.studentPrimaryData?.studentEmail,
       studentMobileNo: data.studentPrimaryData?.studentMobileNo,
-      studentJobType: data.studentPrimaryData?.studentJobType?.job_type_name,
+      studentJobSector: data.studentPrimaryData?.studentJobSector?.job_sector_name,
       accountStatus: data.studentPrimaryData?.accountStatus,
       studentReferralCode: data.studentPrimaryData?.studentReferralCode,
       studentReferralByCode: data.studentPrimaryData?.studentReferralByCode,
@@ -565,12 +568,14 @@ const WizardStudentDetail = () => {
       permanentPincode: addressData?.permanent?.pincode,
       isPermanentSameAsCurrent: addressData?.isPermanentSameAsCurrent,
 
-      // Bank & Body
+      // Bank
       bankHolderName: bankData?.bankHolderName,
       bankName: bankData?.bankName,
       accountNumber: bankData?.accountNumber,
       ifscCode: bankData?.ifscCode,
       branchName: bankData?.branchName,
+
+      // Body
       heightCm: bodyData?.heightCm,
       weightKg: bodyData?.weightKg,
       bloodGroup: bodyData?.bloodGroup,
@@ -707,7 +712,7 @@ const WizardStudentDetail = () => {
                   { name: "studentLastName", label: "Last Name", type: "text", cols: 4 },
                   { name: "studentEmail", label: "Email", type: "email", cols: 4 },
                   { name: "studentMobileNo", label: "Mobile Number", type: "tel", cols: 4 },
-                  { name: "studentJobType", label: "Job Type", type: "text", cols: 4 },
+                  { name: "studentJobSector", label: "Job Sector", type: "text", cols: 4 },
                   {
                     name: "accountStatus", label: "Account Status", type: "select", cols: 4,
                     options: [
@@ -738,9 +743,7 @@ const WizardStudentDetail = () => {
                     name: "studentGender", label: "Gender", type: "select", cols: 3,
                     options: [
                       { value: "male", label: "Male" },
-                      { value: "female", label: "Female" },
-                      { value: "other", label: "Other" },
-                      { value: "prefer_not_to_say", label: "Prefer Not to Say" },
+                      { value: "female", label: "Female" }, 
                     ]
                   },
                   { name: "studentAlternateMobileNo", label: "Alternate Mobile", type: "tel", cols: 3 },
@@ -793,13 +796,13 @@ const WizardStudentDetail = () => {
 
               {/* Step 4: Bank & Body Details */}
               <StepSection
-                title="Bank & Body Details"
+                title="Bank Details"
                 data={sectionData}
                 next
                 prev
                 onChange={handleFieldChange}
                 onSave={handleSave}
-                apiEndpoint={`/student/updateStudentBankDetails/${id}`}
+                apiEndpoint={`/student/updateStudentBodyDetails/${id}`}
                 saving={saving}
                 fields={[
                   { label: "Bank Details", type: "divider", cols: 12 },
@@ -808,7 +811,19 @@ const WizardStudentDetail = () => {
                   { name: "accountNumber", label: "Account Number", type: "text", cols: 4 },
                   { name: "ifscCode", label: "IFSC Code", type: "text", cols: 4 },
                   { name: "branchName", label: "Branch Name", type: "text", cols: 4 },
+                ]}
+              />
 
+              <StepSection
+                title="Body Details"
+                data={sectionData}
+                next
+                prev
+                onChange={handleFieldChange}
+                onSave={handleSave}
+                apiEndpoint={`/student/updateStudentBankDetails/${id}`}
+                saving={saving}
+                fields={[
                   { label: "Body Details", type: "divider", cols: 12 },
                   { name: "heightCm", label: "Height (cm)", type: "number", cols: 2 },
                   { name: "weightKg", label: "Weight (kg)", type: "number", cols: 2 },
