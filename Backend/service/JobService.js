@@ -1,4 +1,6 @@
 const Job = require("../models/JobModel");
+const Student = require("../models/StudentModel");
+const JobAppliedMapper = require("../models/JobAppliedMapperModel");
 
 class JobService {
   // Create a new job
@@ -98,6 +100,47 @@ class JobService {
     } catch (error) {
       return { success: false, error: error.message };
     }
+  }
+}
+
+// APPLY ON JOB SERVICE
+exports.applyOnJob = async (data) => {
+  try {
+
+    const job = await Job.findById(data.jobId);
+    if (!job) {
+      return { status: 404, message: 'Job not found' };
+    }
+
+    const studentId = await Student.findOne({ userId: data.userId }).select('_id');
+    if (!studentId) {
+      return { status: 404, message: 'Student not found' };
+    }
+
+    // Check if the student has already applied for the job
+    const existingApplication = await JobAppliedMapper.findOne({
+      studentId: studentId._id,
+      jobId: job._id,
+    });
+
+    // Add the student to the applied_students array
+    const applyApply = await JobAppliedMapper.create({
+      studentId: studentId._id,
+      jobId: job._id,
+      applicationStatus: 'applied',
+    });
+
+    applyApply.save();
+
+    return {
+      status: 200,
+      message: 'Job application successful',
+      jsonData: applyApply,
+    };
+
+  } catch (error) {
+    console.error('Error in applyOnJob Service:', error);
+    throw error;
   }
 }
 
