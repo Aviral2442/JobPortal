@@ -20,6 +20,7 @@ const StudentExperience = require('../models/student/studentWorkExprienceModel')
 const loginHistory = require('../models/LoginHistoryModel');
 const JobType = require('../models/JobTypeModel');
 const sendEmailOtp = require('../utils/emailOtp');
+const sendMobileOtp = require('../utils/mobileNoOtp');
 
 // STUDENT LIST SERVICE
 exports.studentListService = async (query) => {
@@ -103,7 +104,7 @@ exports.studentLoginLogoutHistory = async (query) => {
             dateField: "createdAt"
         });
 
-        filter = {...dateQuery };
+        filter = { ...dateQuery };
 
         const { skip, limit: finalLimit, currentPage } = buildPagination({
             dateFilter,
@@ -237,86 +238,86 @@ exports.studentAllDetails = async (studentId) => {
 
 // STUDENT REGISTRATION SERVICE
 exports.studentRegistration = async (studentData) => {
-  try {
-    const emailExists = await studentModel.findOne({ studentEmail: studentData.studentEmail });
-    if (emailExists) {
-      return { status: 409, message: 'Student Entered Email is already registered' };
+    try {
+        const emailExists = await studentModel.findOne({ studentEmail: studentData.studentEmail });
+        if (emailExists) {
+            return { status: 409, message: 'Student Entered Email is already registered' };
+        }
+
+        const mobileExists = await studentModel.findOne({ studentMobileNo: studentData.studentMobileNo });
+        if (mobileExists) {
+            return { status: 409, message: 'Student Entered Mobile No. is already registered' };
+        }
+
+        // Referral logic (unchanged)
+        if (studentData.studentReferralByCode) {
+            const refStudent = await studentModel.findOne({
+                studentReferralCode: studentData.studentReferralByCode
+            });
+
+            if (!refStudent) {
+                return { status: 400, message: 'Invalid referral code provided' };
+            }
+
+            studentData.studentReferralById = refStudent._id;
+            studentData.studentReferralByCode = refStudent.studentReferralCode;
+        }
+
+        // ✅ Handle base64 profile image
+        let studentProfilePic = null;
+        if (studentData.studentProfilePic) {
+            studentProfilePic = saveBase64File(
+                studentData.studentProfilePic,
+                'StudentProfile',
+                'student'
+            );
+        }
+
+        const generateRandomReferralCode = async () => {
+            const prefix = 'CW';
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = prefix;
+            for (let i = 0; i < 6; i++) {
+                code += chars[Math.floor(Math.random() * chars.length)];
+            }
+
+            const exists = await studentModel.findOne({ studentReferralCode: code });
+            if (exists) return generateRandomReferralCode();
+            return code;
+        };
+
+        const newStudent = new studentModel({
+            studentProfilePic,
+            studentFirstName: studentData.studentFirstName,
+            studentLastName: studentData.studentLastName,
+            studentEmail: studentData.studentEmail,
+            studentMobileNo: studentData.studentMobileNo,
+            studentPassword: studentData.studentPassword,
+            studentJobType: studentData.studentJobType,
+            studentReferralCode: await generateRandomReferralCode(),
+            studentReferralById: studentData.studentReferralById || null,
+            studentReferralByCode: studentData.studentReferralByCode || null,
+        });
+
+        await newStudent.save();
+
+        return {
+            status: 200,
+            message: 'Student registered successfully',
+            jsonData: {
+                studentId: newStudent._id,
+                studentFirstName: newStudent.studentFirstName,
+                studentLastName: newStudent.studentLastName,
+                studentEmail: newStudent.studentEmail,
+                studentMobileNo: newStudent.studentMobileNo,
+                studentJobType: newStudent.studentJobType,
+                studentReferralCode: newStudent.studentReferralCode,
+            },
+        };
+    } catch (error) {
+        console.error('Error in studentRegistration:', error);
+        return { status: 500, message: 'An error occurred during student registration' };
     }
-
-    const mobileExists = await studentModel.findOne({ studentMobileNo: studentData.studentMobileNo });
-    if (mobileExists) {
-      return { status: 409, message: 'Student Entered Mobile No. is already registered' };
-    }
-
-    // Referral logic (unchanged)
-    if (studentData.studentReferralByCode) {
-      const refStudent = await studentModel.findOne({
-        studentReferralCode: studentData.studentReferralByCode
-      });
-
-      if (!refStudent) {
-        return { status: 400, message: 'Invalid referral code provided' };
-      }
-
-      studentData.studentReferralById = refStudent._id;
-      studentData.studentReferralByCode = refStudent.studentReferralCode;
-    }
-
-    // ✅ Handle base64 profile image
-    let studentProfilePic = null;
-    if (studentData.studentProfilePic) {
-      studentProfilePic = saveBase64File(
-        studentData.studentProfilePic,
-        'StudentProfile',
-        'student'
-      );
-    }
-
-    const generateRandomReferralCode = async () => {
-      const prefix = 'CW';
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let code = prefix;
-      for (let i = 0; i < 6; i++) {
-        code += chars[Math.floor(Math.random() * chars.length)];
-      }
-
-      const exists = await studentModel.findOne({ studentReferralCode: code });
-      if (exists) return generateRandomReferralCode();
-      return code;
-    };
-
-    const newStudent = new studentModel({
-      studentProfilePic,
-      studentFirstName: studentData.studentFirstName,
-      studentLastName: studentData.studentLastName,
-      studentEmail: studentData.studentEmail,
-      studentMobileNo: studentData.studentMobileNo,
-      studentPassword: studentData.studentPassword,
-      studentJobType: studentData.studentJobType,
-      studentReferralCode: await generateRandomReferralCode(),
-      studentReferralById: studentData.studentReferralById || null,
-      studentReferralByCode: studentData.studentReferralByCode || null,
-    });
-
-    await newStudent.save();
-
-    return {
-      status: 200,
-      message: 'Student registered successfully',
-      jsonData: {
-        studentId: newStudent._id,
-        studentFirstName: newStudent.studentFirstName,
-        studentLastName: newStudent.studentLastName,
-        studentEmail: newStudent.studentEmail,
-        studentMobileNo: newStudent.studentMobileNo,
-        studentJobType: newStudent.studentJobType,
-        studentReferralCode: newStudent.studentReferralCode,
-      },
-    };
-  } catch (error) {
-    console.error('Error in studentRegistration:', error);
-    return { status: 500, message: 'An error occurred during student registration' };
-  }
 };
 
 // STUDENT LOGIN SERVICE
@@ -430,7 +431,7 @@ exports.studentForgetPassword = async (studentForgetData) => {
             };
         }
 
-        forgetEmailOrMobileNo = forgetEmailOrMobileNo.trim(); // remove spaces
+        forgetEmailOrMobileNo = forgetEmailOrMobileNo.trim();
 
         const isEmail = forgetEmailOrMobileNo.includes("@");
 
@@ -471,7 +472,7 @@ exports.studentForgetPassword = async (studentForgetData) => {
         if (isEmail) {
             const lowercaseEmail = student.studentEmail.toLowerCase();
             console.log(`Sending OTP to email: ${lowercaseEmail}`, otp); // For testing purposes
-            
+
             await sendEmailOtp(lowercaseEmail, otp);
 
             return {
@@ -485,6 +486,16 @@ exports.studentForgetPassword = async (studentForgetData) => {
         }
 
         // 🔹 Mobile case
+        const lowerCaseMobileNO = student.studentMobileNo;
+
+        sendMobileOtp(lowerCaseMobileNO, otp);
+
+        if (sendMobileOtp.success === false) {
+            return {
+                status: 500,
+                message: 'Failed to send OTP to mobile number'
+            };
+        }
         return {
             status: 200,
             message: 'OTP sent to registered mobile number successfully',
@@ -496,7 +507,7 @@ exports.studentForgetPassword = async (studentForgetData) => {
 
     } catch (error) {
         console.log(error);
-        
+
         return {
             status: 500,
             message: 'An error occurred during password reset',
