@@ -314,6 +314,7 @@ exports.studentRegistration = async (studentData) => {
                 studentMobileNo: newStudent.studentMobileNo,
                 studentJobSector: newStudent.studentJobSector,
                 studentReferralCode: newStudent.studentReferralCode,
+                studentProfilePic: newStudent.studentProfilePic
             },
         };
     } catch (error) {
