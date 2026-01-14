@@ -13,7 +13,7 @@ const studentRoutes = require("./routes/studentRoutes");
 dotenv.config();
 const app = express();
 
-// Middleware
+// Middleware 
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:5174','https://jobportal-cloud.vercel.app'], 
   credentials: true,
@@ -23,7 +23,7 @@ app.use(express.json()); // parse JSON
 app.use(express.urlencoded({ extended: true })); // parse form data
 
 // Serve uploaded files
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/ ", express.static(path.join(__dirname, "uploads")));
 
 // Connect to MongoDB
 connectDB();

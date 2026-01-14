@@ -26,6 +26,7 @@ const Documents = lazy(() => import('@/views/pages/Manage-Jobs/documents'));
 const Admissions = lazy(() => import('@/views/pages/Manage-Jobs/admission'));
 const RegisterStudent = lazy(() => import('@/views/pages/student/Register'));
 const Students = lazy(() => import('@/views/pages/student'));
+const WizardStudentDetail = lazy(() => import('@/components/WizardStudentDetail'));
 const StudentDetail = lazy(() => import('@/views/pages/student/components/StudentDetail'));
 
 
@@ -103,6 +104,10 @@ const studentsRoutes=[{
   path:'/admin/students',
   element:<Students/>
 },{
+  path: '/admin/student/detail/:id',
+  element:<WizardStudentDetail/>
+},
+{
   path:'/admin/students/view/:id',
   element:<StudentDetail/>
 },{

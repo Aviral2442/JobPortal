@@ -40,7 +40,8 @@ export const userDropdownItems = [{
 
 
 //dashboard sidebar menu items
-export const menuItems = [{
+export const menuItems = [
+  {
   key: 'dashboard',
   label: 'Dashboard',
   icon: LuCircleGauge,
