@@ -23,7 +23,7 @@ app.use(express.json()); // parse JSON
 app.use(express.urlencoded({ extended: true })); // parse form data
 
 // Serve uploaded files
-app.use("/ ", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Connect to MongoDB
 connectDB();

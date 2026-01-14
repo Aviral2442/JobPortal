@@ -104,7 +104,7 @@ const StudentList = ({ refreshFlag }) => {
       orderable: false,
       render: (data) => {
         if (data) {
-          return `<img src="${BASE_URL}/api${data}" alt="Profile" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;" />`;
+          return `<img src="${BASE_URL}${data}" alt="Profile" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;" />`;
         }
         return `<div style="width: 20px; height: 20px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center;">
                   <i class="ti ti-user"></i>
@@ -127,9 +127,9 @@ const StudentList = ({ refreshFlag }) => {
       data: "studentMobileNo",
     },
     {
-      title: "Job Type",
-      data: "studentJobType",
-      render: (data) => data?.job_type_name || "N/A",
+      title: "Sector",
+      data: "studentJobSector",
+      render: (data) => data?.job_sector_name || "N/A",
     },
     {
         title: "Date Created",

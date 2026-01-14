@@ -61,7 +61,7 @@ exports.studentListService = async (query) => {
 
         const totalCount = await studentModel.countDocuments(filter);
         const students = await studentModel.find(filter)
-            .populate({ path: 'studentJobType', model: 'JobType', select: 'job_type_name' })
+            .populate({ path: 'studentJobSector', model: 'JobSector', select: 'job_sector_name' })
             .sort({ studentCreatedAt: -1 })
             .skip(skip)
             .limit(finalLimit);
@@ -206,6 +206,8 @@ exports.studentAllDetails = async (studentId) => {
         const studentSocialLinksData = await StudentSocialLinks.findOne({ studentId });
         const studentWorkExperienceData = await StudentExperience.findOne({ studentId });
 
+        studentPrimaryData.studentJobSector = await require('../models/JobSectorModel').findById(studentPrimaryData.studentJobSector);
+
         return {
             result: 200,
             message: "Student all details fetched successfully",
@@ -262,7 +264,7 @@ exports.studentRegistration = async (studentData) => {
             studentData.studentReferralById = refStudent._id;
             studentData.studentReferralByCode = refStudent.studentReferralCode;
         }
-
+        console.log('Student Data Received for Registration:', studentData);
         // ✅ Handle base64 profile image
         let studentProfilePic = null;
         if (studentData.studentProfilePic) {
@@ -293,12 +295,12 @@ exports.studentRegistration = async (studentData) => {
             studentEmail: studentData.studentEmail,
             studentMobileNo: studentData.studentMobileNo,
             studentPassword: studentData.studentPassword,
-            studentJobType: studentData.studentJobType,
+            studentJobSector: studentData.studentJobSector,
             studentReferralCode: await generateRandomReferralCode(),
             studentReferralById: studentData.studentReferralById || null,
             studentReferralByCode: studentData.studentReferralByCode || null,
         });
-
+        console.log('New Student Object Created:', newStudent); 
         await newStudent.save();
 
         return {
@@ -310,7 +312,7 @@ exports.studentRegistration = async (studentData) => {
                 studentLastName: newStudent.studentLastName,
                 studentEmail: newStudent.studentEmail,
                 studentMobileNo: newStudent.studentMobileNo,
-                studentJobType: newStudent.studentJobType,
+                studentJobSector: newStudent.studentJobSector,
                 studentReferralCode: newStudent.studentReferralCode,
             },
         };
@@ -365,7 +367,7 @@ exports.studentLogin = async (studentLoginData) => {
                 studentLastName: student.studentLastName,
                 studentEmail: student.studentEmail,
                 studentMobileNo: student.studentMobileNo,
-                studentJobType: student.studentJobType,
+                studentJobSector: student.studentJobSector,
                 studentProfilePic: student.studentProfilePic
             }
         };

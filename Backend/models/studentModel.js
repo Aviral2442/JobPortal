@@ -9,7 +9,7 @@ const StudentSchema = new mongoose.Schema({
     studentEmail: { type: String, required: true, unique: true, lowercase: true, trim: true },
     studentMobileNo: { type: String, required: true, unique: true },
     studentPassword: { type: String, required: true },
-    studentJobType: { type: mongoose.Schema.Types.ObjectId, ref: 'jobType', required: true },
+    studentJobSector: { type: mongoose.Schema.Types.ObjectId, ref: 'JobSector', required: true },
     studentResumeFile: { type: String },
     studentReferralCode: { type: String },
     studentReferralById: { type: mongoose.Schema.Types.ObjectId, ref: 'student', default: null },

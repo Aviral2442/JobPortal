@@ -35,7 +35,7 @@ const studentValidationSchema = Yup.object({
   confirmPassword: Yup.string()
     .required('Confirm Password is required')
     .oneOf([Yup.ref('studentPassword')], 'Passwords must match'),
-  studentJobType: Yup.string().required('Job Type is required'),
+  studentJobSector: Yup.string().required('Job Sector is required'),
   studentReferralByCode: Yup.string()
     .matches(/^CW[A-Z0-9]{6}$/, 'Invalid referral code format (Example: CW123ABC)')
     .optional(),
@@ -95,14 +95,14 @@ const Register = () => {
     studentMobileNo: '',
     studentPassword: '',
     confirmPassword: '',
-    studentJobType: '',
+    studentJobSector: '',
     studentReferralByCode: '',
   };
 
   const fetchJobTypes = async () => {
     try {
-      const response = await axios.get('/job-categories/get_job_type_list');
-      setJobTypeList(response.data?.jsonData?.jobTypes || []);
+      const response = await axios.get('/job-categories/get_job_sector_list');
+      setJobTypeList(response.data?.jsonData?.data || []);
       console.log('Job Types fetched:', response.data);
     } catch (error) {
       console.error('Error fetching job types:', error);
@@ -161,7 +161,7 @@ const Register = () => {
         studentEmail: values.studentEmail.toLowerCase().trim(),
         studentMobileNo: values.studentMobileNo.trim(),
         studentPassword: values.studentPassword,
-        studentJobType: values.studentJobType,
+        studentJobSector: values.studentJobSector,
         studentReferralByCode: values.studentReferralByCode
           ? values.studentReferralByCode.trim().toUpperCase()
           : null,
@@ -376,21 +376,21 @@ const Register = () => {
                           Preferred Job Type <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Select
-                          name="studentJobType"
-                          value={values.studentJobType}
+                          name="studentJobSector"
+                          value={values.studentJobSector}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          isInvalid={touched.studentJobType && errors.studentJobType}
+                          isInvalid={touched.studentJobSector && errors.studentJobSector}
                         >
                           <option value="">Select Job Type</option>
                           {jobTypeList.map((jobType) => (
                             <option key={jobType._id} value={jobType._id}>
-                              {jobType.job_type_name}
+                              {jobType.job_sector_name}
                             </option>
                           ))}
                         </Form.Select>
                         <Form.Control.Feedback type="invalid">
-                          {errors.studentJobType}
+                          {errors.studentJobSector}
                         </Form.Control.Feedback>
                       </Form.Group>
                     </Col>

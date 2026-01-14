@@ -10,6 +10,9 @@ import {
   FormSelect,
   ProgressBar,
   Row,
+  Spinner,
+  Alert,
+  Table,
 } from "react-bootstrap";
 import { Wizard, useWizard } from "react-use-wizard";
 import PageTitle from "@/components/PageTitle";
@@ -18,6 +21,7 @@ import Flatpickr from "react-flatpickr";
 import clsx from "clsx";
 import { useParams } from "react-router-dom";
 import axios from "@/api/axios";
+import toast from "react-hot-toast";
 
 import {
   TbUserCircle,
@@ -97,7 +101,7 @@ const Header = ({ withProgress }) => {
 /* ---------------------------------------------------
    Field Renderer
 ----------------------------------------------------*/
-const RenderField = ({ field, value }) => {
+const RenderField = ({ field, value, onChange }) => {
   if (field.type === "divider") {
     return (
       <Col xl={12}>
@@ -108,13 +112,27 @@ const RenderField = ({ field, value }) => {
     );
   }
 
+  const handleChange = (e) => {
+    if (field.type === "checkbox") {
+      onChange(field.name, e.target.checked);
+    } else if (field.type === "file") {
+      onChange(field.name, e.target.files[0]);
+    } else {
+      onChange(field.name, e.target.value);
+    }
+  };
+
+  const handleDateChange = (dates) => {
+    onChange(field.name, dates[0]);
+  };
+
   return (
     <Col xl={field.cols || 4}>
       <FormGroup className="mb-3">
         <FormLabel>{field.label}</FormLabel>
 
         {field.type === "select" ? (
-          <FormSelect value={value || ""} disabled={!field.editable}>
+          <FormSelect value={value || ""} onChange={handleChange}>
             <option value="">Select</option>
             {field.options?.map((opt, idx) => (
               <option key={idx} value={opt.value}>
@@ -127,32 +145,32 @@ const RenderField = ({ field, value }) => {
             className="form-control"
             value={value}
             options={{ dateFormat: "d M, Y" }}
-            disabled={!field.editable}
+            onChange={handleDateChange}
           />
         ) : field.type === "textarea" ? (
           <Form.Control
             as="textarea"
             rows={field.rows || 3}
             value={value || ""}
-            disabled={!field.editable}
+            onChange={handleChange}
           />
         ) : field.type === "checkbox" ? (
           <Form.Check
             type="checkbox"
             checked={value || false}
-            disabled={!field.editable}
+            onChange={handleChange}
           />
         ) : field.type === "file" ? (
           <FormControl
             type="file"
             accept={field.accept}
-            disabled={!field.editable}
+            onChange={handleChange}
           />
         ) : (
           <FormControl
             type={field.type || "text"}
             value={value || ""}
-            disabled={!field.editable}
+            onChange={handleChange}
           />
         )}
       </FormGroup>
@@ -163,31 +181,69 @@ const RenderField = ({ field, value }) => {
 /* ---------------------------------------------------
    Step Builder
 ----------------------------------------------------*/
-const StepSection = ({ title, fields, data, next, prev }) => {
+const StepSection = ({ title, fields, data, next, prev, onChange, onSave, apiEndpoint, saving, customContent, additionalButtons }) => {
   const { nextStep, previousStep } = useWizard();
+
+  const handleSave = async () => {
+    await onSave(apiEndpoint, fields);
+  };
 
   return (
     <Form>
+      {customContent && <div className="mb-3">{customContent}</div>}
+      
       <Row>
         {fields.map((field, idx) => (
-          <RenderField key={idx} field={field} value={data?.[field.name]} />
+          <RenderField 
+            key={idx} 
+            field={field} 
+            value={data?.[field.name]} 
+            onChange={onChange}
+          />
         ))}
       </Row>
 
-      <div className="d-flex justify-content-between mt-3">
-        {prev && (
-          <Button variant="secondary" onClick={previousStep}>
-            ← Back
+      <div className="d-flex justify-content-between align-items-center my-3">
+        <div>
+          {prev && (
+            <Button variant="dark" onClick={previousStep} className="me-2">
+              ← Back
+            </Button>
+          )}
+          {additionalButtons && additionalButtons.map((btn, idx) => (
+            <Button 
+              key={idx}
+              variant={btn.variant || "secondary"} 
+              onClick={btn.onClick}
+              className="me-2"
+            >
+              {btn.icon && <i className={`bi bi-${btn.icon} me-1`}></i>}
+              {btn.label}
+            </Button>
+          ))}
+        </div>
+        <div>
+          <Button 
+            variant="light" 
+            onClick={handleSave} 
+            disabled={saving}
+            className="me-2"
+          >
+            {saving ? (
+              <>
+                <Spinner size="sm" className="me-2" />
+                Saving...
+              </>
+            ) : (
+              "Save Changes"
+            )}
           </Button>
-        )}
-        {next && (
-          <Button variant="primary" onClick={nextStep}>
-            Next →
-          </Button>
-        )}
-        {!next && !prev && (
-          <Button variant="success">Finish</Button>
-        )}
+          {next && (
+            <Button variant="primary" onClick={nextStep}>
+              Next →
+            </Button>
+          )}
+        </div>
       </div>
     </Form>
   );
@@ -200,16 +256,23 @@ const WizardStudentDetail = () => {
   const { id } = useParams();
   const [sectionData, setSectionData] = useState({});
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [certificates, setCertificates] = useState([]);
+  const [workExperiences, setWorkExperiences] = useState([]);
+  const [editingCertificateIndex, setEditingCertificateIndex] = useState(null);
+  const [editingExperienceIndex, setEditingExperienceIndex] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const res = await axios.get(`/student/studentAllDetails/${id}`);
+        console.log("Fetched student details:", res.data); 
         const flattened = flattenData(res.data.jsonData);
         setSectionData(flattened);
       } catch (error) {
         console.error("Error fetching student details:", error);
+        toast.error("Failed to fetch student details");
       } finally {
         setLoading(false);
       }
@@ -217,6 +280,226 @@ const WizardStudentDetail = () => {
 
     fetchData();
   }, [id]);
+
+  const handleFieldChange = (fieldName, value) => {
+    setSectionData((prev) => ({
+      ...prev,
+      [fieldName]: value,
+    }));
+  };
+
+  const handleSave = async (endpoint, fields) => {
+    try {
+      setSaving(true);
+      
+      // Prepare data based on the fields in the current section
+      let payload = {};
+      fields.forEach((field) => {
+        if (field.type !== "divider" && field.name) {
+          const value = sectionData[field.name];
+          // Include all values including empty strings (to allow clearing fields)
+          // Only exclude undefined and null
+          if (value !== undefined && value !== null) {
+            payload[field.name] = value;
+          }
+        }
+      });
+
+      // Special handling for Address - needs nested structure
+      if (endpoint.includes('updateStudentAddress')) {
+        payload = {
+          current: {
+            addressLine1: sectionData.currentAddressLine1 || '',
+            addressLine2: sectionData.currentAddressLine2 || '',
+            city: sectionData.currentCity || '',
+            district: sectionData.currentDistrict || '',
+            state: sectionData.currentState || '',
+            country: sectionData.currentCountry || '',
+            pincode: sectionData.currentPincode || '',
+          },
+          permanent: {
+            addressLine1: sectionData.permanentAddressLine1 || '',
+            addressLine2: sectionData.permanentAddressLine2 || '',
+            city: sectionData.permanentCity || '',
+            district: sectionData.permanentDistrict || '',
+            state: sectionData.permanentState || '',
+            country: sectionData.permanentCountry || '',
+            pincode: sectionData.permanentPincode || '',
+          },
+          isPermanentSameAsCurrent: sectionData.isPermanentSameAsCurrent || false,
+        };
+      }
+
+      console.log('Endpoint:', endpoint);
+      console.log('Payload being sent:', payload);
+
+      // Special handling for certificates
+      if (endpoint.includes('updateStudentCertificates')) {
+        // Validate required fields
+        if (!payload.certificationName || !payload.issuingOrganization || !payload.issueDate) {
+          toast.error('Please fill in Certification Name, Issuing Organization, and Issue Date');
+          setSaving(false);
+          return;
+        }
+        
+        // If editing existing certificate, include the certificate ID
+        if (editingCertificateIndex !== null) {
+          const existingCert = certificates[editingCertificateIndex];
+          if (existingCert && existingCert._id) {
+            payload.certificateId = existingCert._id.toString();
+            console.log('Editing certificate with ID:', payload.certificateId);
+          }
+        }
+      }
+
+      // Special handling for work experience
+      if (endpoint.includes('updateStudentWorkExperience')) {
+        // If editing existing experience, include the experience ID
+        if (editingExperienceIndex !== null) {
+          const existingExp = workExperiences[editingExperienceIndex];
+          if (existingExp && existingExp._id) {
+            payload.experienceId = existingExp._id.toString();
+            console.log('Editing experience with ID:', payload.experienceId);
+          }
+        }
+      }
+
+      // Handle file uploads separately if needed
+      const hasFiles = fields.some(f => f.type === "file");
+      
+      if (hasFiles) {
+        const formData = new FormData();
+        Object.keys(payload).forEach(key => {
+          const value = payload[key];
+          if (value instanceof File) {
+            formData.append(key, value);
+          } else if (value !== undefined && value !== null) {
+            formData.append(key, value.toString());
+          }
+        });
+        
+        console.log('Sending FormData with files');
+        const response = await axios.put(endpoint, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        console.log('Response:', response.data);
+      } else {
+        console.log('Sending JSON payload');
+        const response = await axios.put(endpoint, payload);
+        console.log('Response:', response.data);
+      }
+
+      toast.success("Changes saved successfully!");
+      
+      // Clear certificate/experience form after save
+      if (endpoint.includes('updateStudentCertificates')) {
+        setEditingCertificateIndex(null);
+        // Clear certificate fields
+        setSectionData(prev => ({
+          ...prev,
+          certificationName: '',
+          issuingOrganization: '',
+          issueDate: '',
+          expirationDate: '',
+          credentialId: '',
+          certificateUrl: '',
+        }));
+      }
+      
+      if (endpoint.includes('updateStudentWorkExperience')) {
+        setEditingExperienceIndex(null);
+        // Clear experience fields
+        setSectionData(prev => ({
+          ...prev,
+          companyName: '',
+          jobTitle: '',
+          jobType: '',
+          experienceDurationMonths: '',
+          experienceStartDate: '',
+          experienceEndDate: '',
+          responsibilities: '',
+        }));
+      }
+      
+      // Refresh data
+      const res = await axios.get(`/student/studentAllDetails/${id}`);
+      const flattened = flattenData(res.data.jsonData);
+      setSectionData(flattened);
+      
+    } catch (error) {
+      console.error("Error saving data:", error);
+      console.error("Error response:", error.response?.data);
+      toast.error(error.response?.data?.message || "Failed to save changes");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Add new certificate - clear form
+  const addNewCertificate = () => {
+    setSectionData(prev => ({
+      ...prev,
+      certificationName: '',
+      issuingOrganization: '',
+      issueDate: '',
+      expirationDate: '',
+      credentialId: '',
+      certificateUrl: '',
+    }));
+    setEditingCertificateIndex(null);
+    toast.info('Fill in new certificate details and click Save');
+  };
+
+  // Edit existing certificate
+  const editCertificate = (index) => {
+    const cert = certificates[index];
+    setSectionData(prev => ({
+      ...prev,
+      certificationName: cert.certificationName || '',
+      issuingOrganization: cert.issuingOrganization || '',
+      issueDate: cert.issueDate ? cert.issueDate.split('T')[0] : '',
+      expirationDate: cert.expirationDate ? cert.expirationDate.split('T')[0] : '',
+      credentialId: cert.credentialId || '',
+      certificateUrl: cert.certificateUrl || '',
+    }));
+    setEditingCertificateIndex(index);
+    toast.info(`Editing certificate: ${cert.certificationName}`);
+  };
+
+  // Add new work experience - clear form
+  const addNewExperience = () => {
+    setSectionData(prev => ({
+      ...prev,
+      companyName: '',
+      jobTitle: '',
+      jobType: '',
+      experienceDurationMonths: '',
+      experienceStartDate: '',
+      experienceEndDate: '',
+      responsibilities: '',
+    }));
+    setEditingExperienceIndex(null);
+    toast.info('Fill in new work experience details and click Save');
+  };
+
+  // Edit existing work experience
+  const editExperience = (index) => {
+    const exp = workExperiences[index];
+    setSectionData(prev => ({
+      ...prev,
+      companyName: exp.companyName || '',
+      jobTitle: exp.jobTitle || '',
+      jobType: exp.jobType || '',
+      experienceDurationMonths: exp.experienceDurationMonths || '',
+      experienceStartDate: exp.startDate ? exp.startDate.split('T')[0] : '',
+      experienceEndDate: exp.endDate ? exp.endDate.split('T')[0] : '',
+      responsibilities: exp.responsibilities || '',
+    }));
+    setEditingExperienceIndex(index);
+    toast.info(`Editing experience: ${exp.companyName}`);
+  };
 
   const flattenData = (data) => {
     if (!data) return {};
@@ -235,8 +518,14 @@ const WizardStudentDetail = () => {
     const certificatesData = Array.isArray(data.studentCertificatesData) ? data.studentCertificatesData[0] : data.studentCertificatesData;
     const basicData = Array.isArray(data.studentBasicData) ? data.studentBasicData[0] : data.studentBasicData;
 
-    const firstExperience = workExperienceData?.experiences?.[0] || {};
-    const firstCertificate = certificatesData?.certificates?.[0] || {};
+    // Store all certificates and work experiences
+    const validCertificates = (certificatesData?.certificates || []).filter(cert => cert !== null);
+    setCertificates(validCertificates);
+    const validExperiences = (workExperienceData?.experiences || []).filter(exp => exp !== null);
+    setWorkExperiences(validExperiences);
+
+    const firstExperience = validExperiences[0] || {};
+    const firstCertificate = validCertificates[0] || {};
 
     return {
       // Primary Data
@@ -404,28 +693,32 @@ const WizardStudentDetail = () => {
         <Col cols={12}>
           <ComponentCard title="Student Details Wizard">
             <Wizard header={<Header withProgress />}>
-              {/* Step 1: Primary Info */}
+              {/* Step 1: Primary Information */}
               <StepSection
                 title="Primary Information"
                 data={sectionData}
                 next
+                onChange={handleFieldChange}
+                onSave={handleSave}
+                apiEndpoint={`/student/updateStudentBasicDetails/${id}`}
+                saving={saving}
                 fields={[
-                  { name: "studentFirstName", label: "First Name", type: "text", editable: false, cols: 4 },
-                  { name: "studentLastName", label: "Last Name", type: "text", editable: false, cols: 4 },
-                  { name: "studentEmail", label: "Email", type: "email", editable: false, cols: 4 },
-                  { name: "studentMobileNo", label: "Mobile Number", type: "tel", editable: false, cols: 4 },
-                  { name: "studentJobType", label: "Job Type", type: "text", editable: false, cols: 4 },
+                  { name: "studentFirstName", label: "First Name", type: "text", cols: 4 },
+                  { name: "studentLastName", label: "Last Name", type: "text", cols: 4 },
+                  { name: "studentEmail", label: "Email", type: "email", cols: 4 },
+                  { name: "studentMobileNo", label: "Mobile Number", type: "tel", cols: 4 },
+                  { name: "studentJobType", label: "Job Type", type: "text", cols: 4 },
                   {
-                    name: "accountStatus", label: "Account Status", type: "select", editable: false, cols: 4,
+                    name: "accountStatus", label: "Account Status", type: "select", cols: 4,
                     options: [
                       { value: "active", label: "Active" },
                       { value: "inactive", label: "Inactive" },
                       { value: "blocked", label: "Blocked" },
                     ]
                   },
-                  { name: "studentReferralCode", label: "Referral Code", type: "text", editable: false, cols: 4 },
-                  { name: "studentReferralByCode", label: "Referred By Code", type: "text", editable: false, cols: 4 },
-                  { name: "studentCreatedAt", label: "Created At", type: "date", editable: false, cols: 4 },
+                  { name: "studentReferralCode", label: "Referral Code", type: "text", cols: 4 },
+                  { name: "studentReferralByCode", label: "Referred By Code", type: "text", cols: 4 },
+                  { name: "studentCreatedAt", label: "Created At", type: "date", cols: 4 },
                 ]}
               />
 
@@ -435,10 +728,14 @@ const WizardStudentDetail = () => {
                 data={sectionData}
                 next
                 prev
+                onChange={handleFieldChange}
+                onSave={handleSave}
+                apiEndpoint={`/student/updateStudentBasicDetails/${id}`}
+                saving={saving}
                 fields={[
-                  { name: "studentDOB", label: "Date of Birth", type: "date", editable: false, cols: 3 },
+                  { name: "studentDOB", label: "Date of Birth", type: "date", cols: 3 },
                   {
-                    name: "studentGender", label: "Gender", type: "select", editable: false, cols: 3,
+                    name: "studentGender", label: "Gender", type: "select", cols: 3,
                     options: [
                       { value: "male", label: "Male" },
                       { value: "female", label: "Female" },
@@ -446,9 +743,9 @@ const WizardStudentDetail = () => {
                       { value: "prefer_not_to_say", label: "Prefer Not to Say" },
                     ]
                   },
-                  { name: "studentAlternateMobileNo", label: "Alternate Mobile", type: "tel", editable: false, cols: 3 },
+                  { name: "studentAlternateMobileNo", label: "Alternate Mobile", type: "tel", cols: 3 },
                   {
-                    name: "studentMaritalStatus", label: "Marital Status", type: "select", editable: false, cols: 3,
+                    name: "studentMaritalStatus", label: "Marital Status", type: "select", cols: 3,
                     options: [
                       { value: "single", label: "Single" },
                       { value: "married", label: "Married" },
@@ -456,9 +753,9 @@ const WizardStudentDetail = () => {
                       { value: "prefer_not_to_say", label: "Prefer Not to Say" },
                     ]
                   },
-                  { name: "studentMotherTongue", label: "Mother Tongue", type: "text", editable: false, cols: 3 },
-                  { name: "studentNationality", label: "Nationality", type: "text", editable: false, cols: 3 },
-                  { name: "studentCitizenship", label: "Citizenship", type: "text", editable: false, cols: 3 },
+                  { name: "studentMotherTongue", label: "Mother Tongue", type: "text", cols: 3 },
+                  { name: "studentNationality", label: "Nationality", type: "text", cols: 3 },
+                  { name: "studentCitizenship", label: "Citizenship", type: "text", cols: 3 },
                 ]}
               />
 
@@ -468,25 +765,29 @@ const WizardStudentDetail = () => {
                 data={sectionData}
                 next
                 prev
+                onChange={handleFieldChange}
+                onSave={handleSave}
+                apiEndpoint={`/student/updateStudentAddress/${id}`}
+                saving={saving}
                 fields={[
                   { label: "Current Address", type: "divider", cols: 12 },
-                  { name: "currentAddressLine1", label: "Address Line 1", type: "text", editable: false, cols: 6 },
-                  { name: "currentAddressLine2", label: "Address Line 2", type: "text", editable: false, cols: 6 },
-                  { name: "currentCity", label: "City", type: "text", editable: false, cols: 2 },
-                  { name: "currentDistrict", label: "District", type: "text", editable: false, cols: 2 },
-                  { name: "currentState", label: "State", type: "text", editable: false, cols: 2 },
-                  { name: "currentCountry", label: "Country", type: "text", editable: false, cols: 2 },
-                  { name: "currentPincode", label: "Pincode", type: "text", editable: false, cols: 2 },
+                  { name: "currentAddressLine1", label: "Address Line 1", type: "text", cols: 6 },
+                  { name: "currentAddressLine2", label: "Address Line 2", type: "text", cols: 6 },
+                  { name: "currentCity", label: "City", type: "text", cols: 2 },
+                  { name: "currentDistrict", label: "District", type: "text", cols: 2 },
+                  { name: "currentState", label: "State", type: "text", cols: 2 },
+                  { name: "currentCountry", label: "Country", type: "text", cols: 2 },
+                  { name: "currentPincode", label: "Pincode", type: "text", cols: 2 },
 
                   { label: "Permanent Address", type: "divider", cols: 12 },
-                  { name: "isPermanentSameAsCurrent", label: "Same as Current", type: "checkbox", editable: false, cols: 12 },
-                  { name: "permanentAddressLine1", label: "Address Line 1", type: "text", editable: false, cols: 6 },
-                  { name: "permanentAddressLine2", label: "Address Line 2", type: "text", editable: false, cols: 6 },
-                  { name: "permanentCity", label: "City", type: "text", editable: false, cols: 2 },
-                  { name: "permanentDistrict", label: "District", type: "text", editable: false, cols: 2 },
-                  { name: "permanentState", label: "State", type: "text", editable: false, cols: 2 },
-                  { name: "permanentCountry", label: "Country", type: "text", editable: false, cols: 2 },
-                  { name: "permanentPincode", label: "Pincode", type: "text", editable: false, cols: 2 },
+                  { name: "isPermanentSameAsCurrent", label: "Same as Current", type: "checkbox", cols: 12 },
+                  { name: "permanentAddressLine1", label: "Address Line 1", type: "text", cols: 6 },
+                  { name: "permanentAddressLine2", label: "Address Line 2", type: "text", cols: 6 },
+                  { name: "permanentCity", label: "City", type: "text", cols: 2 },
+                  { name: "permanentDistrict", label: "District", type: "text", cols: 2 },
+                  { name: "permanentState", label: "State", type: "text", cols: 2 },
+                  { name: "permanentCountry", label: "Country", type: "text", cols: 2 },
+                  { name: "permanentPincode", label: "Pincode", type: "text", cols: 2 },
                 ]}
               />
 
@@ -496,25 +797,29 @@ const WizardStudentDetail = () => {
                 data={sectionData}
                 next
                 prev
+                onChange={handleFieldChange}
+                onSave={handleSave}
+                apiEndpoint={`/student/updateStudentBankDetails/${id}`}
+                saving={saving}
                 fields={[
                   { label: "Bank Details", type: "divider", cols: 12 },
-                  { name: "bankHolderName", label: "Account Holder Name", type: "text", editable: false, cols: 4 },
-                  { name: "bankName", label: "Bank Name", type: "text", editable: false, cols: 4 },
-                  { name: "accountNumber", label: "Account Number", type: "text", editable: false, cols: 4 },
-                  { name: "ifscCode", label: "IFSC Code", type: "text", editable: false, cols: 4 },
-                  { name: "branchName", label: "Branch Name", type: "text", editable: false, cols: 4 },
+                  { name: "bankHolderName", label: "Account Holder Name", type: "text", cols: 4 },
+                  { name: "bankName", label: "Bank Name", type: "text", cols: 4 },
+                  { name: "accountNumber", label: "Account Number", type: "text", cols: 4 },
+                  { name: "ifscCode", label: "IFSC Code", type: "text", cols: 4 },
+                  { name: "branchName", label: "Branch Name", type: "text", cols: 4 },
 
                   { label: "Body Details", type: "divider", cols: 12 },
-                  { name: "heightCm", label: "Height (cm)", type: "number", editable: false, cols: 2 },
-                  { name: "weightKg", label: "Weight (kg)", type: "number", editable: false, cols: 2 },
-                  { name: "bloodGroup", label: "Blood Group", type: "text", editable: false, cols: 2 },
-                  { name: "eyeColor", label: "Eye Color", type: "text", editable: false, cols: 2 },
-                  { name: "hairColor", label: "Hair Color", type: "text", editable: false, cols: 2 },
-                  { name: "identificationMark1", label: "Identification Mark 1", type: "text", editable: false, cols: 6 },
-                  { name: "identificationMark2", label: "Identification Mark 2", type: "text", editable: false, cols: 6 },
-                  { name: "disability", label: "Disability", type: "checkbox", editable: false, cols: 4 },
-                  { name: "disabilityType", label: "Disability Type", type: "text", editable: false, cols: 4 },
-                  { name: "disabilityPercentage", label: "Disability %", type: "number", editable: false, cols: 4 },
+                  { name: "heightCm", label: "Height (cm)", type: "number", cols: 2 },
+                  { name: "weightKg", label: "Weight (kg)", type: "number", cols: 2 },
+                  { name: "bloodGroup", label: "Blood Group", type: "text", cols: 2 },
+                  { name: "eyeColor", label: "Eye Color", type: "text", cols: 2 },
+                  { name: "hairColor", label: "Hair Color", type: "text", cols: 2 },
+                  { name: "identificationMark1", label: "Identification Mark 1", type: "text", cols: 6 },
+                  { name: "identificationMark2", label: "Identification Mark 2", type: "text", cols: 6 },
+                  { name: "disability", label: "Disability", type: "checkbox", cols: 4 },
+                  { name: "disabilityType", label: "Disability Type", type: "text", cols: 4 },
+                  { name: "disabilityPercentage", label: "Disability %", type: "number", cols: 4 },
                 ]}
               />
 
@@ -524,11 +829,15 @@ const WizardStudentDetail = () => {
                 data={sectionData}
                 next
                 prev
+                onChange={handleFieldChange}
+                onSave={handleSave}
+                apiEndpoint={`/student/updateStudentEmergencyContact/${id}`}
+                saving={saving}
                 fields={[
-                  { name: "emergencyContactName", label: "Contact Name", type: "text", editable: false, cols: 4 },
-                  { name: "emergencyRelation", label: "Relation", type: "text", editable: false, cols: 4 },
-                  { name: "emergencyPhoneNumber", label: "Phone Number", type: "tel", editable: false, cols: 4 },
-                  { name: "emergencyAddress", label: "Address", type: "textarea", rows: 2, editable: false, cols: 12 },
+                  { name: "emergencyContactName", label: "Contact Name", type: "text", cols: 4 },
+                  { name: "emergencyRelation", label: "Relation", type: "text", cols: 4 },
+                  { name: "emergencyPhoneNumber", label: "Phone Number", type: "tel", cols: 4 },
+                  { name: "emergencyAddress", label: "Address", type: "textarea", rows: 2, cols: 12 },
                 ]}
               />
 
@@ -538,28 +847,32 @@ const WizardStudentDetail = () => {
                 data={sectionData}
                 next
                 prev
+                onChange={handleFieldChange}
+                onSave={handleSave}
+                apiEndpoint={`/student/updateStudentParentalInfo/${id}`}
+                saving={saving}
                 fields={[
                   { label: "Father's Information", type: "divider", cols: 12 },
-                  { name: "fatherName", label: "Father's Name", type: "text", editable: false, cols: 4 },
-                  { name: "fatherContactNumber", label: "Contact Number", type: "tel", editable: false, cols: 4 },
-                  { name: "fatherOccupation", label: "Occupation", type: "text", editable: false, cols: 4 },
-                  { name: "fatherEmail", label: "Email", type: "email", editable: false, cols: 4 },
-                  { name: "fatherAnnualIncome", label: "Annual Income", type: "number", editable: false, cols: 4 },
+                  { name: "fatherName", label: "Father's Name", type: "text", cols: 4 },
+                  { name: "fatherContactNumber", label: "Contact Number", type: "tel", cols: 4 },
+                  { name: "fatherOccupation", label: "Occupation", type: "text", cols: 4 },
+                  { name: "fatherEmail", label: "Email", type: "email", cols: 4 },
+                  { name: "fatherAnnualIncome", label: "Annual Income", type: "number", cols: 4 },
 
                   { label: "Mother's Information", type: "divider", cols: 12 },
-                  { name: "motherName", label: "Mother's Name", type: "text", editable: false, cols: 4 },
-                  { name: "motherContactNumber", label: "Contact Number", type: "tel", editable: false, cols: 4 },
-                  { name: "motherOccupation", label: "Occupation", type: "text", editable: false, cols: 4 },
-                  { name: "motherEmail", label: "Email", type: "email", editable: false, cols: 4 },
-                  { name: "motherAnnualIncome", label: "Annual Income", type: "number", editable: false, cols: 4 },
+                  { name: "motherName", label: "Mother's Name", type: "text", cols: 4 },
+                  { name: "motherContactNumber", label: "Contact Number", type: "tel", cols: 4 },
+                  { name: "motherOccupation", label: "Occupation", type: "text", cols: 4 },
+                  { name: "motherEmail", label: "Email", type: "email", cols: 4 },
+                  { name: "motherAnnualIncome", label: "Annual Income", type: "number", cols: 4 },
 
                   { label: "Guardian's Information", type: "divider", cols: 12 },
-                  { name: "guardianName", label: "Guardian Name", type: "text", editable: false, cols: 4 },
-                  { name: "guardianRelation", label: "Relation", type: "text", editable: false, cols: 4 },
-                  { name: "guardianContactNumber", label: "Contact Number", type: "tel", editable: false, cols: 4 },
-                  { name: "numberOfFamilyMembers", label: "Family Members", type: "number", editable: false, cols: 4 },
+                  { name: "guardianName", label: "Guardian Name", type: "text", cols: 4 },
+                  { name: "guardianRelation", label: "Relation", type: "text", cols: 4 },
+                  { name: "guardianContactNumber", label: "Contact Number", type: "tel", cols: 4 },
+                  { name: "numberOfFamilyMembers", label: "Family Members", type: "number", cols: 4 },
                   {
-                    name: "familyType", label: "Family Type", type: "select", editable: false, cols: 4,
+                    name: "familyType", label: "Family Type", type: "select", cols: 4,
                     options: [
                       { value: "joint", label: "Joint" },
                       { value: "nuclear", label: "Nuclear" },
@@ -575,13 +888,17 @@ const WizardStudentDetail = () => {
                 data={sectionData}
                 next
                 prev
+                onChange={handleFieldChange}
+                onSave={handleSave}
+                apiEndpoint={`/student/updateStudentCareerPreferences/${id}`}
+                saving={saving}
                 fields={[
-                  { name: "preferredJobCategory", label: "Preferred Job Category", type: "textarea", rows: 2, editable: false, cols: 6 },
-                  { name: "preferredJobLocation", label: "Preferred Job Location", type: "textarea", rows: 2, editable: false, cols: 6 },
-                  { name: "expectedSalaryMin", label: "Expected Salary Min", type: "number", editable: false, cols: 4 },
-                  { name: "expectedSalaryMax", label: "Expected Salary Max", type: "number", editable: false, cols: 4 },
-                  { name: "employmentType", label: "Employment Type", type: "textarea", rows: 2, editable: false, cols: 6 },
-                  { name: "willingToRelocate", label: "Willing to Relocate", type: "checkbox", editable: false, cols: 4 },
+                  { name: "preferredJobCategory", label: "Preferred Job Category", type: "textarea", rows: 2, cols: 6 },
+                  { name: "preferredJobLocation", label: "Preferred Job Location", type: "textarea", rows: 2, cols: 6 },
+                  { name: "expectedSalaryMin", label: "Expected Salary Min", type: "number", cols: 4 },
+                  { name: "expectedSalaryMax", label: "Expected Salary Max", type: "number", cols: 4 },
+                  { name: "employmentType", label: "Employment Type", type: "textarea", rows: 2, cols: 6 },
+                  { name: "willingToRelocate", label: "Willing to Relocate", type: "checkbox", cols: 4 },
                 ]}
               />
 
@@ -591,9 +908,13 @@ const WizardStudentDetail = () => {
                 data={sectionData}
                 next
                 prev
+                onChange={handleFieldChange}
+                onSave={handleSave}
+                apiEndpoint={`/student/updateStudentEducationDetails/${id}`}
+                saving={saving}
                 fields={[
                   {
-                    name: "highestQualification", label: "Highest Qualification", type: "select", editable: false, cols: 12,
+                    name: "highestQualification", label: "Highest Qualification", type: "select", cols: 12,
                     options: [
                       { value: "No formal education", label: "No formal education" },
                       { value: "Primary", label: "Primary" },
@@ -613,31 +934,31 @@ const WizardStudentDetail = () => {
                   },
 
                   { label: "10th Standard", type: "divider", cols: 12 },
-                  { name: "tenthSchoolName", label: "School Name", type: "text", editable: false, cols: 6 },
-                  { name: "tenthBoard", label: "Board", type: "text", editable: false, cols: 6 },
-                  { name: "tenthPassingYear", label: "Passing Year", type: "number", editable: false, cols: 6 },
-                  { name: "tenthPercentage", label: "Percentage", type: "number", editable: false, cols: 6 },
+                  { name: "tenthSchoolName", label: "School Name", type: "text", cols: 6 },
+                  { name: "tenthBoard", label: "Board", type: "text", cols: 6 },
+                  { name: "tenthPassingYear", label: "Passing Year", type: "number", cols: 6 },
+                  { name: "tenthPercentage", label: "Percentage", type: "number", cols: 6 },
 
                   { label: "12th Standard", type: "divider", cols: 12 },
-                  { name: "twelfthSchoolCollegeName", label: "School/College Name", type: "text", editable: false, cols: 6 },
-                  { name: "twelfthBoard", label: "Board", type: "text", editable: false, cols: 6 },
-                  { name: "twelfthStream", label: "Stream", type: "text", editable: false, cols: 4 },
-                  { name: "twelfthPassingYear", label: "Passing Year", type: "number", editable: false, cols: 4 },
-                  { name: "twelfthPercentage", label: "Percentage", type: "number", editable: false, cols: 4 },
+                  { name: "twelfthSchoolCollegeName", label: "School/College Name", type: "text", cols: 6 },
+                  { name: "twelfthBoard", label: "Board", type: "text", cols: 6 },
+                  { name: "twelfthStream", label: "Stream", type: "text", cols: 4 },
+                  { name: "twelfthPassingYear", label: "Passing Year", type: "number", cols: 4 },
+                  { name: "twelfthPercentage", label: "Percentage", type: "number", cols: 4 },
 
                   { label: "Graduation", type: "divider", cols: 12 },
-                  { name: "graduationCollegeName", label: "College Name", type: "text", editable: false, cols: 6 },
-                  { name: "graduationCourseName", label: "Course Name", type: "text", editable: false, cols: 6 },
-                  { name: "graduationSpecialization", label: "Specialization", type: "text", editable: false, cols: 4 },
-                  { name: "graduationPassingYear", label: "Passing Year", type: "number", editable: false, cols: 4 },
-                  { name: "graduationPercentage", label: "Percentage", type: "number", editable: false, cols: 4 },
+                  { name: "graduationCollegeName", label: "College Name", type: "text", cols: 6 },
+                  { name: "graduationCourseName", label: "Course Name", type: "text", cols: 6 },
+                  { name: "graduationSpecialization", label: "Specialization", type: "text", cols: 4 },
+                  { name: "graduationPassingYear", label: "Passing Year", type: "number", cols: 4 },
+                  { name: "graduationPercentage", label: "Percentage", type: "number", cols: 4 },
 
                   { label: "Post Graduation", type: "divider", cols: 12 },
-                  { name: "postGraduationCollegeName", label: "College Name", type: "text", editable: false, cols: 6 },
-                  { name: "postGraduationCourseName", label: "Course Name", type: "text", editable: false, cols: 6 },
-                  { name: "postGraduationSpecialization", label: "Specialization", type: "text", editable: false, cols: 4 },
-                  { name: "postGraduationPassingYear", label: "Passing Year", type: "number", editable: false, cols: 4 },
-                  { name: "postGraduationPercentage", label: "Percentage", type: "number", editable: false, cols: 4 },
+                  { name: "postGraduationCollegeName", label: "College Name", type: "text", cols: 6 },
+                  { name: "postGraduationCourseName", label: "Course Name", type: "text", cols: 6 },
+                  { name: "postGraduationSpecialization", label: "Specialization", type: "text", cols: 4 },
+                  { name: "postGraduationPassingYear", label: "Passing Year", type: "number", cols: 4 },
+                  { name: "postGraduationPercentage", label: "Percentage", type: "number", cols: 4 },
                 ]}
               />
 
@@ -647,11 +968,15 @@ const WizardStudentDetail = () => {
                 data={sectionData}
                 next
                 prev
+                onChange={handleFieldChange}
+                onSave={handleSave}
+                apiEndpoint={`/student/updateStudentSkills/${id}`}
+                saving={saving}
                 fields={[
-                  { name: "hobbies", label: "Hobbies", type: "textarea", rows: 2, editable: false, cols: 12 },
-                  { name: "technicalSkills", label: "Technical Skills", type: "textarea", rows: 2, editable: false, cols: 12 },
-                  { name: "softSkills", label: "Soft Skills", type: "textarea", rows: 2, editable: false, cols: 12 },
-                  { name: "computerKnowledge", label: "Computer Knowledge", type: "textarea", rows: 2, editable: false, cols: 12 },
+                  { name: "hobbies", label: "Hobbies", type: "textarea", rows: 2, cols: 12 },
+                  { name: "technicalSkills", label: "Technical Skills", type: "textarea", rows: 2, cols: 12 },
+                  { name: "softSkills", label: "Soft Skills", type: "textarea", rows: 2, cols: 12 },
+                  { name: "computerKnowledge", label: "Computer Knowledge", type: "textarea", rows: 2, cols: 12 },
                 ]}
               />
 
@@ -661,12 +986,16 @@ const WizardStudentDetail = () => {
                 data={sectionData}
                 next
                 prev
+                onChange={handleFieldChange}
+                onSave={handleSave}
+                apiEndpoint={`/student/updateStudentSocialLinks/${id}`}
+                saving={saving}
                 fields={[
-                  { name: "linkedInUrl", label: "LinkedIn URL", type: "url", editable: false, cols: 6 },
-                  { name: "githubUrl", label: "GitHub URL", type: "url", editable: false, cols: 6 },
-                  { name: "portfolioUrl", label: "Portfolio URL", type: "url", editable: false, cols: 6 },
-                  { name: "facebookUrl", label: "Facebook URL", type: "url", editable: false, cols: 6 },
-                  { name: "instagramUrl", label: "Instagram URL", type: "url", editable: false, cols: 6 },
+                  { name: "linkedInUrl", label: "LinkedIn URL", type: "url", cols: 6 },
+                  { name: "githubUrl", label: "GitHub URL", type: "url", cols: 6 },
+                  { name: "portfolioUrl", label: "Portfolio URL", type: "url", cols: 6 },
+                  { name: "facebookUrl", label: "Facebook URL", type: "url", cols: 6 },
+                  { name: "instagramUrl", label: "Instagram URL", type: "url", cols: 6 },
                 ]}
               />
 
@@ -676,13 +1005,64 @@ const WizardStudentDetail = () => {
                 data={sectionData}
                 next
                 prev
-                fields={[
-                  { name: "totalExperienceMonths", label: "Total Experience (Months)", type: "number", editable: false, cols: 4 },
-                  { label: "Experience Details", type: "divider", cols: 12 },
-                  { name: "companyName", label: "Company Name", type: "text", editable: false, cols: 6 },
-                  { name: "jobTitle", label: "Job Title", type: "text", editable: false, cols: 6 },
+                onChange={handleFieldChange}
+                onSave={handleSave}
+                apiEndpoint={`/student/updateStudentWorkExperience/${id}`}
+                saving={saving}
+                additionalButtons={[
                   {
-                    name: "jobType", label: "Job Type", type: "select", editable: false, cols: 4,
+                    label: "Add New Experience",
+                    variant: "primary",
+                    onClick: addNewExperience,
+                    icon: "plus"
+                  }
+                ]}
+                customContent={workExperiences.length > 0 && (
+                  <div className="mb-3">
+                    <h6 className="mb-3">Existing Work Experiences ({workExperiences.length})</h6>
+                    <div className="table-responsive">
+                      <Table bordered hover>
+                        <thead className="table-light">
+                          <tr>
+                            <th style={{ width: '5%' }}>#</th>
+                            <th style={{ width: '30%' }}>Company</th>
+                            <th style={{ width: '25%' }}>Job Title</th>
+                            <th style={{ width: '15%' }}>Type</th>
+                            <th style={{ width: '15%' }}>Duration</th>
+                            <th style={{ width: '10%' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {workExperiences.map((exp, index) => (
+                            <tr key={index} className={editingExperienceIndex === index ? 'table-active' : ''}>
+                              <td>{index + 1}</td>
+                              <td>{exp.companyName}</td>
+                              <td>{exp.jobTitle}</td>
+                              <td>{exp.jobType}</td>
+                              <td>{exp.experienceDurationMonths} months</td>
+                              <td>
+                                <Button
+                                  size="sm"
+                                  variant="outline-primary"
+                                  onClick={() => editExperience(index)}
+                                >
+                                  <i className="bi bi-pencil"></i> Edit
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+                fields={[
+                  { name: "totalExperienceMonths", label: "Total Experience (Months)", type: "number", cols: 4 },
+                  { label: "Experience Details", type: "divider", cols: 12 },
+                  { name: "companyName", label: "Company Name", type: "text", cols: 6 },
+                  { name: "jobTitle", label: "Job Title", type: "text", cols: 6 },
+                  {
+                    name: "jobType", label: "Job Type", type: "select", cols: 4,
                     options: [
                       { value: "Full-time", label: "Full-time" },
                       { value: "Part-time", label: "Part-time" },
@@ -691,10 +1071,10 @@ const WizardStudentDetail = () => {
                       { value: "Freelance", label: "Freelance" },
                     ]
                   },
-                  { name: "experienceDurationMonths", label: "Duration (Months)", type: "number", editable: false, cols: 4 },
-                  { name: "experienceStartDate", label: "Start Date", type: "date", editable: false, cols: 4 },
-                  { name: "experienceEndDate", label: "End Date", type: "date", editable: false, cols: 4 },
-                  { name: "responsibilities", label: "Responsibilities", type: "textarea", rows: 3, editable: false, cols: 12 },
+                  { name: "experienceDurationMonths", label: "Duration (Months)", type: "number", cols: 4 },
+                  { name: "experienceStartDate", label: "Start Date", type: "date", cols: 4 },
+                  { name: "experienceEndDate", label: "End Date", type: "date", cols: 4 },
+                  { name: "responsibilities", label: "Responsibilities", type: "textarea", rows: 3, cols: 12 },
                 ]}
               />
 
@@ -704,13 +1084,64 @@ const WizardStudentDetail = () => {
                 data={sectionData}
                 next
                 prev
+                onChange={handleFieldChange}
+                onSave={handleSave}
+                apiEndpoint={`/student/updateStudentCertificates/${id}`}
+                saving={saving}
+                additionalButtons={[
+                  {
+                    label: "Add New Certificate",
+                    variant: "primary",
+                    onClick: addNewCertificate,
+                    icon: "plus"
+                  }
+                ]}
+                customContent={certificates.length > 0 && (
+                  <div className="mb-3">
+                    <h6 className="mb-3">Existing Certificates ({certificates.length})</h6>
+                    <div className="table-responsive">
+                      <Table bordered hover>
+                        <thead className="table-light">
+                          <tr>
+                            <th style={{ width: '5%' }}>#</th>
+                            <th style={{ width: '30%' }}>Name</th>
+                            <th style={{ width: '30%' }}>Organization</th>
+                            <th style={{ width: '15%' }}>Issue Date</th>
+                            <th style={{ width: '10%' }}>Expiration</th>
+                            <th style={{ width: '10%' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {certificates.map((cert, index) => (
+                            <tr key={index} className={editingCertificateIndex === index ? 'table-active' : ''}>
+                              <td>{index + 1}</td>
+                              <td>{cert.certificationName}</td>
+                              <td>{cert.issuingOrganization}</td>
+                              <td>{cert.issueDate ? new Date(cert.issueDate).toLocaleDateString() : 'N/A'}</td>
+                              <td>{cert.expirationDate ? new Date(cert.expirationDate).toLocaleDateString() : 'N/A'}</td>
+                              <td>
+                                <Button
+                                  size="sm"
+                                  variant="outline-primary"
+                                  onClick={() => editCertificate(index)}
+                                >
+                                  <i className="bi bi-pencil"></i> Edit
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
                 fields={[
-                  { name: "certificationName", label: "Certification Name", type: "text", editable: false, cols: 6 },
-                  { name: "issuingOrganization", label: "Issuing Organization", type: "text", editable: false, cols: 6 },
-                  { name: "issueDate", label: "Issue Date", type: "date", editable: false, cols: 4 },
-                  { name: "expirationDate", label: "Expiration Date", type: "date", editable: false, cols: 4 },
-                  { name: "credentialId", label: "Credential ID", type: "text", editable: false, cols: 4 },
-                  { name: "certificateUrl", label: "Certificate URL", type: "url", editable: false, cols: 12 },
+                  { name: "certificationName", label: "Certification Name", type: "text", cols: 6 },
+                  { name: "issuingOrganization", label: "Issuing Organization", type: "text", cols: 6 },
+                  { name: "issueDate", label: "Issue Date", type: "date", cols: 4 },
+                  { name: "expirationDate", label: "Expiration Date", type: "date", cols: 4 },
+                  { name: "credentialId", label: "Credential ID", type: "text", cols: 4 },
+                  { name: "certificateUrl", label: "Certificate URL", type: "url", cols: 12 },
                 ]}
               />
 
@@ -719,12 +1150,16 @@ const WizardStudentDetail = () => {
                 title="Document Uploads"
                 data={sectionData}
                 prev
+                onChange={handleFieldChange}
+                onSave={handleSave}
+                apiEndpoint={`/student/updateStudentDocumentUpload/${id}`}
+                saving={saving}
                 fields={[
-                  { name: "aadharNumber", label: "Aadhar Number", type: "text", editable: false, cols: 4 },
-                  { name: "panNumber", label: "PAN Number", type: "text", editable: false, cols: 4 },
-                  { name: "voterId", label: "Voter ID", type: "text", editable: false, cols: 4 },
-                  { name: "passportNumber", label: "Passport Number", type: "text", editable: false, cols: 4 },
-                  { name: "drivingLicenseNo", label: "Driving License No", type: "text", editable: false, cols: 4 },
+                  { name: "aadharNumber", label: "Aadhar Number", type: "text", cols: 4 },
+                  { name: "panNumber", label: "PAN Number", type: "text", cols: 4 },
+                  { name: "voterId", label: "Voter ID", type: "text", cols: 4 },
+                  { name: "passportNumber", label: "Passport Number", type: "text", cols: 4 },
+                  { name: "drivingLicenseNo", label: "Driving License No", type: "text", cols: 4 },
                 ]}
               />
             </Wizard>

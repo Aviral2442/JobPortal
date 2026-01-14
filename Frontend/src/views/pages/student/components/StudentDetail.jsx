@@ -90,7 +90,7 @@ const StudentDetail = () => {
       studentLastName: data.studentPrimaryData?.studentLastName,
       studentEmail: data.studentPrimaryData?.studentEmail,
       studentMobileNo: data.studentPrimaryData?.studentMobileNo,
-      studentJobType: data.studentPrimaryData?.studentJobType?.job_type_name,
+      studentJobSector: data.studentPrimaryData?.studentJobSector?.job_sector_name,
       studentResumeFile: data.studentPrimaryData?.studentResumeFile,
       studentReferralCode: data.studentPrimaryData?.studentReferralCode,
       studentReferralByCode: data.studentPrimaryData?.studentReferralByCode,
@@ -782,7 +782,7 @@ const StudentDetail = () => {
         { label: "Last Name", name: "studentLastName", editable: false, cols: 4 },
         { label: "Email", name: "studentEmail", type: "email", editable: false, cols: 4 },
         { label: "Mobile Number", name: "studentMobileNo", type: "tel", editable: false, cols: 4 },
-        { label: "Job Type", name: "studentJobType", editable: false, cols: 4 },
+        { label: "Sector", name: "studentJobSector", editable: false, cols: 4 },
         {
           label: "Account Status", name: "accountStatus", type: "select", options: [
             { value: "active", label: "Active" },
