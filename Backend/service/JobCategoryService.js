@@ -511,8 +511,28 @@ exports.upcommingJobForStudents = async (studentId) => {
     }
 };
 
+// UPDATE JOB STATUS SERVICE
 exports.updateJobStatus = async (jobId, updateColumnName, updateValue) => {
     try {
+
+        const job = await Job.findById(jobId);
+        if (!job) {
+            return { status: 404, message: "Job not found" };
+        }
+
+        const validColumns = ['job_status', 'jobRecommendation', 'jobFeatured'];
+        if (!validColumns.includes(updateColumnName)) {
+            return { status: 400, message: "Invalid column name for update" };
+        }
+
+        const updateJobStatus = await Job.findByIdAndUpdate(jobId, {
+            [updateColumnName]: updateValue
+        }, { new: true });
+
+        return {
+            status: 200,
+            message: "Job status updated successfully",
+        };
 
     } catch (error) {
         console.error("Error in updateJobStatus Service:", error);

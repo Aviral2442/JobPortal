@@ -35,6 +35,7 @@ router.post('/apply_on_job', JobCategoryController.applyOnJob);
 router.get('/student_applied_jobs_list_and_counts/:studentId', JobCategoryController.studentAppliedJobsOn);
 router.get('/job_applied_list_of_students', JobCategoryController.jobAppliedListOfStudents);
 router.get('/upcomming_jobs_for_student/:studentId', JobCategoryController.upcommingJobForStudents);
+router.post('/update_jobs_status/:jobId', JobCategoryController.updateJobStatus);
 router.get('/recommended_jobs_list_for_student/:studentId', JobCategoryController.recommendJobsForStudent);
 
 module.exports = router;

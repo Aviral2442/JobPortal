@@ -254,6 +254,26 @@ exports.upcommingJobForStudents = async (req, res) => {
     }
 };
 
+// UPDATE JOB STATUS CONTROLLER
+exports.updateJobStatus = async (req, res) => {
+    try {
+        const jobId = req.params.jobId;
+        const { updateColumnName, updateValue } = req.body;
+        const response = await JobCategoryService.updateJobStatus(jobId, updateColumnName, updateValue);
+        return res.status(response.status).json({
+            status: response.status,
+            message: response.message,
+        });
+    }
+    catch (error) {
+        console.error("Update Job Status Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
+};
+
 // RECOMMEND JOBS FOR STUDENT CONTROLLER
 exports.recommendJobsForStudent = async (req, res) => {
     try {
