@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const JobCategorySchema = new mongoose.Schema({
+    category_job_sector: { type: mongoose.Schema.Types.ObjectId, ref: 'JobSector', required: true },
     category_name: { type: String, required: true, unique: true },
     category_image: { type: String, required: true },
     category_slug: { type: String, unique: true },

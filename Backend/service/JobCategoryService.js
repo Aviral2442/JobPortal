@@ -96,6 +96,7 @@ exports.createJobCategory = async (data) => {
 
         const newCategory = new JobCategoryModel({
             category_name: data.category_name,
+            category_job_sector: data.category_job_sector,
             category_image: data.category_image,
             category_slug,
             category_status: data.category_status || 0,
@@ -122,6 +123,7 @@ exports.updateJobCategory = async (categoryId, data) => {
             'category_image',
             'category_slug',
             'category_status',
+            'category_job_sector',
             'category_updated_at'
         ];
 

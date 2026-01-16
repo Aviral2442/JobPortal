@@ -25,7 +25,7 @@ exports.getJobCategoryList = async (req, res) => {
 // Create Job Category Controller
 exports.createJobCategory = async (req, res) => {
     try {
-        const { category_name, category_status } = req.body;
+        const { category_name, category_status, category_job_sector } = req.body;
 
         if (!category_name) {
             return res.status(400).json({ status: false, message: 'Category name is required' });
@@ -41,6 +41,7 @@ exports.createJobCategory = async (req, res) => {
             category_name,
             category_image,
             category_status,
+            category_job_sector,
         });
 
         res.status(200).json(result);
