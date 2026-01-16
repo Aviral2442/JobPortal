@@ -212,6 +212,28 @@ exports.studentAppliedJobsOn = async (req, res) => {
     }
 };
 
+// JOB APPLIED LIST OF STUDENTS CONTROLLER
+exports.jobAppliedListOfStudents = async (req, res) => {
+
+    try {
+        const result = await JobCategoryService.jobAppliedListOfStudents(req.query);
+
+        res.status(200).json({
+            status: 200,
+            message: 'Job applied list of students fetched successfully',
+            jsonData: result,
+        });
+    } catch (error) {
+        console.error('Error in getJobCategoryList Controller:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+
+};
+
 // RECOMMEND JOBS FOR STUDENT CONTROLLER
 exports.recommendJobsForStudent = async (req, res) => {
     try {
