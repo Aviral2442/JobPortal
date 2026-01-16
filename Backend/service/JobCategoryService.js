@@ -67,6 +67,7 @@ exports.getJobCategoryList = async (query) => {
     // Pagination and Data Retrieval
     const total = await JobCategoryModel.countDocuments(filter);
     const data = await JobCategoryModel.find(filter)
+        .populate({ path: 'category_job_sector', model: 'JobSector', select: 'job_sector_name' })
         .skip(skip)
         .limit(limit)
         .sort({ category_created_at: -1 });
@@ -503,6 +504,18 @@ exports.upcommingJobForStudents = async (studentId) => {
 
     } catch (error) {
         console.error("Error in upcommingJobForStudents Service:", error);
+        return {
+            status: 500,
+            message: "Server error",
+        };
+    }
+};
+
+exports.updateJobStatus = async (jobId, updateColumnName, updateValue) => {
+    try {
+
+    } catch (error) {
+        console.error("Error in updateJobStatus Service:", error);
         return {
             status: 500,
             message: "Server error",
