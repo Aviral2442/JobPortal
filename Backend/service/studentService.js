@@ -1283,19 +1283,41 @@ exports.updateStudentWorkExperience = async (studentId, studentWorkExperienceDat
         experiences = experiences
             .filter(exp => exp && Object.keys(exp).length > 0) // remove empty objects
             .map(exp => {
+                // Handle startDate: if it's already a number (Unix timestamp), keep it; otherwise convert from string
                 if (exp.startDate) {
-                    exp.startDate = convertIntoUnixTimeStamp(exp.startDate);
+                    if (typeof exp.startDate === 'number') {
+                        // Already a Unix timestamp, keep as is
+                        exp.startDate = exp.startDate;
+                    } else {
+                        // Convert from date string to Unix timestamp in seconds
+                        const timestamp = convertIntoUnixTimeStamp(exp.startDate);
+                        exp.startDate = timestamp ? Math.floor(timestamp / 1000) : null;
+                    }
                 }
+                // Handle endDate: if it's already a number (Unix timestamp), keep it; otherwise convert from string
                 if (exp.endDate) {
-                    exp.endDate = convertIntoUnixTimeStamp(exp.endDate);
+                    if (typeof exp.endDate === 'number') {
+                        // Already a Unix timestamp, keep as is
+                        exp.endDate = exp.endDate;
+                    } else {
+                        // Convert from date string to Unix timestamp in seconds
+                        const timestamp = convertIntoUnixTimeStamp(exp.endDate);
+                        exp.endDate = timestamp ? Math.floor(timestamp / 1000) : null;
+                    }
                 }
                 return exp;
             });
+
+        // Calculate total experience months from all experiences
+        const totalExperienceMonths = experiences.reduce((sum, exp) => {
+            return sum + (exp.experienceDurationMonths || 0);
+        }, 0);
 
         const updateStdWorkExperienceData = await StudentExperience.findOneAndUpdate(
             { studentId },
             {
                 experiences,
+                totalExperienceMonths,
                 updatedAt: currentUnixTimeStamp()
             },
             { new: true, upsert: true, setDefaultsOnInsert: true }

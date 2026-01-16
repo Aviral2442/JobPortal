@@ -17,6 +17,7 @@ import {
 import { Wizard, useWizard } from "react-use-wizard";
 import PageTitle from "@/components/PageTitle";
 import ComponentCard from "@/components/ComponentCard";
+import ImageModal from "@/components/ImageModel";
 import Flatpickr from "react-flatpickr";
 import clsx from "clsx";
 import { useParams } from "react-router-dom";
@@ -38,6 +39,7 @@ import {
   TbLink,
   TbBodyScan,
   TbMan,
+  TbEye,
 } from "react-icons/tb";
 
 /* ---------------------------------------------------
@@ -104,7 +106,7 @@ const Header = ({ withProgress }) => {
 /* ---------------------------------------------------
    Field Renderer
 ----------------------------------------------------*/
-const RenderField = ({ field, value, onChange }) => {
+const RenderField = ({ field, value, onChange, onViewImage }) => {
   if (field.type === "divider") {
     return (
       <Col xl={12}>
@@ -132,7 +134,20 @@ const RenderField = ({ field, value, onChange }) => {
   return (
     <Col xl={field.cols || 4}>
       <FormGroup className="mb-3">
-        <FormLabel>{field.label}</FormLabel>
+        <FormLabel className="d-flex align-items-center gap-2">
+          {field.label}
+          {field.type === "file" && value && typeof value === "string" && (
+            <Button
+              size="sm"
+              variant="link"
+              className="p-0 text-primary"
+              onClick={() => onViewImage && onViewImage(value, field.label)}
+              title="View uploaded file"
+            >
+              <TbEye size={20} />
+            </Button>
+          )}
+        </FormLabel>
 
         {field.type === "select" ? (
           <FormSelect value={value || ""} onChange={handleChange}>
@@ -184,7 +199,7 @@ const RenderField = ({ field, value, onChange }) => {
 /* ---------------------------------------------------
    Step Builder
 ----------------------------------------------------*/
-const StepSection = ({ title, fields, data, next, prev, onChange, onSave, apiEndpoint, saving, customContent, additionalButtons }) => {
+const StepSection = ({ title, fields, data, next, prev, onChange, onSave, apiEndpoint, saving, customContent, additionalButtons, onViewImage }) => {
   const { nextStep, previousStep } = useWizard();
 
   const handleSave = async () => {
@@ -202,6 +217,7 @@ const StepSection = ({ title, fields, data, next, prev, onChange, onSave, apiEnd
             field={field} 
             value={data?.[field.name]} 
             onChange={onChange}
+            onViewImage={onViewImage}
           />
         ))}
       </Row>
@@ -262,8 +278,19 @@ const WizardStudentDetail = () => {
   const [saving, setSaving] = useState(false);
   const [certificates, setCertificates] = useState([]);
   const [workExperiences, setWorkExperiences] = useState([]);
+  const [additionalEducation, setAdditionalEducation] = useState([]);
   const [editingCertificateIndex, setEditingCertificateIndex] = useState(null);
   const [editingExperienceIndex, setEditingExperienceIndex] = useState(null);
+  const [editingAdditionalEduIndex, setEditingAdditionalEduIndex] = useState(null);
+  const [imageModalShow, setImageModalShow] = useState(false);
+  const [imageModalSrc, setImageModalSrc] = useState("");
+  const [imageModalTitle, setImageModalTitle] = useState("");
+
+  const handleViewImage = (imageSrc, title) => {
+    setImageModalSrc(imageSrc);
+    setImageModalTitle(title);
+    setImageModalShow(true);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -285,10 +312,22 @@ const WizardStudentDetail = () => {
   }, [id]);
 
   const handleFieldChange = (fieldName, value) => {
-    setSectionData((prev) => ({
-      ...prev,
-      [fieldName]: value,
-    }));
+    setSectionData((prev) => {
+      const updated = { ...prev, [fieldName]: value };
+      
+      // Auto-fill permanent address when "Same as Current" is checked
+      if (fieldName === 'isPermanentSameAsCurrent' && value === true) {
+        updated.permanentAddressLine1 = prev.currentAddressLine1 || '';
+        updated.permanentAddressLine2 = prev.currentAddressLine2 || '';
+        updated.permanentCity = prev.currentCity || '';
+        updated.permanentDistrict = prev.currentDistrict || '';
+        updated.permanentState = prev.currentState || '';
+        updated.permanentCountry = prev.currentCountry || '';
+        updated.permanentPincode = prev.currentPincode || '';
+      }
+      
+      return updated;
+    });
   };
 
   const handleSave = async (endpoint, fields) => {
@@ -333,12 +372,141 @@ const WizardStudentDetail = () => {
         };
       }
 
+      // Special handling for Skills - backend expects arrays
+      if (endpoint.includes('updateStudentSkills')) {
+        // Convert comma-separated strings to arrays
+        const convertToArray = (value) => {
+          if (!value) return [];
+          if (Array.isArray(value)) return value;
+          return value.split(',').map(item => item.trim()).filter(item => item);
+        };
+        
+        payload = {
+          technicalSkills: convertToArray(sectionData.technicalSkills),
+          softSkills: convertToArray(sectionData.softSkills),
+          computerKnowledge: convertToArray(sectionData.computerKnowledge),
+          hobbies: convertToArray(sectionData.hobbies),
+        };
+      }
+
+      // Special handling for Education - backend expects objects for each level
+      if (endpoint.includes('updateStudentEducationDetails')) {
+        const eduPayload = {
+          highestQualification: sectionData.highestQualification,
+        };
+        
+        // 10th Standard
+        if (sectionData.tenthSchoolName || sectionData.tenthBoard || sectionData.tenthPassingYear || sectionData.tenthPercentage || sectionData.tenthMarksheetFile) {
+          eduPayload.tenth = {
+            schoolName: sectionData.tenthSchoolName,
+            board: sectionData.tenthBoard,
+            passingYear: sectionData.tenthPassingYear,
+            percentage: sectionData.tenthPercentage,
+          };
+        }
+        
+        // 12th Standard
+        if (sectionData.twelfthSchoolCollegeName || sectionData.twelfthBoard || sectionData.twelfthStream || sectionData.twelfthPassingYear || sectionData.twelfthPercentage || sectionData.twelfthMarksheetFile) {
+          eduPayload.twelfth = {
+            schoolCollegeName: sectionData.twelfthSchoolCollegeName,
+            board: sectionData.twelfthBoard,
+            stream: sectionData.twelfthStream,
+            passingYear: sectionData.twelfthPassingYear,
+            percentage: sectionData.twelfthPercentage,
+          };
+        }
+        
+        // Graduation
+        if (sectionData.graduationCollegeName || sectionData.graduationCourseName || sectionData.graduationSpecialization || sectionData.graduationPassingYear || sectionData.graduationPercentage || sectionData.graduationMarksheetFile) {
+          eduPayload.graduation = {
+            collegeName: sectionData.graduationCollegeName,
+            courseName: sectionData.graduationCourseName,
+            specialization: sectionData.graduationSpecialization,
+            passingYear: sectionData.graduationPassingYear,
+            percentage: sectionData.graduationPercentage,
+          };
+        }
+        
+        // Post Graduation
+        if (sectionData.postGraduationCollegeName || sectionData.postGraduationCourseName || sectionData.postGraduationSpecialization || sectionData.postGraduationPassingYear || sectionData.postGraduationPercentage || sectionData.postGraduationMarksheetFile) {
+          eduPayload.postGraduation = {
+            collegeName: sectionData.postGraduationCollegeName,
+            courseName: sectionData.postGraduationCourseName,
+            specialization: sectionData.postGraduationSpecialization,
+            passingYear: sectionData.postGraduationPassingYear,
+            percentage: sectionData.postGraduationPercentage,
+          };
+        }
+        
+        // Additional Education
+        if (sectionData.additionalEduName || sectionData.additionalInstitutionName || sectionData.additionalPassingYear || sectionData.additionalPercentage) {
+          // Collect existing additional education entries from state
+          const additionalEducationArray = additionalEducation || [];
+          
+          // Add new entry if form has data
+          const newEntry = {
+            additionalEduName: sectionData.additionalEduName,
+            institutionName: sectionData.additionalInstitutionName,
+            passingYear: sectionData.additionalPassingYear,
+            percentage: sectionData.additionalPercentage,
+          };
+          
+          eduPayload.additionalEducation = [...additionalEducationArray, newEntry];
+        } 
+        
+        payload = eduPayload;
+      }
+
+      // Special handling for Work Experience - backend expects array of experiences
+      if (endpoint.includes('updateStudentWorkExperience')) {
+        // Collect all work experiences from state
+        const allExperiences = [...workExperiences];
+        
+        // If we're adding/editing an experience, update the array
+        if (payload.companyName && payload.jobTitle) {
+          // Convert date strings to Unix timestamps (seconds)
+          const startTimestamp = payload.experienceStartDate 
+            ? Math.floor(new Date(payload.experienceStartDate).getTime() / 1000) 
+            : null;
+          const endTimestamp = payload.experienceEndDate 
+            ? Math.floor(new Date(payload.experienceEndDate).getTime() / 1000) 
+            : null;
+            
+          const experienceData = {
+            companyName: payload.companyName,
+            jobTitle: payload.jobTitle,
+            jobType: payload.jobType,
+            experienceDurationMonths: parseInt(payload.experienceDurationMonths) || 0,
+            startDate: startTimestamp,
+            endDate: endTimestamp,
+            responsibilities: payload.responsibilities,
+          };
+          
+          if (editingExperienceIndex !== null) {
+            // Update existing experience
+            const existingExp = allExperiences[editingExperienceIndex];
+            allExperiences[editingExperienceIndex] = {
+              ...existingExp,
+              ...experienceData
+            };
+          } else {
+            // Add new experience
+            allExperiences.push(experienceData);
+          }
+        }
+        
+        // Backend auto-calculates totalExperienceMonths, so we don't send it
+        payload = {
+          experiences: allExperiences
+        };
+        
+        console.log('Work experience payload:', payload);
+      }
+
       console.log('Endpoint:', endpoint);
       console.log('Payload being sent:', payload);
 
-      // Special handling for certificates
       if (endpoint.includes('updateStudentCertificates')) {
-        // Validate required fields
         if (!payload.certificationName || !payload.issuingOrganization || !payload.issueDate) {
           toast.error('Please fill in Certification Name, Issuing Organization, and Issue Date');
           setSaving(false);
@@ -372,6 +540,7 @@ const WizardStudentDetail = () => {
       
       if (hasFiles) {
         const formData = new FormData();
+        // Append payload fields first
         Object.keys(payload).forEach(key => {
           const value = payload[key];
           if (value instanceof File) {
@@ -380,7 +549,25 @@ const WizardStudentDetail = () => {
             formData.append(key, value.toString());
           }
         });
-        
+
+        // If education update, also append any marksheet files from sectionData
+        if (endpoint.includes('updateStudentEducationDetails')) {
+          const fileFields = [
+            'tenthMarksheetFile',
+            'twelfthMarksheetFile',
+            'graduationMarksheetFile',
+            'postGraduationMarksheetFile',
+            'additionalMarksheetFile'
+          ];
+
+          fileFields.forEach(fieldName => {
+            const fileVal = sectionData[fieldName];
+            if (fileVal instanceof File) {
+              formData.append(fieldName, fileVal);
+            }
+          });
+        }
+
         console.log('Sending FormData with files');
         const response = await axios.put(endpoint, formData, {
           headers: {
@@ -452,7 +639,7 @@ const WizardStudentDetail = () => {
       certificateUrl: '',
     }));
     setEditingCertificateIndex(null);
-    toast.info('Fill in new certificate details and click Save');
+    toast.success('Fill in new certificate details and click Save');
   };
 
   // Edit existing certificate
@@ -462,13 +649,13 @@ const WizardStudentDetail = () => {
       ...prev,
       certificationName: cert.certificationName || '',
       issuingOrganization: cert.issuingOrganization || '',
-      issueDate: cert.issueDate ? cert.issueDate.split('T')[0] : '',
-      expirationDate: cert.expirationDate ? cert.expirationDate.split('T')[0] : '',
+      issueDate: cert.issueDate && typeof cert.issueDate === 'string' ? cert.issueDate.split('T')[0] : '',
+      expirationDate: cert.expirationDate && typeof cert.expirationDate === 'string' ? cert.expirationDate.split('T')[0] : '',
       credentialId: cert.credentialId || '',
       certificateUrl: cert.certificateUrl || '',
     }));
     setEditingCertificateIndex(index);
-    toast.info(`Editing certificate: ${cert.certificationName}`);
+    toast.success(`Editing certificate: ${cert.certificationName}`);
   };
 
   // Add new work experience - clear form
@@ -484,24 +671,33 @@ const WizardStudentDetail = () => {
       responsibilities: '',
     }));
     setEditingExperienceIndex(null);
-    toast.info('Fill in new work experience details and click Save');
+    toast.success('Fill in new work experience details and click Save');
   };
 
   // Edit existing work experience
   const editExperience = (index) => {
     const exp = workExperiences[index];
+    
+    // Convert Unix timestamps (seconds) to date strings for the form
+    const formatDateFromTimestamp = (timestamp) => {
+      if (!timestamp) return '';
+      // Backend stores as seconds, convert to milliseconds for JS Date
+      const date = new Date(timestamp * 1000);
+      return date.toISOString().split('T')[0];
+    };
+    
     setSectionData(prev => ({
       ...prev,
       companyName: exp.companyName || '',
       jobTitle: exp.jobTitle || '',
       jobType: exp.jobType || '',
       experienceDurationMonths: exp.experienceDurationMonths || '',
-      experienceStartDate: exp.startDate ? exp.startDate.split('T')[0] : '',
-      experienceEndDate: exp.endDate ? exp.endDate.split('T')[0] : '',
+      experienceStartDate: formatDateFromTimestamp(exp.startDate),
+      experienceEndDate: formatDateFromTimestamp(exp.endDate),
       responsibilities: exp.responsibilities || '',
     }));
     setEditingExperienceIndex(index);
-    toast.info(`Editing experience: ${exp.companyName}`);
+    toast.success(`Editing experience: ${exp.companyName}`);
   };
 
   const flattenData = (data) => {
@@ -521,11 +717,13 @@ const WizardStudentDetail = () => {
     const certificatesData = Array.isArray(data.studentCertificatesData) ? data.studentCertificatesData[0] : data.studentCertificatesData;
     const basicData = Array.isArray(data.studentBasicData) ? data.studentBasicData[0] : data.studentBasicData;
 
-    // Store all certificates and work experiences
+    // Store all certificates, work experiences, and additional education
     const validCertificates = (certificatesData?.certificates || []).filter(cert => cert !== null);
     setCertificates(validCertificates);
     const validExperiences = (workExperienceData?.experiences || []).filter(exp => exp !== null);
     setWorkExperiences(validExperiences);
+    const validAdditionalEdu = (educationData?.additionalEducation || []).filter(edu => edu !== null);
+    setAdditionalEducation(validAdditionalEdu);
 
     const firstExperience = validExperiences[0] || {};
     const firstCertificate = validCertificates[0] || {};
@@ -630,21 +828,25 @@ const WizardStudentDetail = () => {
       tenthBoard: educationData?.tenth?.board,
       tenthPassingYear: educationData?.tenth?.passingYear,
       tenthPercentage: educationData?.tenth?.percentage,
+      tenthMarksheetFile: educationData?.tenth?.marksheetFile,
       twelfthSchoolCollegeName: educationData?.twelfth?.schoolCollegeName,
       twelfthBoard: educationData?.twelfth?.board,
       twelfthStream: educationData?.twelfth?.stream,
       twelfthPassingYear: educationData?.twelfth?.passingYear,
       twelfthPercentage: educationData?.twelfth?.percentage,
+      twelfthMarksheetFile: educationData?.twelfth?.marksheetFile,
       graduationCollegeName: educationData?.graduation?.collegeName,
       graduationCourseName: educationData?.graduation?.courseName,
       graduationSpecialization: educationData?.graduation?.specialization,
       graduationPassingYear: educationData?.graduation?.passingYear,
       graduationPercentage: educationData?.graduation?.percentage,
+      graduationMarksheetFile: educationData?.graduation?.marksheetFile,
       postGraduationCollegeName: educationData?.postGraduation?.collegeName,
       postGraduationCourseName: educationData?.postGraduation?.courseName,
       postGraduationSpecialization: educationData?.postGraduation?.specialization,
       postGraduationPassingYear: educationData?.postGraduation?.passingYear,
       postGraduationPercentage: educationData?.postGraduation?.percentage,
+      postGraduationMarksheetFile: educationData?.postGraduation?.marksheetFile,
 
       // Skills
       hobbies: Array.isArray(skillsData?.hobbies) ? skillsData.hobbies.join(', ') : (skillsData?.hobbies || ''),
@@ -707,6 +909,7 @@ const WizardStudentDetail = () => {
                 onSave={handleSave}
                 apiEndpoint={`/student/updateStudentBasicDetails/${id}`}
                 saving={saving}
+                onViewImage={handleViewImage}
                 fields={[
                   { name: "studentFirstName", label: "First Name", type: "text", cols: 4 },
                   { name: "studentLastName", label: "Last Name", type: "text", cols: 4 },
@@ -737,6 +940,7 @@ const WizardStudentDetail = () => {
                 onSave={handleSave}
                 apiEndpoint={`/student/updateStudentBasicDetails/${id}`}
                 saving={saving}
+                onViewImage={handleViewImage}
                 fields={[
                   { name: "studentDOB", label: "Date of Birth", type: "date", cols: 3 },
                   {
@@ -772,6 +976,7 @@ const WizardStudentDetail = () => {
                 onSave={handleSave}
                 apiEndpoint={`/student/updateStudentAddress/${id}`}
                 saving={saving}
+                onViewImage={handleViewImage}
                 fields={[
                   { label: "Current Address", type: "divider", cols: 12 },
                   { name: "currentAddressLine1", label: "Address Line 1", type: "text", cols: 6 },
@@ -804,6 +1009,7 @@ const WizardStudentDetail = () => {
                 onSave={handleSave}
                 apiEndpoint={`/student/updateStudentBodyDetails/${id}`}
                 saving={saving}
+                onViewImage={handleViewImage}
                 fields={[
                   { label: "Bank Details", type: "divider", cols: 12 },
                   { name: "bankHolderName", label: "Account Holder Name", type: "text", cols: 4 },
@@ -821,8 +1027,9 @@ const WizardStudentDetail = () => {
                 prev
                 onChange={handleFieldChange}
                 onSave={handleSave}
-                apiEndpoint={`/student/updateStudentBankDetails/${id}`}
+                apiEndpoint={`/student/updateStudentBodyDetails/${id}`}
                 saving={saving}
+                onViewImage={handleViewImage}
                 fields={[
                   { label: "Body Details", type: "divider", cols: 12 },
                   { name: "heightCm", label: "Height (cm)", type: "number", cols: 2 },
@@ -848,6 +1055,7 @@ const WizardStudentDetail = () => {
                 onSave={handleSave}
                 apiEndpoint={`/student/updateStudentEmergencyContact/${id}`}
                 saving={saving}
+                onViewImage={handleViewImage}
                 fields={[
                   { name: "emergencyContactName", label: "Contact Name", type: "text", cols: 4 },
                   { name: "emergencyRelation", label: "Relation", type: "text", cols: 4 },
@@ -866,6 +1074,7 @@ const WizardStudentDetail = () => {
                 onSave={handleSave}
                 apiEndpoint={`/student/updateStudentParentalInfo/${id}`}
                 saving={saving}
+                onViewImage={handleViewImage}
                 fields={[
                   { label: "Father's Information", type: "divider", cols: 12 },
                   { name: "fatherName", label: "Father's Name", type: "text", cols: 4 },
@@ -907,6 +1116,7 @@ const WizardStudentDetail = () => {
                 onSave={handleSave}
                 apiEndpoint={`/student/updateStudentCareerPreferences/${id}`}
                 saving={saving}
+                onViewImage={handleViewImage}
                 fields={[
                   { name: "preferredJobCategory", label: "Preferred Job Category", type: "textarea", rows: 2, cols: 6 },
                   { name: "preferredJobLocation", label: "Preferred Job Location", type: "textarea", rows: 2, cols: 6 },
@@ -927,6 +1137,7 @@ const WizardStudentDetail = () => {
                 onSave={handleSave}
                 apiEndpoint={`/student/updateStudentEducationDetails/${id}`}
                 saving={saving}
+                onViewImage={handleViewImage}
                 fields={[
                   {
                     name: "highestQualification", label: "Highest Qualification", type: "select", cols: 12,
@@ -951,8 +1162,9 @@ const WizardStudentDetail = () => {
                   { label: "10th Standard", type: "divider", cols: 12 },
                   { name: "tenthSchoolName", label: "School Name", type: "text", cols: 6 },
                   { name: "tenthBoard", label: "Board", type: "text", cols: 6 },
-                  { name: "tenthPassingYear", label: "Passing Year", type: "number", cols: 6 },
-                  { name: "tenthPercentage", label: "Percentage", type: "number", cols: 6 },
+                  { name: "tenthPassingYear", label: "Passing Year", type: "number", cols: 4 },
+                  { name: "tenthPercentage", label: "Percentage", type: "number", cols: 4 },
+                  { name: "tenthMarksheetFile", label: "Marksheet", type: "file", accept: ".pdf,.jpg,.jpeg,.png", cols: 4 },
 
                   { label: "12th Standard", type: "divider", cols: 12 },
                   { name: "twelfthSchoolCollegeName", label: "School/College Name", type: "text", cols: 6 },
@@ -960,6 +1172,7 @@ const WizardStudentDetail = () => {
                   { name: "twelfthStream", label: "Stream", type: "text", cols: 4 },
                   { name: "twelfthPassingYear", label: "Passing Year", type: "number", cols: 4 },
                   { name: "twelfthPercentage", label: "Percentage", type: "number", cols: 4 },
+                  { name: "twelfthMarksheetFile", label: "Marksheet", type: "file", accept: ".pdf,.jpg,.jpeg,.png", cols: 4 },
 
                   { label: "Graduation", type: "divider", cols: 12 },
                   { name: "graduationCollegeName", label: "College Name", type: "text", cols: 6 },
@@ -967,6 +1180,7 @@ const WizardStudentDetail = () => {
                   { name: "graduationSpecialization", label: "Specialization", type: "text", cols: 4 },
                   { name: "graduationPassingYear", label: "Passing Year", type: "number", cols: 4 },
                   { name: "graduationPercentage", label: "Percentage", type: "number", cols: 4 },
+                  { name: "graduationMarksheetFile", label: "Marksheet", type: "file", accept: ".pdf,.jpg,.jpeg,.png", cols: 4 },
 
                   { label: "Post Graduation", type: "divider", cols: 12 },
                   { name: "postGraduationCollegeName", label: "College Name", type: "text", cols: 6 },
@@ -974,6 +1188,14 @@ const WizardStudentDetail = () => {
                   { name: "postGraduationSpecialization", label: "Specialization", type: "text", cols: 4 },
                   { name: "postGraduationPassingYear", label: "Passing Year", type: "number", cols: 4 },
                   { name: "postGraduationPercentage", label: "Percentage", type: "number", cols: 4 },
+                  { name: "postGraduationMarksheetFile", label: "Marksheet", type: "file", accept: ".pdf,.jpg,.jpeg,.png", cols: 4 },
+
+                  { label: "Additional Education", type: "divider", cols: 12 },
+                  { name: "additionalEduName", label: "Course/Certification Name", type: "text", cols: 6 },
+                  { name: "additionalInstitutionName", label: "Institution Name", type: "text", cols: 6 },
+                  { name: "additionalPassingYear", label: "Passing Year", type: "number", cols: 4 },
+                  { name: "additionalPercentage", label: "Percentage/Grade", type: "number", cols: 4 },
+                  { name: "additionalMarksheetFile", label: "Certificate/Marksheet", type: "file", accept: ".pdf,.jpg,.jpeg,.png", cols: 4 },
                 ]}
               />
 
@@ -987,6 +1209,7 @@ const WizardStudentDetail = () => {
                 onSave={handleSave}
                 apiEndpoint={`/student/updateStudentSkills/${id}`}
                 saving={saving}
+                onViewImage={handleViewImage}
                 fields={[
                   { name: "hobbies", label: "Hobbies", type: "textarea", rows: 2, cols: 12 },
                   { name: "technicalSkills", label: "Technical Skills", type: "textarea", rows: 2, cols: 12 },
@@ -1005,6 +1228,7 @@ const WizardStudentDetail = () => {
                 onSave={handleSave}
                 apiEndpoint={`/student/updateStudentSocialLinks/${id}`}
                 saving={saving}
+                onViewImage={handleViewImage}
                 fields={[
                   { name: "linkedInUrl", label: "LinkedIn URL", type: "url", cols: 6 },
                   { name: "githubUrl", label: "GitHub URL", type: "url", cols: 6 },
@@ -1024,6 +1248,7 @@ const WizardStudentDetail = () => {
                 onSave={handleSave}
                 apiEndpoint={`/student/updateStudentWorkExperience/${id}`}
                 saving={saving}
+                onViewImage={handleViewImage}
                 additionalButtons={[
                   {
                     label: "Add New Experience",
@@ -1032,48 +1257,73 @@ const WizardStudentDetail = () => {
                     icon: "plus"
                   }
                 ]}
-                customContent={workExperiences.length > 0 && (
-                  <div className="mb-3">
-                    <h6 className="mb-3">Existing Work Experiences ({workExperiences.length})</h6>
-                    <div className="table-responsive">
-                      <Table bordered hover>
-                        <thead className="table-light">
-                          <tr>
-                            <th style={{ width: '5%' }}>#</th>
-                            <th style={{ width: '30%' }}>Company</th>
-                            <th style={{ width: '25%' }}>Job Title</th>
-                            <th style={{ width: '15%' }}>Type</th>
-                            <th style={{ width: '15%' }}>Duration</th>
-                            <th style={{ width: '10%' }}>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {workExperiences.map((exp, index) => (
-                            <tr key={index} className={editingExperienceIndex === index ? 'table-active' : ''}>
-                              <td>{index + 1}</td>
-                              <td>{exp.companyName}</td>
-                              <td>{exp.jobTitle}</td>
-                              <td>{exp.jobType}</td>
-                              <td>{exp.experienceDurationMonths} months</td>
-                              <td>
-                                <Button
-                                  size="sm"
-                                  variant="outline-primary"
-                                  onClick={() => editExperience(index)}
-                                >
-                                  <i className="bi bi-pencil"></i> Edit
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
+                customContent={(
+                  <>
+                    <div className="mb-4 p-3 bg-light rounded">
+                      <Row>
+                        <Col xl={4}>
+                          <FormGroup>
+                            <FormLabel className="fw-semibold">Total Work Experience (in Months)</FormLabel>
+                            <FormControl
+                              type="number"
+                              value={sectionData.totalExperienceMonths || 0}
+                              onChange={(e) => handleFieldChange('totalExperienceMonths', e.target.value)}
+                              placeholder="e.g., 24 for 2 years"
+                            />
+                            <Form.Text className="text-muted">
+                              This is your total work experience across all jobs/internships
+                            </Form.Text>
+                          </FormGroup>
+                        </Col>
+                      </Row>
                     </div>
-                  </div>
+                    
+                    {workExperiences.length > 0 && (
+                      <div className="mb-3">
+                        <h6 className="mb-3">Existing Work Experiences ({workExperiences.length})</h6>
+                        <div className="table-responsive">
+                          <Table bordered hover>
+                            <thead className="table-light">
+                              <tr>
+                                <th style={{ width: '5%' }}>#</th>
+                                <th style={{ width: '30%' }}>Company</th>
+                                <th style={{ width: '25%' }}>Job Title</th>
+                                <th style={{ width: '15%' }}>Type</th>
+                                <th style={{ width: '15%' }}>Duration</th>
+                                <th style={{ width: '10%' }}>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {workExperiences.map((exp, index) => (
+                                <tr key={index} className={editingExperienceIndex === index ? 'table-active' : ''}>
+                                  <td>{index + 1}</td>
+                                  <td>{exp.companyName}</td>
+                                  <td>{exp.jobTitle}</td>
+                                  <td>{exp.jobType}</td>
+                                  <td>{exp.experienceDurationMonths} months</td>
+                                  <td>
+                                    <Button
+                                      size="sm"
+                                      variant="outline-primary"
+                                      onClick={() => editExperience(index)}
+                                    >
+                                      <i className="bi bi-pencil"></i> Edit
+                                    </Button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </Table>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <h6 className="mb-3 mt-4 text-primary border-bottom pb-2">
+                      {editingExperienceIndex !== null ? 'Edit' : 'Add'} Individual Job/Internship Details
+                    </h6>
+                  </>
                 )}
                 fields={[
-                  { name: "totalExperienceMonths", label: "Total Experience (Months)", type: "number", cols: 4 },
-                  { label: "Experience Details", type: "divider", cols: 12 },
                   { name: "companyName", label: "Company Name", type: "text", cols: 6 },
                   { name: "jobTitle", label: "Job Title", type: "text", cols: 6 },
                   {
@@ -1086,7 +1336,7 @@ const WizardStudentDetail = () => {
                       { value: "Freelance", label: "Freelance" },
                     ]
                   },
-                  { name: "experienceDurationMonths", label: "Duration (Months)", type: "number", cols: 4 },
+                  { name: "experienceDurationMonths", label: "Duration of this Job (Months)", type: "number", cols: 4 },
                   { name: "experienceStartDate", label: "Start Date", type: "date", cols: 4 },
                   { name: "experienceEndDate", label: "End Date", type: "date", cols: 4 },
                   { name: "responsibilities", label: "Responsibilities", type: "textarea", rows: 3, cols: 12 },
@@ -1103,6 +1353,7 @@ const WizardStudentDetail = () => {
                 onSave={handleSave}
                 apiEndpoint={`/student/updateStudentCertificates/${id}`}
                 saving={saving}
+                onViewImage={handleViewImage}
                 additionalButtons={[
                   {
                     label: "Add New Certificate",
@@ -1169,6 +1420,7 @@ const WizardStudentDetail = () => {
                 onSave={handleSave}
                 apiEndpoint={`/student/updateStudentDocumentUpload/${id}`}
                 saving={saving}
+                onViewImage={handleViewImage}
                 fields={[
                   { name: "aadharNumber", label: "Aadhar Number", type: "text", cols: 4 },
                   { name: "panNumber", label: "PAN Number", type: "text", cols: 4 },
@@ -1181,6 +1433,13 @@ const WizardStudentDetail = () => {
           </ComponentCard>
         </Col>
       </Row>
+
+      <ImageModal
+        show={imageModalShow}
+        onHide={() => setImageModalShow(false)}
+        imageSrc={imageModalSrc}
+        title={imageModalTitle}
+      />
     </Container>
   );
 };

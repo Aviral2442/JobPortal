@@ -47,7 +47,7 @@ const StudentDetail = () => {
       console.error("Error fetching student detail:", error);
       setError("Failed to fetch student details");
     } finally {
-      setLoading(false);
+      setLoading(false);  
     }
   };
 
@@ -624,8 +624,8 @@ const StudentDetail = () => {
       ...prev,
       certificationName: cert.certificationName || '',
       issuingOrganization: cert.issuingOrganization || '',
-      issueDate: cert.issueDate ? cert.issueDate.split('T')[0] : '', // Format date properly
-      expirationDate: cert.expirationDate ? cert.expirationDate.split('T')[0] : '',
+      issueDate: cert.issueDate && typeof cert.issueDate === 'string' ? cert.issueDate.split('T')[0] : '', // Format date properly
+      expirationDate: cert.expirationDate && typeof cert.expirationDate === 'string' ? cert.expirationDate.split('T')[0] : '',
       credentialId: cert.credentialId || '',
       certificateUrl: cert.certificateUrl || '',
       certificateFile: cert.certificateFile || '',

@@ -1,37 +1,50 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 /**
  * Save base64 file to disk
- * @param {string} base64Data - data:image/png;base64,xxxx
- * @param {string} folderName - uploads subfolder
- * @param {string} prefix - filename prefix
+ * Supports:
+ *  - pure base64 string
+ *  - data:image/png;base64,...
+ *
+ * @param {string} base64Data
+ * @param {string} folderName
+ * @param {string} prefix
+ * @returns {string|null} file path
  */
-exports.saveBase64File = (base64Data, folderName = 'MiscFiles', prefix = 'file') => {
-    if (!base64Data) return null;
+exports.saveBase64File = (
+  base64Data,
+  folderName = "MiscFiles",
+  prefix = "file"
+) => {
+  if (!base64Data) return null;
 
-    // Match base64 format
-    const matches = base64Data.match(/^data:(.+);base64,(.+)$/);
-    if (!matches || matches.length !== 3) {
-        throw new Error('Invalid base64 file format');
-    }
+  let fileData = base64Data;
+  let ext = "bin";
 
-    const mimeType = matches[1];
-    const fileData = matches[2];
+  // ✅ Handle data:image/...;base64,
+  const matches = base64Data.match(/^data:(.+);base64,(.+)$/);
 
-    // Get file extension
-    const ext = mimeType.split('/')[1];
-    const buffer = Buffer.from(fileData, 'base64');
+  if (matches) {
+    const mimeType = matches[1];        // image/png
+    fileData = matches[2];              // actual base64
+    ext = mimeType.split("/")[1] || "bin";
+  }
 
-    const uploadDir = path.join('uploads', folderName);
-    if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-    }
+  const buffer = Buffer.from(fileData, "base64");
 
-    const fileName = `${prefix}-${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
-    const filePath = path.join(uploadDir, fileName);
+  const uploadDir = path.join("uploads", folderName);
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
 
-    fs.writeFileSync(filePath, buffer);
+  const fileName = `${prefix}-${Date.now()}-${Math.round(
+    Math.random() * 1e9
+  )}.${ext}`;
 
-    return `/${uploadDir}/${fileName}`.replace(/\\/g, '/');
+  const filePath = path.join(uploadDir, fileName);
+
+  fs.writeFileSync(filePath, buffer);
+
+  return `/${uploadDir}/${fileName}`.replace(/\\/g, "/");
 };
