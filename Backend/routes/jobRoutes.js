@@ -10,7 +10,7 @@ const {
   deleteJob,
   saveJobSection,
   uploadJobFiles,
-  deleteJobArrayItem,
+  deleteJobArrayItem
 } = require("../controllers/jobController");
 
 // Multer configuration for file uploads

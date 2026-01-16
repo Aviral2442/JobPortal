@@ -1,3 +1,6 @@
+const Job = require('../models/JobModel');
+const Student = require('../models/studentModel');
+const JobAppliedMapper = require('../models/JobAppliedMapperModel');
 const JobCategoryModel = require('../models/JobCategoryModel');
 const JobSubCategoryModel = require('../models/JobSubCategoryModel');
 const moment = require('moment');
@@ -298,5 +301,102 @@ exports.updateJobSubCategory = async (subcategoryId, data) => {
     } catch (error) {
         console.error('Error in updateJobSubCategory Service:', error);
         throw error;
+    }
+};
+
+// APPLY ON JOB SERVICE
+exports.applyOnJob = async (data) => {
+    try {
+        const { jobId, studentId } = data;
+
+        // 1. Check Job
+        const job = await Job.findById(jobId);
+        if (!job) {
+            return { status: 404, message: "Job not found" };
+        }
+
+        // 2. Check Student
+        const student = await Student.findById(studentId);
+        if (!student) {
+            return { status: 404, message: "Student not found" };
+        }
+
+        // 3. Check if already applied
+        const existingApplication = await JobAppliedMapper.findOne({
+            studentId: student._id,
+            jobId: job._id,
+        });
+
+        if (existingApplication) {
+            return {
+                status: 409,
+                message: "You have already applied for this job",
+            };
+        }
+
+        // 4. Create application
+        const application = await JobAppliedMapper.create({
+            studentId: student._id,
+            jobId: job._id,
+            applicationStatus: "applied",
+        });
+
+        return {
+            status: 200,
+            message: "Job application successful",
+            jsonData: {
+                applicationId: application._id,
+            },
+        };
+
+    } catch (error) {
+        console.error("Apply Job Service Error:", error);
+        return {
+            status: 500,
+            message: "Server error",
+        };
+    }
+};
+
+// FETCH STUDENT APPLIED JOBS SERVICE
+exports.studentAppliedJobsOn = async (studentId) => {
+    try {
+        const student = await Student.findById(studentId);
+        if (!student) {
+            return { status: 404, message: "Student not found" };
+        }
+
+        const appliedJobs = await JobAppliedMapper.find({ studentId })
+            .populate({ path: 'jobId', model: 'Jobs', select: 'job_title job_category job_sector job_type' })
+            .exec();
+
+        const appliedJobsCount = appliedJobs.length;
+        return {
+            status: 200,
+            message: "Applied jobs fetched successfully",
+            jsonData: {
+                appliedJobslist: appliedJobs,
+                appliedJobsCount: appliedJobsCount
+            },
+        }
+    } catch (error) {
+        console.error("Error fetching applied jobs:", error);
+        return {
+            status: 500,
+            message: "Server error",
+        };
+    }
+};
+
+// i have to create a api to fetch job recommendations based on student profile
+exports.recommendJobsForStudent = async (studentId) => {
+    try {
+
+    } catch (error) {
+        console.error("Error in recommendJobsForStudent Service:", error);
+        return {
+            status: 500,
+            message: "Server error",
+        };
     }
 };

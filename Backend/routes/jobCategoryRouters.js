@@ -30,4 +30,9 @@ router.get('/get_career_preferences_list', JobSectorController.getCareerPreferen
 router.post('/add_career_preference', JobSectorController.addCareerPreference);
 router.put('/update_career_preference/:id', JobSectorController.updateCareerPreference);
 
+// APPLY ON JOB ROUTE
+router.post('/apply_on_job', JobCategoryController.applyOnJob);
+router.get('/student_applied_jobs_list_and_counts/:studentId', JobCategoryController.studentAppliedJobsOn);
+router.get('/recommended_jobs_list_for_student/:studentId', JobCategoryController.recommendJobsForStudent);
+
 module.exports = router;

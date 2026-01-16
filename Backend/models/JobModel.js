@@ -106,6 +106,9 @@ const JobSchema = new mongoose.Schema(
     // FILES
     files: [{ type: String }],
 
+    jobRecommendation: { type: Boolean, default: false },
+    jobFeatured: { type: Boolean, default: false },
+
     // SEO DETAILS
     job_meta_title: { type: String, default: "" },
     job_meta_description: { type: String, default: "" },

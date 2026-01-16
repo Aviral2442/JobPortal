@@ -50,7 +50,6 @@ exports.createJobCategory = async (req, res) => {
     }
 };
 
-
 // Update Job Category Controller
 exports.updateJobCategory = async (req, res) => {
     try {
@@ -84,7 +83,6 @@ exports.updateJobCategory = async (req, res) => {
     }
 };
 
-
 // Get Job Subcategory List Controller
 exports.getJobSubCategoryList = async (req, res) => {
     try {
@@ -103,7 +101,6 @@ exports.getJobSubCategoryList = async (req, res) => {
         });
     }
 };
-
 
 // Create Job Subcategory Controller
 exports.createJobSubCategory = async (req, res) => {
@@ -143,7 +140,6 @@ exports.createJobSubCategory = async (req, res) => {
 
 };
 
-
 // Update Job Subcategory Controller
 exports.updateJobSubCategory = async (req, res) => {
 
@@ -174,4 +170,63 @@ exports.updateJobSubCategory = async (req, res) => {
         res.status(500).json({ status: false, message: 'Internal server error', error: error.message });
     }
 
+};
+
+// Apply On Job Controller
+exports.applyOnJob = async (req, res) => {
+    try {
+        const response = await JobCategoryService.applyOnJob(req.body);
+
+        return res.status(response.status).json({
+            status: response.status,
+            message: response.message,
+            jsonData: response.jsonData || null,
+        });
+
+    } catch (error) {
+        console.error("Apply Job Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
+};
+
+// STUDENT APPLIED JOBS CONTROLLER
+exports.studentAppliedJobsOn = async (req, res) => {
+    try {
+        const studentId = req.params.studentId;
+        const response = await JobCategoryService.studentAppliedJobsOn(studentId);
+        return res.status(response.status).json({
+            status: response.status,
+            message: response.message,
+            jsonData: response.jsonData || null,
+        });
+
+    } catch (error) {
+        console.error("Student Applied Jobs Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
+};
+
+// RECOMMEND JOBS FOR STUDENT CONTROLLER
+exports.recommendJobsForStudent = async (req, res) => {
+    try {
+        const studentId = req.params.studentId;
+        const response = await JobCategoryService.recommendJobsForStudent(studentId);
+        return res.status(response.status).json({
+            status: response.status,
+            message: response.message,
+            jsonData: response.jsonData || null,
+        });
+    } catch (error) {
+        console.error("Recommend Jobs For Student Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
 };

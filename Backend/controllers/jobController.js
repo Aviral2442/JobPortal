@@ -32,17 +32,17 @@ const createJob = async (req, res) => {
     jobData.job_last_updated_date = Math.floor(Date.now() / 1000);
 
     const job = await Job.create(jobData);
-    return res.status(201).json({ 
-      message: "Job created successfully", 
+    return res.status(201).json({
+      message: "Job created successfully",
       _id: job._id,
       jobId: job._id,
-      job 
+      job
     });
   } catch (error) {
     console.error("Create Job Error:", error);
-    return res.status(400).json({ 
-      message: "Bad Request", 
-      error: error.message 
+    return res.status(400).json({
+      message: "Bad Request",
+      error: error.message
     });
   }
 };
@@ -83,11 +83,11 @@ const updateJob = async (req, res) => {
 
     jobData.job_last_updated_date = Math.floor(Date.now() / 1000);
 
-    const job = await Job.findByIdAndUpdate(id, jobData, { 
-      new: true, 
-      runValidators: true 
+    const job = await Job.findByIdAndUpdate(id, jobData, {
+      new: true,
+      runValidators: true
     });
-    
+
     if (!job) return res.status(404).json({ error: "Job not found" });
 
     return res.status(200).json({ message: "Job updated successfully", job });
@@ -101,7 +101,7 @@ const updateJob = async (req, res) => {
 const saveJobSection = async (req, res) => {
   try {
     const { jobId, section, data } = req.body;
-    
+
     if (!jobId || !section) {
       return res.status(400).json({ error: "jobId and section are required" });
     }
@@ -109,7 +109,7 @@ const saveJobSection = async (req, res) => {
     console.log(`Saving section: ${section}`, data);
 
     let updateDoc = { $set: {} };
-    
+
     switch (section) {
       case "basicDetails":
         updateDoc.$set = {
@@ -204,7 +204,7 @@ const saveJobSection = async (req, res) => {
       case "links":
         // Convert array of link objects or formatted strings to a proper Map
         let linksMap = {};
-        
+
         if (Array.isArray(data.job_important_links)) {
           data.job_important_links.forEach((link, index) => {
             if (typeof link === 'string') {
@@ -260,15 +260,15 @@ const saveJobSection = async (req, res) => {
     }
 
     console.log(`Section ${section} saved successfully`);
-    return res.status(200).json({ 
-      message: `${section} saved successfully`, 
-      job: updated 
+    return res.status(200).json({
+      message: `${section} saved successfully`,
+      job: updated
     });
   } catch (error) {
     console.error("Save Section Error:", error);
-    return res.status(500).json({ 
-      error: "Server error", 
-      details: error.message 
+    return res.status(500).json({
+      error: "Server error",
+      details: error.message
     });
   }
 };
@@ -281,17 +281,17 @@ const uploadJobFiles = async (req, res) => {
 
     const filePaths = (req.files || []).map((f) => toPublicPath(f.path));
     const job = await Job.findById(jobId);
-    
+
     if (!job) return res.status(404).json({ error: "Job not found" });
 
     job.files = [...(job.files || []), ...filePaths];
     job.job_last_updated_date = Math.floor(Date.now() / 1000);
     await job.save();
 
-    return res.status(200).json({ 
-      message: "Files uploaded successfully", 
-      files: job.files, 
-      job 
+    return res.status(200).json({
+      message: "Files uploaded successfully",
+      files: job.files,
+      job
     });
   } catch (error) {
     console.error("Upload Files Error:", error);
@@ -332,9 +332,9 @@ const deleteJobArrayItem = async (req, res) => {
     job.job_last_updated_date = Math.floor(Date.now() / 1000);
     await job.save();
 
-    return res.status(200).json({ 
-      message: `${section} item deleted successfully`, 
-      job 
+    return res.status(200).json({
+      message: `${section} item deleted successfully`,
+      job
     });
   } catch (error) {
     console.error("Delete Array Item Error:", error);
