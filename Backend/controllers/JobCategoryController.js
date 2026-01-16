@@ -292,3 +292,22 @@ exports.recommendJobsForStudent = async (req, res) => {
         });
     }
 };
+
+// JOB LIST SECTOR WISE CONTROLLER
+exports.jobListSectorWise = async (req, res) => {
+    try {
+        const sectorId = req.params.sectorId;
+        const response = await JobCategoryService.jobListSectorWise(sectorId);
+        return res.status(response.status).json({
+            status: response.status,
+            message: response.message,
+            jsonData: response.jsonData || null,
+        });
+    } catch (error) {
+        console.error("Job List Sector Wise Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
+};
