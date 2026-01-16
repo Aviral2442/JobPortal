@@ -296,8 +296,8 @@ exports.recommendJobsForStudent = async (req, res) => {
 // JOB LIST SECTOR WISE CONTROLLER
 exports.jobListSectorWise = async (req, res) => {
     try {
-        const sectorId = req.params.sectorId;
-        const response = await JobCategoryService.jobListSectorWise(sectorId);
+        const studentId = req.params.studentId;
+        const response = await JobCategoryService.jobListSectorWise(studentId);
         return res.status(response.status).json({
             status: response.status,
             message: response.message,

@@ -559,15 +559,17 @@ exports.recommendJobsForStudent = async (studentId) => {
 };
 
 // JOB LIST SECTOR WISE SERVICE
-exports.jobListSectorWise = async (sectorId) => {
+exports.jobListSectorWise = async (studentId) => {
     try {
 
-        const jobs = await Job.find({ job_sector: sectorId });
-        if (!jobs || jobs.length === 0) {
-            return { status: 404, message: "No jobs found for the given sector" };
+        const student = await Student.findById(studentId);
+        if (!student) {
+            return { status: 404, message: "Student not found" };
         }
 
-        const fetchJobSectorWise = await Job.find({ job_sector: sectorId });
+        const studentSector = student.studentJobSector;
+
+        const fetchJobSectorWise = await Job.find({ job_sector: studentSector });
 
         return {
             status: 200,
@@ -582,4 +584,4 @@ exports.jobListSectorWise = async (sectorId) => {
             message: "Server error",
         };
     }
-}
+};
