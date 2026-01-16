@@ -5,27 +5,12 @@ const JobSchema = new mongoose.Schema(
     // BASIC DETAILS
     job_title: { type: String, required: true },
     job_short_desc: { type: String, required: true },
-    job_category: { type: String, required: true }, // Changed to String to match frontend
-    job_sub_category: { type: String, required: true }, // Changed to String
+    job_category: {type: mongoose.Schema.Types.ObjectId, ref: 'JobCategory', required: true },
+    job_sub_category: {type: mongoose.Schema.Types.ObjectId, ref: 'JobSubCategory', required: true },
     job_advertisement_no: { type: String, required: true },
     job_organization: { type: String, required: true },
-    job_type: {
-      type: String,
-      required: true,
-      enum: [
-        "Permanent",
-        "Contract",
-        "Apprentice",
-        "Full-time",
-        "Part-time",
-        "Internship",
-      ],
-    },
-    job_sector: {
-      type: String, // Changed to String
-      required: true,
-      enum: ["Central Govt", "State Govt", "PSU", "Public", "Private", "NGO"],
-    },
+    job_type: {type: mongoose.Schema.Types.ObjectId, ref: 'JobType', required: true },
+    job_sector: {type: mongoose.Schema.Types.ObjectId, ref: 'JobSector', required: true },
     job_logo: { type: String, required: false },
     job_status: { type: Number, default: 0 }, // 0 = Active, 1 = Inactive
     job_posted_date: {

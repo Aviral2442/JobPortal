@@ -13,6 +13,8 @@ const AddCategory = ({ mode, data, onCancel, onDataChanged }) => {
   const [variant, setVariant] = useState('success');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [sectors, setSectors] = useState([]);
+  const [selectedSector, setSelectedSector] = useState('');
 
   // Populate form if in edit mode
   useEffect(() => {
@@ -22,6 +24,7 @@ const AddCategory = ({ mode, data, onCancel, onDataChanged }) => {
       if (imageUrl) {
         setPreview(imageUrl.startsWith('http') ? imageUrl : `${import.meta.env.VITE_BASE_URL}${imageUrl}`);
       }
+      setSelectedSector(data.category_job_sector._id || '');
     }
   }, [isEditMode, data]);
 
@@ -38,6 +41,26 @@ const AddCategory = ({ mode, data, onCancel, onDataChanged }) => {
     }
   };
 
+  const fetchSectorDetails = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`/job-categories/get_job_sector_list`);
+      // console.log('Sector details fetched:', response.data);
+      // Handle different response structures
+      const sectorData = response.data?.jsonData?.data || response.data || [];
+      setSectors(Array.isArray(sectorData) ? sectorData : []);
+    } catch (error) {
+      console.error('Error fetching sector details:', error);
+      setSectors([]); // Set empty array on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSectorDetails();
+  }, []);
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -50,6 +73,7 @@ const AddCategory = ({ mode, data, onCancel, onDataChanged }) => {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
+      formData.append('category_job_sector', selectedSector);
       formData.append('category_name', categoryName);
       if (categoryImage) {
         formData.append('category_image', categoryImage);
@@ -75,6 +99,7 @@ const AddCategory = ({ mode, data, onCancel, onDataChanged }) => {
         setCategoryName('');
         setCategoryImage(null);
         setPreview(null);
+        setSelectedSector('');
       }
 
       // Trigger refresh and hide form after delay
@@ -110,6 +135,24 @@ const AddCategory = ({ mode, data, onCancel, onDataChanged }) => {
       >
         {message && <Alert variant={variant} dismissible onClose={() => setMessage('')}>{message}</Alert>}
         <Form onSubmit={handleSubmit} className='py-2'>
+          <Form.Group className="mb-3" controlId="categoryName">
+            <Form.Label>
+              Select Sector <span className="text-danger">*</span>
+            </Form.Label>
+            <Form.Control
+              as="select"
+              value={selectedSector}
+              onChange={(e) => setSelectedSector(e.target.value)}
+              required
+            >
+              <option value="">Select a sector</option>
+              {sectors.map((sector) => (
+                <option key={sector._id} value={sector._id}>
+                  {sector.job_sector_name}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
           <Form.Group className="mb-3" controlId="categoryImage">
             <Form.Label>Upload Image</Form.Label>
             <Form.Control

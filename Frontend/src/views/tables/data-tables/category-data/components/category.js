@@ -2,7 +2,6 @@ import formatDate from "@/components/DateFormat"
 const basePath = import.meta.env.VITE_BASE_URL;
 
 export const categoryColumns = [
-  { data: "_id", title: "Category ID" },
   {
     data: "category_image",
     title: "Image",
@@ -14,6 +13,7 @@ export const categoryColumns = [
     },
   },
   { data: "category_name", title: "Name" },
+  { data: "category_job_sector.job_sector_name", title: "Sector" },
   {
     data: "category_status",
     title: "Status",
@@ -28,7 +28,6 @@ export const categoryColumns = [
 ];
 
 export const subCategoryColumns = [
-  { data: "_id", title: "Sub Category ID" },
   {
     data: "subcategory_image",
     title: "Image",
@@ -37,8 +36,8 @@ export const subCategoryColumns = [
       return `<img src="${basePath}${data}" alt="Category Image" style="width: 24px; height: 24px;" />`;
     },
   },
-  { data: "subcategory_category_id.category_name", title: "Category Name", defaultContent: "N/A" },
   { data: "subcategory_name", title: "Sub Category Name" },
+  { data: "subcategory_category_id.category_name", title: "Category Name", defaultContent: "N/A" },
   {
     data: "subcategory_status",
     title: "Status",

@@ -124,6 +124,8 @@ export default function AddJob() {
   const [message, setMessage] = useState({ text: "", variant: "" });
   const [categoryList, setCategoryList] = useState([]);
   const [subcategoryList, setSubcategoryList] = useState([]);
+  const [sectorList, setSectorList] = useState([]);
+  const [jobTypeList, setJobTypeList] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const requiredSections = [
@@ -136,17 +138,37 @@ export default function AddJob() {
   );
 
 
-  //fetch category and subcategory values 
+  //fetch category, subcategory, sector, and type values 
   const fetchCategories = async () => {
     try {
-      const category = await axios.get('/job-categories/get_job_category_list');
-      const subcategory = await axios.get('/job-categories/get_job_subcategory_list');
-      setCategoryList(category.data?.jsonData?.data);
-      setSubcategoryList(subcategory.data?.jsonData?.data);
-      console.log('Categories fetched:', category.data);
-      console.log('Subcategories fetched:', subcategory.data);
+      const [category, subcategory, sector, jobType] = await Promise.all([
+        axios.get('/job-categories/get_job_category_list'),
+        axios.get('/job-categories/get_job_subcategory_list'),
+        axios.get('/job-categories/get_job_sector_list'),
+        axios.get('/job-categories/get_job_type_list')
+      ]);
+      
+      // Handle different response structures and ensure arrays
+      const categoryData = category.data?.jsonData?.data || category.data?.jsonData || category.data || [];
+      const subcategoryData = subcategory.data?.jsonData?.data || subcategory.data?.jsonData || subcategory.data || [];
+      const sectorData = sector.data?.jsonData?.data || sector.data?.jsonData || sector.data || [];
+      const jobTypeData = jobType.data?.jsonData?.jobTypes || jobType.data?.jsonData || jobType.data || [];
+      
+      setCategoryList(Array.isArray(categoryData) ? categoryData : []);
+      setSubcategoryList(Array.isArray(subcategoryData) ? subcategoryData : []);
+      setSectorList(Array.isArray(sectorData) ? sectorData : []);
+      setJobTypeList(Array.isArray(jobTypeData) ? jobTypeData : []);
+      
+      console.log('Categories fetched:', categoryData);
+      console.log('Subcategories fetched:', subcategoryData);
+      console.log('Sectors fetched:', sectorData);
+      console.log('Job Types fetched:', jobTypeData);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Error fetching data:', error);
+      setCategoryList([]);
+      setSubcategoryList([]);
+      setSectorList([]);
+      setJobTypeList([]);
     }
   }
 
@@ -194,11 +216,12 @@ export default function AddJob() {
       job_title: jobData.job_title || "",
       job_organization: jobData.job_organization || "",
       job_advertisement_no: jobData.job_advertisement_no || "",
-      job_type: jobData.job_type || "Permanent",
-      job_sector: jobData.job_sector || "Central Govt",
+      // Handle ObjectId references - can be populated objects or just IDs
+      job_type: typeof jobData.job_type === 'object' ? jobData.job_type?._id : jobData.job_type || "",
+      job_sector: typeof jobData.job_sector === 'object' ? jobData.job_sector?._id : jobData.job_sector || "",
       job_short_desc: jobData.job_short_desc || "",
-      job_category: jobData.job_category || "",
-      job_sub_category: jobData.job_sub_category || "",
+      job_category: typeof jobData.job_category === 'object' ? jobData.job_category?._id : jobData.job_category || "",
+      job_sub_category: typeof jobData.job_sub_category === 'object' ? jobData.job_sub_category?._id : jobData.job_sub_category || "",
       dates: transformDatesFromBackend(jobData),
       fees: transformFeesFromBackend(jobData),
       vacancies: transformVacanciesFromBackend(jobData),
@@ -301,8 +324,8 @@ export default function AddJob() {
     job_title: "",
     job_organization: "",
     job_advertisement_no: "",
-    job_type: "Permanent",
-    job_sector: "Central Govt",
+    job_type: "",
+    job_sector: "",
     job_short_desc: "",
     job_category: "",
     job_sub_category: "",
@@ -820,44 +843,102 @@ export default function AddJob() {
                       </Col>
                       <Col md={4}>
                         <Form.Group className="mb-2">
-                          <Form.Label>Job Type</Form.Label>
-                          <Form.Select name="job_type" value={values.job_type} onChange={handleChange}>
-                            <option>Permanent</option>
-                            <option>Contract</option>
-                            <option>Apprentice</option>
+                          <Form.Label>
+                            Job Type
+                            <span className="text-danger ms-1">*</span>
+                          </Form.Label>
+                          <Form.Select 
+                            name="job_type" 
+                            value={values.job_type} 
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            isInvalid={touched.job_type && errors.job_type}
+                          >
+                            <option value="">Select Job Type</option>
+                            {jobTypeList.map((type) => (
+                              <option key={type._id} value={type._id}>
+                                {type.job_type_name}
+                              </option>
+                            ))}
                           </Form.Select>
+                          {touched.job_type && errors.job_type && (
+                            <div className="text-danger small mt-1">{errors.job_type}</div>
+                          )}
                         </Form.Group>
                       </Col>
                       <Col md={4}>
                         <Form.Group className="mb-2">
-                          <Form.Label>Sector</Form.Label>
-                          <Form.Select name="job_sector" value={values.job_sector} onChange={handleChange}>
-                            <option>Central Govt</option>
-                            <option>State Govt</option>
-                            <option>PSU</option>
+                          <Form.Label>
+                            Sector
+                            <span className="text-danger ms-1">*</span>
+                          </Form.Label>
+                          <Form.Select 
+                            name="job_sector" 
+                            value={values.job_sector} 
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            isInvalid={touched.job_sector && errors.job_sector}
+                          >
+                            <option value="">Select Sector</option>
+                            {sectorList.map((sector) => (
+                              <option key={sector._id} value={sector._id}>
+                                {sector.job_sector_name}
+                              </option>
+                            ))}
                           </Form.Select>
+                          {touched.job_sector && errors.job_sector && (
+                            <div className="text-danger small mt-1">{errors.job_sector}</div>
+                          )}
                         </Form.Group>
                       </Col>
                       <Col md={4}>
                         <Form.Group className="mb-2">
-                          <Form.Label>Category</Form.Label>
-                          <Form.Select name="job_category" value={values.job_category} onChange={handleChange}>
-                            <option value="" selected disabled>Select Category</option>
-                            {categoryList.map((cat, index) => {
-                              return <option key={index} value={cat.category_name}>{cat.category_name}</option>
-                            })}
+                          <Form.Label>
+                            Category
+                            <span className="text-danger ms-1">*</span>
+                          </Form.Label>
+                          <Form.Select 
+                            name="job_category" 
+                            value={values.job_category} 
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            isInvalid={touched.job_category && errors.job_category}
+                          >
+                            <option value="">Select Category</option>
+                            {categoryList.map((cat) => (
+                              <option key={cat._id} value={cat._id}>
+                                {cat.category_name}
+                              </option>
+                            ))}
                           </Form.Select>
+                          {touched.job_category && errors.job_category && (
+                            <div className="text-danger small mt-1">{errors.job_category}</div>
+                          )}
                         </Form.Group>
                       </Col>
                       <Col md={4}>
                         <Form.Group className="mb-2">
-                          <Form.Label>Sub-Category</Form.Label>
-                          <Form.Select name="job_sub_category" value={values.job_sub_category} onChange={handleChange}>
-                            <option value="" selected disabled>Select SubCategory</option>
-                            {subcategoryList.map((subCat, index) => {
-                              return <option key={index} value={subCat.subcategory_name}>{subCat.subcategory_name}</option>
-                            })}
+                          <Form.Label>
+                            Sub-Category
+                            <span className="text-danger ms-1">*</span>
+                          </Form.Label>
+                          <Form.Select 
+                            name="job_sub_category" 
+                            value={values.job_sub_category} 
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            isInvalid={touched.job_sub_category && errors.job_sub_category}
+                          >
+                            <option value="">Select SubCategory</option>
+                            {subcategoryList.map((subCat) => (
+                              <option key={subCat._id} value={subCat._id}>
+                                {subCat.subcategory_name}
+                              </option>
+                            ))}
                           </Form.Select>
+                          {touched.job_sub_category && errors.job_sub_category && (
+                            <div className="text-danger small mt-1">{errors.job_sub_category}</div>
+                          )}
                         </Form.Group>
                       </Col>
                       <Col md={4}>

@@ -50,7 +50,7 @@ const createJob = async (req, res) => {
 // Get all jobs
 const getJobs = async (req, res) => {
   try {
-    const jobs = await Job.find().sort({ createdAt: -1 });
+    const jobs = await Job.find().sort({ createdAt: -1 }).populate('job_category').populate('job_sub_category').populate('job_type').populate('job_sector');
     return res.json(jobs);
   } catch (error) {
     console.error("Get Jobs Error:", error);

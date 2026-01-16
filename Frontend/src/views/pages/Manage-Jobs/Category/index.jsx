@@ -14,10 +14,10 @@ const Page = () => {
   const [editData, setEditData] = React.useState(null);
 
   const tabs = [
+    { key: 4, label: "Sector" },
     { key: 1, label: "Category" },
     { key: 2, label: "Sub Category" },
     { key: 3, label: "Job Type" },
-    { key: 4, label: "Sector" },
     { key: 5, label: "Career Preferences" },
   ];
 
