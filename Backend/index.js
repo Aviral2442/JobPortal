@@ -19,8 +19,8 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json()); // parse JSON
-app.use(express.urlencoded({ extended: true })); // parse form data
+app.use(express.json({ limit: "50mb" })); // parse JSON
+app.use(express.urlencoded({ extended: true, limit: "50mb" })); // parse form data
 
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

@@ -374,19 +374,22 @@ const WizardStudentDetail = () => {
 
       // Special handling for Skills - backend expects arrays
       if (endpoint.includes('updateStudentSkills')) {
-        // Convert comma-separated strings to arrays
+        // Convert comma-separated strings to arrays - same approach as StudentDetail.jsx
+        // Filter out empty values and ensure we send empty arrays instead of null/undefined
         const convertToArray = (value) => {
-          if (!value) return [];
-          if (Array.isArray(value)) return value;
-          return value.split(',').map(item => item.trim()).filter(item => item);
+          if (!value || value === '') return [];
+          return value.split(',').map(s => s.trim()).filter(Boolean);
         };
         
         payload = {
+          hobbies: convertToArray(sectionData.hobbies),
           technicalSkills: convertToArray(sectionData.technicalSkills),
           softSkills: convertToArray(sectionData.softSkills),
           computerKnowledge: convertToArray(sectionData.computerKnowledge),
-          hobbies: convertToArray(sectionData.hobbies),
+          languageProficiency: [] // Ensure this field is included as empty array
         };
+        
+        console.log('Skills payload:', payload);
       }
 
       // Special handling for Education - backend expects objects for each level
