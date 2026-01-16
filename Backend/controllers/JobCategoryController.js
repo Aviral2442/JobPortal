@@ -301,7 +301,7 @@ exports.jobListSectorWise = async (req, res) => {
         return res.status(response.status).json({
             status: response.status,
             message: response.message,
-            jsonData: response.jsonData || null,
+            jsonData: response.jsonData,
         });
     } catch (error) {
         console.error("Job List Sector Wise Controller Error:", error);
