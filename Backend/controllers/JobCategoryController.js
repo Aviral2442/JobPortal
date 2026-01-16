@@ -234,6 +234,25 @@ exports.jobAppliedListOfStudents = async (req, res) => {
 
 };
 
+// UPCOMMING JOB FOR STUDENTS CONTROLLER
+exports.upcommingJobForStudents = async (req, res) => {
+    try {
+        const studentId = req.params.studentId;
+        const response = await JobCategoryService.upcommingJobForStudents(studentId);
+        return res.status(response.status).json({
+            status: response.status,
+            message: response.message,
+            jsonData: response.jsonData || null,
+        });
+    } catch (error) {
+        console.error("Upcomming Job For Students Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
+};
+
 // RECOMMEND JOBS FOR STUDENT CONTROLLER
 exports.recommendJobsForStudent = async (req, res) => {
     try {

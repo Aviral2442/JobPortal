@@ -468,6 +468,46 @@ exports.jobAppliedListOfStudents = async (query) => {
     };
 };
 
+// UPCOMMING JOBS FOR STUDENTS SERVICE
+exports.upcommingJobForStudents = async (studentId) => {
+    try {
+
+        const student = await Student.findById(studentId);
+        if (!student) {
+            return { status: 404, message: "Student not found" };
+        }
+
+        const studentSector = student.studentJobSector;
+
+        const sevenDaysFromNow = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60);
+
+        console.log(sevenDaysFromNow);
+
+        const upcommingJobSectorWise = await Job.find({
+            job_sector: studentSector,
+            job_start_date: { $gte: sevenDaysFromNow }
+        })
+
+        const upcommingJobSectorWiseCount = upcommingJobSectorWise.length;
+
+        return {
+            status: 200,
+            message: "Upcomming jobs fetched successfully",
+            jsonData: {
+                upcommingJobSectorWiseCount,
+                upcommingJobSectorWise
+            },
+        }
+
+    } catch (error) {
+        console.error("Error in upcommingJobForStudents Service:", error);
+        return {
+            status: 500,
+            message: "Server error",
+        };
+    }
+};
+
 // RECOMMEND JOBS FOR STUDENT SERVICE
 exports.recommendJobsForStudent = async (studentId) => {
     try {
