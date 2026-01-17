@@ -11,7 +11,7 @@ import ModelUsageSummary from '@/views/dashboard/components/ModelUsageSummary';
 import APIPerformanceMetrics from '@/views/dashboard/components/APIPerformanceMetrics';
 const Page = () => {
   return <Container fluid>
-            <PageTitle title="The Ultimate Admin & Dashboard Theme" subtitle="A premium collection of elegant, accessible components and a powerful codebase. Built for modern frameworks. Developer Friendly. Production Ready." badge={{
+            <PageTitle title="Job Portal" subtitle="A premium collection of elegant, accessible components and a powerful codebase. Built for modern frameworks. Developer Friendly. Production Ready." badge={{
       title: 'Medium and Large Business',
       icon: LuSparkles
     }} />
