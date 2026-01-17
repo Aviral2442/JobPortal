@@ -83,7 +83,7 @@ const ExportDataWithButtons = ({
     try {
       const res = await axios.get(endpoint);
       console.log("Fetched data:", res.data);
-      toast.success("Data fetched successfully");
+      // toast.success("Data fetched successfully");
       // keep existing handling for tabs that use tableConfig
       setRows(res.data?.jsonData?.data || res.data?.data || []);
     } catch (err) {
