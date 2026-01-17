@@ -1443,7 +1443,10 @@ exports.notificationListForStudent = async (studentId) => {
         return {
             status: 200,
             message: 'Notification list for student fetched successfully',
-            jsonData: getNotificationsList
+            jsonData: {
+                getNotificationsList: getNotificationsList,
+                notificationsCount: getNotificationsList.length
+            }
         };
 
     } catch (error) {
