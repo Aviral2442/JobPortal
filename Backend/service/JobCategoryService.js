@@ -555,16 +555,50 @@ exports.recommendJobsForStudent = async (studentId) => {
 
         const studentSector = student.studentJobSector;
 
-        const recommendedJobs = await Job.find({ job_sector: studentSector });
+        const recommendedJobs = await Job.find({ job_sector: studentSector, jobRecommendation: true });
         
         return {
             status: 200,
             message: "Recommended jobs fetched successfully",
-            jsonData: recommendedJobs,
+            jsonData: {
+                recommendedJobsCount: recommendedJobs.length,
+                recommendedJobs: recommendedJobs
+            }
         };
 
     } catch (error) {
         console.error("Error in recommendJobsForStudent Service:", error);
+        return {
+            status: 500,
+            message: "Server error",
+        };
+    }
+};
+
+// FEATURED JOBS FOR STUDENT SERVICE
+exports.featuredJobsForStudent = async (studentId) => {
+    try {
+
+        const student = await Student.findById(studentId);
+        if (!student) {
+            return { status: 404, message: "Student not found" };
+        }
+
+        const studentSector = student.studentJobSector;
+
+        const featuredJobs = await Job.find({ job_sector: studentSector, jobFeatured: true });
+        
+        return {
+            status: 200,
+            message: "Featured jobs fetched successfully",
+            jsonData: {
+                featuredJobsCount: featuredJobs.length,
+                featuredJobs: featuredJobs
+            }
+        };
+
+    } catch (error) {
+        console.error("Error in featuredJobsForStudent Service:", error);
         return {
             status: 500,
             message: "Server error",

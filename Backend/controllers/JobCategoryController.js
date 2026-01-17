@@ -293,6 +293,25 @@ exports.recommendJobsForStudent = async (req, res) => {
     }
 };
 
+// FEATURED JOBS FOR STUDENT CONTROLLER
+exports.featuredJobsForStudent = async (req, res) => {
+    try {
+        const studentId = req.params.studentId;
+        const response = await JobCategoryService.featuredJobsForStudent(studentId);
+        return res.status(response.status).json({
+            status: response.status,
+            message: response.message,
+            jsonData: response.jsonData || null,
+        });
+    } catch (error) {
+        console.error("Featured Jobs For Student Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
+};
+
 // JOB LIST SECTOR WISE CONTROLLER
 exports.jobListSectorWise = async (req, res) => {
     try {
