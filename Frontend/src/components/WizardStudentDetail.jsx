@@ -1761,6 +1761,7 @@ const WizardStudentDetail = () => {
                   { name: "experienceDurationMonths", label: "Duration of this Job (Months)", type: "number", cols: 4 },
                   { name: "experienceStartDate", label: "Start Date", type: "date", cols: 4 },
                   { name: "experienceEndDate", label: "End Date", type: "date", cols: 4 },
+                  { name: "experienceCertificateFile", label: "Certificate File", type: "file", cols: 4 },
                   { name: "responsibilities", label: "Responsibilities", type: "textarea", rows: 3, cols: 12 },
                 ]}
               />
@@ -1826,10 +1827,11 @@ const WizardStudentDetail = () => {
                 fields={[
                   { name: "certificationName", label: "Certification Name", type: "text", cols: 6 },
                   { name: "issuingOrganization", label: "Issuing Organization", type: "text", cols: 6 },
-                  { name: "issueDate", label: "Issue Date", type: "date", cols: 4 },
-                  { name: "expirationDate", label: "Expiration Date", type: "date", cols: 4 },
-                  { name: "credentialId", label: "Credential ID", type: "text", cols: 4 },
-                  { name: "certificateUrl", label: "Certificate URL", type: "url", cols: 12 },
+                  { name: "issueDate", label: "Issue Date", type: "date", cols: 3 },
+                  { name: "expirationDate", label: "Expiration Date", type: "date", cols: 3 },
+                  { name: "credentialId", label: "Credential ID", type: "text", cols: 3 },
+                  { name: "certificateUrl", label: "Certificate URL", type: "url", cols: 3 },
+                  { name: "certificateFile", label: "Certificate File", type: "file", cols: 4 },
                 ]}
               />
 
@@ -1849,6 +1851,15 @@ const WizardStudentDetail = () => {
                   { name: "voterId", label: "Voter ID", type: "text", cols: 4 },
                   { name: "passportNumber", label: "Passport Number", type: "text", cols: 4 },
                   { name: "drivingLicenseNo", label: "Driving License No", type: "text", cols: 4 },
+                  { name: "aadharFrontImg", label: "Aadhar Front Image", type: "file", cols: 4 },
+                  { name: "aadharBackImg", label: "Aadhar Back Image", type: "file", cols: 4 },
+                  { label: "Documents files", type: "divider", cols: 12 },
+                  { name: "panImg", label: "PAN Card Image", type: "file", cols: 4 },
+                  { name: "drivingLicenseFrontImg", label: "Driving License Front Image", type: "file", cols: 4 },
+                  { name: "categoryCertificateImg", label: "Category Certificate Image", type: "file", cols: 4 },
+                  { name: "domicileCertificateImg", label: "Domicile Certificate Image", type: "file", cols: 4 },
+                  { name: "incomeCertificateImg", label: "Income Certificate Image", type: "file", cols: 4 },
+                  { name: "birthCertificateImg", label: "Birth Certificate Image", type: "file", cols: 4 }
                 ]}
               />
             </Wizard>

@@ -44,7 +44,7 @@ const StudentList = ({ refreshFlag }) => {
       console.log("Fetched students:", studentsData);
 
       setStudents(studentsData);
-      toast.success("Students loaded successfully");
+      // toast.success("Students loaded successfully");
     } catch (error) {
       console.error("Error fetching students:", error);
       setMessage("Error loading students");
@@ -158,10 +158,10 @@ const StudentList = ({ refreshFlag }) => {
               <TbDotsVertical />
             </Dropdown.Toggle>
             <Dropdown.Menu>
-              <Dropdown.Item onClick={() => handleView(rowData)}>
+              {/* <Dropdown.Item onClick={() => handleView(rowData)}>
                 <TbEye className="me-2" />
                 View Details
-              </Dropdown.Item>
+              </Dropdown.Item> */}
               <Dropdown.Item onClick={() => navigate(`/admin/student/detail/${rowData._id}`)}>
                 <TbEye className="me-2" />
                 View Wizard
