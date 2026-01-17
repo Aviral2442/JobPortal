@@ -1,5 +1,6 @@
 const path = require("path");
 const Job = require("../models/JobModel");
+const NotificationModel = require("../models/NotificationModel");
 
 const toPublicPath = (absPath) => {
   const rel = absPath.replace(/\\/g, "/");
@@ -32,6 +33,13 @@ const createJob = async (req, res) => {
     jobData.job_last_updated_date = Math.floor(Date.now() / 1000);
 
     const job = await Job.create(jobData);
+
+    const createNofitication = await NotificationModel.create({
+      notifyJobId: job._id,
+      notifyTitle: `New Job Posted: ${job.job_title}`,
+      notifyDesc: `A new job titled "${job.job_title}" has been posted. Check it out!`,
+    });
+
     return res.status(201).json({
       message: "Job created successfully",
       _id: job._id,

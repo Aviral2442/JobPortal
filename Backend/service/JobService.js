@@ -13,6 +13,9 @@ class JobService {
         notifyDesc: `A new job titled "${job.job_title}" has been posted. Check it out!`,
       });
 
+      console.log(createNofitication);
+      
+
       return { success: true, job };
     } catch (error) {
       return { success: false, error: error.message };
