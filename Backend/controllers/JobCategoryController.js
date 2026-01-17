@@ -351,3 +351,23 @@ exports.governmentSectorJobList = async (req, res) => {
         });
     }
 };
+
+// PSU SECTOR JOB LIST CONTROLLER
+exports.psuSectorJobList = async (req, res) => {
+    try {
+        const result = await JobCategoryService.psuSectorJobList(req.query);
+
+        res.status(200).json({
+            status: 200,
+            message: 'PSU sector job list fetched successfully',
+            jsonData: result,
+        });
+    } catch (error) {
+        console.error('Error in psuSectorJobList Controller:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};

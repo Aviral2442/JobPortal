@@ -39,7 +39,9 @@ router.post('/update_jobs_status/:jobId', JobCategoryController.updateJobStatus)
 router.get('/recommended_jobs_list_for_student/:studentId', JobCategoryController.recommendJobsForStudent);
 router.get('/job_list_sector_wise/:studentId', JobCategoryController.jobListSectorWise);
 
+// JOB SECTOR BASED JOB LIST ROUTES
 router.get('/private_sector_job_list', JobCategoryController.privateSectorJobList);
 router.get('/government_sector_job_list', JobCategoryController.governmentSectorJobList);
+router.get('/psu_sector_job_list', JobCategoryController.psuSectorJobList);
 
 module.exports = router;

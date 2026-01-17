@@ -776,3 +776,98 @@ exports.governmentSectorJobList = async (query) => {
         }
     };
 };
+
+// PSU SECTOR JOB LIST SERVICE WITH FILTERS AND PAGINATION
+exports.psuSectorJobList = async (query) => {
+    const {
+        dateFilter,
+        fromDate,
+        toDate,
+        searchFilter,
+        page = 1,
+        limit = 10
+    } = query;
+
+    const skip = (page - 1) * limit;
+
+    const psuSector = await JobSector.findOne({
+        job_sector_name: { $regex: /^psu/i }, // matches "PSU Sector"
+    }).select('_id');
+
+    if (!psuSector) {
+        return {
+            total: 0,
+            page: Number(page),
+            limit: Number(limit),
+            totalPages: 0,
+            data: []
+        };
+    }
+
+    const filter = {
+        job_sector: psuSector._id,
+    };
+
+    // Search Filter
+    if (searchFilter) {
+        filter.job_title = { $regex: searchFilter, $options: 'i' };
+    }
+
+    // Date Filter
+    if (dateFilter) {
+        const today = moment().startOf('day');
+        const now = moment().endOf('day');
+        let startDate, endDate;
+
+        switch (dateFilter) {
+            case 'today':
+                startDate = today.unix();
+                endDate = now.unix();
+                break;
+
+            case 'yesterday':
+                startDate = today.subtract(1, 'days').unix();
+                endDate = now.subtract(1, 'days').unix();
+                break;
+
+            case 'this_week':
+                startDate = moment().startOf('week').unix();
+                endDate = moment().endOf('week').unix();
+                break;
+
+            case 'this_month':
+                startDate = moment().startOf('month').unix();
+                endDate = moment().endOf('month').unix();
+                break;
+
+            case 'custom':
+                if (fromDate && toDate) {
+                    startDate = moment(fromDate, 'YYYY-MM-DD').startOf('day').unix();
+                    endDate = moment(toDate, 'YYYY-MM-DD').endOf('day').unix();
+                }
+                break;
+        }
+
+        if (startDate && endDate) {
+            filter.job_posted_date = { $gte: startDate, $lte: endDate };
+        }
+    }
+
+    // Pagination and Data Retrieval
+    const total = await Job.countDocuments(filter);
+    const data = await Job.find(filter)
+        .populate('job_sector', 'job_sector_name')
+        .skip(skip)
+        .limit(limit)
+        .sort({ job_posted_date: -1 });
+
+    return {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit),
+        jsonData: {
+            psuJobs: data
+        }
+    };
+};
