@@ -468,11 +468,22 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
     );
   }
 
-  const handleChange = (e) => {
+  const handleChange = async (e) => {
     if (field.type === "checkbox") {
       onChange(field.name, e.target.checked);
     } else if (field.type === "file") {
-      onChange(field.name, e.target.files[0]);
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = reader.result;
+          onChange(field.name, base64String);
+        };
+        reader.onerror = () => {
+          toast.error("Failed to read file");
+        };
+        reader.readAsDataURL(file);
+      }
     } else {
       onChange(field.name, e.target.value);
     }
@@ -530,11 +541,19 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
             onChange={handleChange}
           />
         ) : field.type === "file" ? (
-          <FormControl
-            type="file"
-            accept={field.accept}
-            onChange={handleChange}
-          />
+          <>
+            <FormControl
+              type="file"
+              accept={field.accept}
+              onChange={handleChange}
+              key={value ? 'has-file' : 'no-file'}
+            />
+            {value && typeof value === "string" && (
+              <small className="text-muted d-block mt-1">
+                File uploaded successfully. Click the eye icon above to view.
+              </small>
+            )}
+          </>
         ) : field.type === "multiselect" ? (
           <MultiSelectWithSearch
             value={value || []}
@@ -1414,7 +1433,7 @@ const WizardStudentDetail = () => {
                 prev
                 onChange={handleFieldChange}
                 onSave={handleSave}
-                apiEndpoint={`/student/updateStudentBodyDetails/${id}`}
+                apiEndpoint={`/student/updateStudentBankDetails/${id}`}
                 saving={saving}
                 onViewImage={handleViewImage}
                 fields={[
@@ -1862,6 +1881,8 @@ const WizardStudentDetail = () => {
                   { name: "birthCertificateImg", label: "Birth Certificate Image", type: "file", cols: 4 }
                 ]}
               />
+
+              
             </Wizard>
           </ComponentCard>
         </Col>

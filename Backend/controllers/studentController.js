@@ -131,6 +131,7 @@ exports.updateStudentBankDetails = async (req, res) => {
         const studentId = req.params.studentId;
         const passbookUrl = req.file ? `/uploads/StudentBankDetails/${req.file.filename}` : null;
         const studentBankData = { ...req.body, passbookUrl };
+        console.log('Student Bank Data:', studentBankData);
         const result = await studentService.updateStudentBankDetails(studentId, studentBankData);
         return res.status(result.status).json(result);
     } catch (error) {

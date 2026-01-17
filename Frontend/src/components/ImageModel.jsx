@@ -11,12 +11,15 @@ const ImageModal = ({
   const [rotation, setRotation] = useState(0);
   const [scale, setScale] = useState(1);
   const imgRef = useRef<HTMLImageElement | null>(null);
+  const [isPdf, setIsPdf] = useState(false);
 
   // Reset transforms when modal opens or image changes
   useEffect(() => {
     if (show) {
       setRotation(0);
-      setScale(1);  
+      setScale(1);
+      // Check if it's a PDF
+      setIsPdf(imageSrc?.includes('data:application/pdf') || imageSrc?.endsWith('.pdf'));
     }
   }, [show, imageSrc]);
 
@@ -46,33 +49,58 @@ const ImageModal = ({
             padding: "16px",
           }}
         >
-          <img
-            ref={imgRef}
-            src={imageSrc}
-            alt={title}
-            style={{
-              transform: `rotate(${rotation}deg) scale(${scale})`,
-              maxWidth: "100%",
-              maxHeight: "70vh",
-              objectFit: "contain",
-              transition: "transform 0.2s ease",
-            }}
-          />
+          {isPdf ? (
+            <iframe
+              src={imageSrc}
+              style={{
+                width: "100%",
+                height: "70vh",
+                border: "none",
+              }}
+              title={title}
+            />
+          ) : (
+            <img
+              ref={imgRef}
+              src={imageSrc}
+              alt={title}
+              style={{
+                transform: `rotate(${rotation}deg) scale(${scale})`,
+                maxWidth: "100%",
+                maxHeight: "70vh",
+                objectFit: "contain",
+                transition: "transform 0.2s ease",
+              }}
+            />
+          )}
         </div>
       </Modal.Body>
       <Modal.Footer className="d-flex justify-content-around align-items-center">
-        <button className="btn btn-light" id="rotate-btn" onClick={rotate} title="Rotate 90°">
-          <TbRotate className="me-1" /> Rotate
-        </button>
-        <button className="btn btn-light" id="zoom-in-btn" onClick={zoomIn} title="Zoom In">
-          <TbZoomIn className="me-1" /> Zoom In
-        </button>
-        <button className="btn btn-light" id="zoom-out-btn" onClick={zoomOut} title="Zoom Out">
-          <TbZoomOut className="me-1" /> Zoom Out
-        </button>
-        <button className="btn btn-light" id="reset-btn" onClick={reset} title="Reset">
-          <TbRefresh className="me-1" /> Reset
-        </button>
+        {!isPdf && (
+          <>
+            <button className="btn btn-light" id="rotate-btn" onClick={rotate} title="Rotate 90°">
+              <TbRotate className="me-1" /> Rotate
+            </button>
+            <button className="btn btn-light" id="zoom-in-btn" onClick={zoomIn} title="Zoom In">
+              <TbZoomIn className="me-1" /> Zoom In
+            </button>
+            <button className="btn btn-light" id="zoom-out-btn" onClick={zoomOut} title="Zoom Out">
+              <TbZoomOut className="me-1" /> Zoom Out
+            </button>
+            <button className="btn btn-light" id="reset-btn" onClick={reset} title="Reset">
+              <TbRefresh className="me-1" /> Reset
+            </button>
+          </>
+        )}
+        {isPdf && (
+          <a 
+            href={imageSrc} 
+            download={title}
+            className="btn btn-primary"
+          >
+            Download PDF
+          </a>
+        )}
       </Modal.Footer>
     </Modal>
   );
