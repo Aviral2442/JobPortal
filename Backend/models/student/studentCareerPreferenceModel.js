@@ -4,7 +4,7 @@ const {currentUnixTimeStamp} = require("../../utils/currentUnixTimeStamp");
 const StudentPreferencesSchema = new mongoose.Schema({
   studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true, index: true },
 
-  preferredJobCategory: { type: [String], default: [] },
+  preferredJobCategory: [{ type: mongoose.Schema.Types.ObjectId, ref: "CareerPreferences" }],
   preferredJobLocation: { type: [String], default: [] },
   expectedSalaryMin: { type: Number, default: 0 },
   expectedSalaryMax: { type: Number, default: 0 },
