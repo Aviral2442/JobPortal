@@ -55,10 +55,6 @@ export const menuItems = [
     key: 'students',
     label: 'Students List',
     url: '/admin/students'
-  },
-  {    key: 'Applied-Jobs',
-    label: 'Applied Jobs',
-    url: '/admin/applied-jobs'
   },],
 },
 {
@@ -75,30 +71,30 @@ export const menuItems = [
     label:'Job List',
     url:'/admin/jobs'
   },
-{
-    key:'admit-card',
-    label:'Admit Card',
-    url:'/admin/admit-card'
-  },
-{
-    key:'result',
-    label:'Results',
-    url:'/admin/result'
-  },
-{
-    key:'answer-key',
-    label:'Answer Key',
-    url:'/admin/answer-key'
-  },
-{
-    key:'documents',
-    label:'Documents',
-    url:'/admin/documents'
-  },
-{    key:'admissions',
-    label:'Admissions',
-    url:'/admin/admissions'
-},
+// {
+//     key:'admit-card',
+//     label:'Admit Card',
+//     url:'/admin/admit-card'
+//   },
+// {
+//     key:'result',
+//     label:'Results',
+//     url:'/admin/result'
+//   },
+// {
+//     key:'answer-key',
+//     label:'Answer Key',
+//     url:'/admin/answer-key'
+//   },
+// {
+//     key:'documents',
+//     label:'Documents',
+//     url:'/admin/documents'
+//   },
+// {    key:'admissions',
+//     label:'Admissions',
+//     url:'/admin/admissions'
+// },
 
 // {
 //     key:'sub-category',
@@ -106,6 +102,16 @@ export const menuItems = [
 //     url:'/admin/sub-category'
 // },
 ]},
+{
+  key: 'manage-applications',
+  label: 'Manage Applications',
+  icon: LuUsers,
+  children: [
+  {    key: 'Applied-Jobs',
+    label: 'Applied Jobs',
+    url: '/admin/applied-jobs'
+  },],
+},
 // {
 //   key:'manage-jobs',
 //   label:'Manage Jobs',
