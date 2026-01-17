@@ -39,4 +39,6 @@ router.post('/update_jobs_status/:jobId', JobCategoryController.updateJobStatus)
 router.get('/recommended_jobs_list_for_student/:studentId', JobCategoryController.recommendJobsForStudent);
 router.get('/job_list_sector_wise/:studentId', JobCategoryController.jobListSectorWise);
 
+router.get('/private_sector_job_list', JobCategoryController.privateSectorJobList);
+
 module.exports = router;
