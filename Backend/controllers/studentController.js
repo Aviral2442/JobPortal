@@ -289,3 +289,31 @@ exports.uploadStudentResume = async (req, res) => {
         return res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
     }
 };
+
+// STUDENT REMOVE NOTIFICATION CONTROLLER
+exports.studentRemoveNotification = async (req, res) => {
+    try {
+
+        const data = {
+            studentId: req.params.studentId,
+            notificationId: req.params.notificationId
+        };
+
+        const result = await studentService.studentRemoveNotification(data);
+        return res.status(result.status).json(result);
+
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
+    }
+};
+
+// NOTIFICATION LIST FOR STUDENT CONTROLLER
+exports.notificationListForStudent = async (req, res) => {
+    try {
+        const studentId = req.params.studentId;
+        const result = await studentService.notificationListForStudent(studentId);
+        return res.status(200).json(result);
+    } catch (error) {
+        return res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
+    }
+};

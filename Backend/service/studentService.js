@@ -21,6 +21,7 @@ const loginHistory = require('../models/LoginHistoryModel');
 const JobType = require('../models/JobTypeModel');
 const sendEmailOtp = require('../utils/emailOtp');
 const sendMobileOtp = require('../utils/mobileNoOtp');
+const NotificationModel = require('../models/NotificationModel');
 
 // STUDENT LIST SERVICE
 exports.studentListService = async (query) => {
@@ -300,7 +301,7 @@ exports.studentRegistration = async (studentData) => {
             studentReferralById: studentData.studentReferralById || null,
             studentReferralByCode: studentData.studentReferralByCode || null,
         });
-        console.log('New Student Object Created:', newStudent); 
+        console.log('New Student Object Created:', newStudent);
         await newStudent.save();
 
         return {
@@ -1371,6 +1372,84 @@ exports.uploadStudentResume = async (studentId, studentResumeData) => {
         return {
             status: 500,
             message: 'An error occurred during student resume upload',
+            error: error.message
+        };
+    }
+};
+
+// STUDENT REMOVE NOTIFICATION SERVICE
+exports.studentRemoveNotification = async (data) => {
+    try {
+
+        const studentId = data.studentId;
+        const notificationId = data.notificationId;
+
+        const student = await studentModel.findById(studentId);
+        if (!student) {
+            return {
+                status: 404,
+                message: 'Student not found with the provided ID'
+            };
+        }
+
+        const notification = await NotificationModel.findById(notificationId);
+        if (!notification) {
+            return {
+                status: 404,
+                message: 'Notification not found with the provided ID'
+            };
+        }
+
+        const removeNotification = await NotificationModel.findByIdAndUpdate(
+            notificationId,
+            { $pull: { notifyNotToStudents: studentId } },
+            { new: true }
+        );
+
+        return {
+            status: 200,
+            message: 'Student notification removed successfully',
+            jsonData: removeNotification
+        };
+
+    } catch (error) {
+        return {
+            status: 500,
+            message: 'An error occurred during removing student notification',
+            error: error.message
+        };
+    }
+};
+
+// NOTIFICATION LIST FOR STUDENT SERVICE
+exports.notificationListForStudent = async (studentId) => {
+    try {
+
+        const student = await studentModel.findById(studentId);
+        if (!student) {
+            return {
+                status: 404,
+                message: 'Student not found with the provided ID'
+            };
+        }
+
+        const studentSector = student.studentJobSector;
+
+        const getNotificationsList = await NotificationModel.find({
+            notifyNotToStudents: { $nin: [studentId] }, // not blocked
+            notifyJobSector: studentSector
+        }).sort({ notifyCreateAt: -1 });
+
+        return {
+            status: 200,
+            message: 'Notification list for student fetched successfully',
+            jsonData: getNotificationsList
+        };
+
+    } catch (error) {
+        return {
+            status: 500,
+            message: 'An error occurred while fetching notifications for student',
             error: error.message
         };
     }

@@ -27,5 +27,7 @@ router.put('/updateStudentSkills/:studentId', studentController.updateStudentSki
 router.put('/updateStudentSocialLinks/:studentId', studentController.updateStudentSocialLink);
 router.put('/updateStudentWorkExperience/:studentId', studentController.updateStudentWorkExperience);
 router.put('/uploadStudentResume/:studentId', upload('StudentResume').single('studentResumeFile'), studentController.uploadStudentResume);
+router.put('/removeNotification', studentController.studentRemoveNotification);
+router.get('/studentNotifications/:studentId', studentController.notificationListForStudent);
 
 module.exports = router;
