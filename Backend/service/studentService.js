@@ -1420,3 +1420,34 @@ exports.studentRemoveNotification = async (data) => {
         };
     }
 };
+
+// NOTIFICATION LIST FOR STUDENT SERVICE
+exports.notificationListForStudent = async (studentId) => {
+    try {
+
+        const student = await studentModel.findById(studentId);
+        if (!student) {
+            return {
+                status: 404,
+                message: 'Student not found with the provided ID'
+            };
+        }
+
+        const getNotificationsList = await NotificationModel.find({
+            notifyNotToStudents: { $ne: studentId }
+        }).sort({ notifyCreateAt: -1 });
+
+        return {
+            status: 200,
+            message: 'Notification list for student fetched successfully',
+            jsonData: getNotificationsList
+        };
+
+    } catch (error) {
+        return {
+            status: 500,
+            message: 'An error occurred while fetching notifications for student',
+            error: error.message
+        };
+    }
+};
