@@ -548,7 +548,21 @@ exports.updateJobStatus = async (jobId, updateColumnName, updateValue) => {
 exports.recommendJobsForStudent = async (studentId) => {
     try {
 
-        // i have to create a recommendation logic based on student's preferences and past applications
+        const student = await Student.findById(studentId);
+        if (!student) {
+            return { status: 404, message: "Student not found" };
+        }
+
+        const studentSector = student.studentJobSector;
+
+        const recommendedJobs = await Job.find({ job_sector: studentSector })
+            .limit(4);
+        
+        return {
+            status: 200,
+            message: "Recommended jobs fetched successfully",
+            jsonData: recommendedJobs,
+        };
 
     } catch (error) {
         console.error("Error in recommendJobsForStudent Service:", error);
