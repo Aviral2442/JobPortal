@@ -16,8 +16,11 @@ import {
 } from "react-icons/tb";
 import axios from "@/api/axios";
 import toast from "react-hot-toast";
+import { formatDate } from "@/components/DateFormat";
+import { MdOutlineToggleOn, MdOutlineToggleOff } from "react-icons/md";
 
-const GovernmentList = () => {
+
+const GovernmentList = ({ isActive }) => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -28,14 +31,36 @@ const GovernmentList = () => {
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
+  // Handle status toggle
+  const handleToggle = async (jobId, columnName, currentValue) => {
+    try {
+      let newValue;
+      if (columnName === 'job_status') {
+        newValue = currentValue === 1 ? 0 : 1;
+      } else {
+        newValue = !currentValue;
+      }
+
+      await axios.post(`/job-categories/update_jobs_status/${jobId}`, {
+        updateColumnName: columnName,
+        updateValue: newValue
+      });
+
+      toast.success(`${columnName} updated successfully`);
+      fetchJobs();
+    } catch (err) {
+      console.error(err);
+      toast.error(`Failed to update ${columnName}`);
+    }
+  };
+
   // Fetch jobs
   const fetchJobs = async () => {
     setLoading(true);
     try {
       const res = await axios.get(`/job-categories/government_sector_job_list`);
       console.log("Fetched jobs:", res.data);
-      toast.success("Jobs fetched successfully");
-      setJobs(res.data.jsonData || res.data);
+      setJobs(res.data.jsonData?.governmentJobs || []);
     } catch (err) {
       console.error(err);
       setJobs([]);
@@ -48,15 +73,84 @@ const GovernmentList = () => {
   };
 
   useEffect(() => {
-    fetchJobs();
-  }, []);
+    if (isActive) {
+      fetchJobs();
+    }
+  }, [isActive]);
 
   const columns = [
-    { title: "Post Name", data: "job_title" },
+    { title: "Job", data: "job_title" },
     { title: "Organization", data: "job_organization" },
-    { title: "Job Sector", data: "job_sector.job_sector_name" },
     { title: "Category", data: "job_category.category_name" },
+    { title: "Date", data: "job_posted_date",
+        render: (data) => {
+            return formatDate(data);
+        }
+    },
     {
+      title: "Recommended",
+      data: null,
+      orderable: false,
+      createdCell: (td, cellData, rowData) => {
+        td.innerHTML = "";
+        const root = createRoot(td);
+        root.render(
+          <button
+            onClick={() => handleToggle(rowData._id, 'jobRecommendation', rowData.jobRecommendation)}
+            className="btn btn-link p-0"
+          >
+            {rowData.jobRecommendation ? (
+              <MdOutlineToggleOn size={24} color="green" />
+            ) : (
+              <MdOutlineToggleOff size={24} color="gray" />
+            )}
+          </button>
+        );
+      },
+    },
+    {
+      title: "Featured",
+      data: null,
+      orderable: false,
+      createdCell: (td, cellData, rowData) => {
+        td.innerHTML = "";
+        const root = createRoot(td);
+        root.render(
+          <button
+            onClick={() => handleToggle(rowData._id, 'jobFeatured', rowData.jobFeatured)}
+            className="btn btn-link p-0"
+          >
+            {rowData.jobFeatured ? (
+              <MdOutlineToggleOn size={24} color="green" />
+            ) : (
+              <MdOutlineToggleOff size={24} color="gray" />
+            )}
+          </button>
+        );
+      },
+    },
+    {
+      title: "Status",
+      data: null,
+      orderable: false,
+      createdCell: (td, cellData, rowData) => {
+        td.innerHTML = "";
+        const root = createRoot(td);
+        root.render(
+          <button
+            onClick={() => handleToggle(rowData._id, 'job_status', rowData.job_status)}
+            className="btn btn-link p-0"
+          >
+            {rowData.job_status === 1 ? (
+              <MdOutlineToggleOn size={24} color="green" />
+            ) : (
+              <MdOutlineToggleOff size={24} color="gray" />
+            )}
+          </button>
+        );
+      },
+    },
+        {
       title: "Actions",
       data: null,
       orderable: false,

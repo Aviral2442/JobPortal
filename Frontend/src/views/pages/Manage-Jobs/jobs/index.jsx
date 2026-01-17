@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Government from "./components/GovernmentList"
 import Private from "./components/PrivateList"
 import PSUList from "./components/PSUList"
-import { Nav, NavItem, NavLink, TabContainer, TabPane } from "react-bootstrap";
+import { Nav, NavItem, NavLink, TabContainer, TabPane, TabContent } from "react-bootstrap";
 import ComponentCard from "@/components/ComponentCard";
 import axios from "axios";
 import { useState } from "react";
@@ -10,11 +10,12 @@ import { useState } from "react";
 const Page = () => {
   const navigate = useNavigate();
   const [creating, setCreating] = useState(false);
+  const [activeTab, setActiveTab] = useState("Private");
 
 
   return (
     <div className="mt-4 pb-3">
-      <TabContainer defaultActiveKey="Private">
+      <TabContainer activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
         <Nav className="nav-tabs nav-bordered mb-3">
           <NavItem className="nav-tabs-nav d-flex">
             <NavLink eventKey="Private" id="0">Private Sector</NavLink>
@@ -23,7 +24,11 @@ const Page = () => {
           </NavItem>
         </Nav>
         <ComponentCard
-          title="Jobs"
+          title={
+            <div className="d-flex align-items-center justify-content-between">
+              <h4 className="mb-0 ">{activeTab} Jobs</h4>
+            </div>
+          }
           className="py-2"
           isLink={
             <Link to="/admin/jobs/add">
@@ -31,16 +36,20 @@ const Page = () => {
             </Link>
           }
         >
+        <TabContent className="pt-2">
           <TabPane eventKey="Private">
-            <Private />
+            <Private isActive={activeTab === "Private"} />
           </TabPane>
+
           <TabPane eventKey="GovernMent">
-            <Government />
+            <Government isActive={activeTab === "GovernMent"} />
           </TabPane>
+
           <TabPane eventKey="PSU">
-            <PSUList />
+            <PSUList isActive={activeTab === "PSU"} />
           </TabPane>
-        </ComponentCard>
+        </TabContent>
+      </ComponentCard>
       </TabContainer>
     </div>
   );

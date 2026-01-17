@@ -28,6 +28,7 @@ const RegisterStudent = lazy(() => import('@/views/pages/student/Register'));
 const Students = lazy(() => import('@/views/pages/student'));
 const WizardStudentDetail = lazy(() => import('@/components/WizardStudentDetail'));
 const StudentDetail = lazy(() => import('@/views/pages/student/components/StudentDetail'));
+const AppliedJobs = lazy(() => import('@/views/pages/student/AppliedOn'));
 
 
 
@@ -113,6 +114,9 @@ const studentsRoutes=[{
 },{
   path: '/admin/student/registration',
   element:<RegisterStudent/>
+},{
+  path: '/admin/applied-jobs',
+  element:<AppliedJobs/>
 }];
 
 

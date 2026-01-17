@@ -55,7 +55,11 @@ export const menuItems = [
     key: 'students',
     label: 'Students List',
     url: '/admin/students'
-  }],
+  },
+  {    key: 'Applied-Jobs',
+    label: 'Applied Jobs',
+    url: '/admin/applied-jobs'
+  },],
 },
 {
   key:'manage-category',
