@@ -1,5 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
-import JobList from "./components/JobList";
+import Government from "./components/GovernmentList"
+import Private from "./components/PrivateList"
+import PSUList from "./components/PSUList"
 import { Nav, NavItem, NavLink, TabContainer, TabPane } from "react-bootstrap";
 import ComponentCard from "@/components/ComponentCard";
 import axios from "axios";
@@ -12,10 +14,12 @@ const Page = () => {
 
   return (
     <div className="mt-4 pb-3">
-      <TabContainer defaultActiveKey="Job-List">
+      <TabContainer defaultActiveKey="Private">
         <Nav className="nav-tabs nav-bordered mb-3">
-          <NavItem>
-            <NavLink eventKey="Job-List" id="1">Job List</NavLink>
+          <NavItem className="nav-tabs-nav d-flex">
+            <NavLink eventKey="Private" id="0">Private Sector</NavLink>
+            <NavLink eventKey="GovernMent" id="2">Government Sector</NavLink>
+            <NavLink eventKey="PSU" id="3">PSU Sector</NavLink>
           </NavItem>
         </Nav>
         <ComponentCard
@@ -27,8 +31,14 @@ const Page = () => {
             </Link>
           }
         >
-          <TabPane eventKey="Job-List">
-            <JobList />
+          <TabPane eventKey="Private">
+            <Private />
+          </TabPane>
+          <TabPane eventKey="GovernMent">
+            <Government />
+          </TabPane>
+          <TabPane eventKey="PSU">
+            <PSUList />
           </TabPane>
         </ComponentCard>
       </TabContainer>

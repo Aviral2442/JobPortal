@@ -23,6 +23,7 @@ import clsx from "clsx";
 import { useParams } from "react-router-dom";
 import axios from "@/api/axios";
 import toast from "react-hot-toast";
+import axios2 from "axios";
 
 import {
   TbUserCircle,
@@ -41,6 +42,356 @@ import {
   TbMan,
   TbEye,
 } from "react-icons/tb";
+
+/* ---------------------------------------------------
+   Custom MultiSelect with Search
+----------------------------------------------------*/
+const MultiSelectWithSearch = ({ value = [], onChange, options = [], placeholder = "Select items" }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = React.useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredOptions = options.filter(option =>
+    option.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const toggleOption = (optionValue) => {
+    const newValue = value.includes(optionValue)
+      ? value.filter(v => v !== optionValue)
+      : [...value, optionValue];
+    onChange(newValue);
+  };
+
+  const removeItem = (optionValue, e) => {
+    e.stopPropagation();
+    onChange(value.filter(v => v !== optionValue));
+  };
+
+  const getSelectedLabels = () => {
+    return value.map(v => {
+      const option = options.find(opt => opt.value === v);
+      return option?.name || option?.label || 'Loading...';
+    });
+  };
+
+  return (
+    <div ref={dropdownRef} style={{ position: "relative" }}>
+      <div
+        className="form-control d-flex align-items-center flex-wrap gap-2"
+        style={{ minHeight: "38px", cursor: "pointer" }}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {value.length === 0 ? (
+          <span className="text-muted">{placeholder}</span>
+        ) : (
+          getSelectedLabels().map((label, idx) => (
+            <span
+              key={idx}
+              className="badge bg-primary d-flex align-items-center gap-1"
+              style={{ fontSize: "0.875rem" }}
+            >
+              {label}
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                style={{ fontSize: "0.6rem" }}
+                onClick={(e) => removeItem(value[idx], e)}
+                aria-label="Remove"
+              />
+            </span>
+          ))
+        )}
+      </div>
+      
+      {isOpen && (
+        <div
+          className="border rounded bg-white shadow-sm"
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            zIndex: 1000,
+            maxHeight: "300px",
+            overflowY: "auto",
+            marginTop: "4px"
+          }}
+        >
+          <div className="p-2 border-bottom">
+            <FormControl
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div>
+            {filteredOptions.length === 0 ? (
+              <div className="p-3 text-muted text-center">No options found</div>
+            ) : (
+              filteredOptions.map((option, idx) => (
+                <div
+                  key={idx}
+                  className="p-2 d-flex align-items-center gap-2"
+                  style={{
+                    cursor: "pointer",
+                    backgroundColor: value.includes(option.value) ? "#f8f9fa" : "transparent"
+                  }}
+                  onClick={() => toggleOption(option.value)}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#e9ecef"}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = value.includes(option.value) ? "#f8f9fa" : "transparent";
+                  }}
+                >
+                  <Form.Check
+                    type="checkbox"
+                    checked={value.includes(option.value)}
+                    onChange={() => {}}
+                    style={{ pointerEvents: "none" }}
+                  />
+                  <span>{option.name}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ---------------------------------------------------
+   MultiSelect with Free Text for Cities/Locations
+----------------------------------------------------*/
+const MultiSelectWithFreeText = ({ value = [], onChange, placeholder = "Enter locations" }) => {
+  const [inputValue, setInputValue] = useState("");
+  const [isInputFocused, setIsInputFocused] = useState(false);
+
+  const addItem = () => {
+    const trimmedValue = inputValue.trim();
+    if (trimmedValue && !value.includes(trimmedValue)) {
+      onChange([...value, trimmedValue]);
+      setInputValue("");
+    }
+  };
+
+  const removeItem = (itemToRemove, e) => {
+    e.stopPropagation();
+    onChange(value.filter(v => v !== itemToRemove));
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addItem();
+    } else if (e.key === 'Backspace' && !inputValue && value.length > 0) {
+      onChange(value.slice(0, -1));
+    }
+  };
+
+  return (
+    <div className="form-control d-flex align-items-center flex-wrap gap-2" style={{ minHeight: "38px", cursor: "text" }}>
+      {value.map((item, idx) => (
+        <span
+          key={idx}
+          className="badge bg-primary d-flex align-items-center gap-1"
+          style={{ fontSize: "0.875rem" }}
+        >
+          {item}
+          <button
+            type="button"
+            className="btn-close btn-close-white"
+            style={{ fontSize: "0.6rem" }}
+            onClick={(e) => removeItem(item, e)}
+            aria-label="Remove"
+          />
+        </span>
+      ))}
+      <input
+        type="text"
+        className="border-0 flex-grow-1"
+        style={{ outline: "none", minWidth: "120px" }}
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={addItem}
+        onFocus={() => setIsInputFocused(true)}
+        placeholder={value.length === 0 ? placeholder : ""}
+      />
+    </div>
+  );
+};
+
+/* ---------------------------------------------------
+   MultiSelect with API Search for Cities
+----------------------------------------------------*/
+const MultiSelectWithApiSearch = ({ value = [], onChange, placeholder = "Search cities" }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [cityOptions, setCityOptions] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const dropdownRef = React.useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Fetch cities from API when search term changes
+  useEffect(() => {
+    const fetchCities = async () => {
+      if (searchTerm.length < 2) {
+        setCityOptions([]);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await fetch(`https://medcab.onrender.com/api/get_city_search?search=${searchTerm}`);
+        const data = await response.json();
+        
+        if (data.status === 200 && data.jsonData?.city_list) {
+          const formatted = data.jsonData.city_list.map(city => ({
+            value: city.city_name,
+            name: city.city_name
+          }));
+          setCityOptions(formatted);
+        }
+      } catch (error) {
+        console.error('Error fetching cities:', error);
+        setCityOptions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(fetchCities, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
+
+  const toggleCity = (cityName) => {
+    if (value.includes(cityName)) {
+      onChange(value.filter(v => v !== cityName));
+    } else {
+      onChange([...value, cityName]);
+    }
+  };
+
+  const removeCity = (cityName, e) => {
+    e.stopPropagation();
+    onChange(value.filter(v => v !== cityName));
+  };
+
+  return (
+    <div ref={dropdownRef} style={{ position: "relative" }}>
+      <div
+        className="form-control d-flex align-items-center flex-wrap gap-2"
+        style={{ minHeight: "38px", cursor: "pointer" }}
+        onClick={() => setIsOpen(true)}
+      >
+        {value.length === 0 ? (
+          <span className="text-muted">{placeholder}</span>
+        ) : (
+          value.map((city, idx) => (
+            <span
+              key={idx}
+              className="badge bg-primary d-flex align-items-center gap-1"
+              style={{ fontSize: "0.875rem" }}
+            >
+              {city}
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                style={{ fontSize: "0.6rem" }}
+                onClick={(e) => removeCity(city, e)}
+                aria-label="Remove"
+              />
+            </span>
+          ))
+        )}
+      </div>
+      
+      {isOpen && (
+        <div
+          className="border rounded bg-white shadow-sm"
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            zIndex: 1000,
+            maxHeight: "300px",
+            overflowY: "auto",
+            marginTop: "4px"
+          }}
+        >
+          <div className="p-2 border-bottom">
+            <FormControl
+              type="text"
+              placeholder="Type to search cities..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div>
+            {loading ? (
+              <div className="p-3 text-muted text-center">
+                <Spinner size="sm" /> Loading cities...
+              </div>
+            ) : searchTerm.length < 2 ? (
+              <div className="p-3 text-muted text-center">Type at least 2 characters to search</div>
+            ) : cityOptions.length === 0 ? (
+              <div className="p-3 text-muted text-center">No cities found</div>
+            ) : (
+              cityOptions.map((city, idx) => (
+                <div
+                  key={idx}
+                  className="p-2 d-flex align-items-center gap-2"
+                  style={{
+                    cursor: "pointer",
+                    backgroundColor: value.includes(city.value) ? "#f8f9fa" : "transparent"
+                  }}
+                  onClick={() => toggleCity(city.value)}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#e9ecef"}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = value.includes(city.value) ? "#f8f9fa" : "transparent";
+                  }}
+                >
+                  <Form.Check
+                    type="checkbox"
+                    checked={value.includes(city.value)}
+                    onChange={() => {}}
+                    style={{ pointerEvents: "none" }}
+                  />
+                  <span>{city.name}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 /* ---------------------------------------------------
    Header with Progress
@@ -106,7 +457,7 @@ const Header = ({ withProgress }) => {
 /* ---------------------------------------------------
    Field Renderer
 ----------------------------------------------------*/
-const RenderField = ({ field, value, onChange, onViewImage }) => {
+const RenderField = ({ field, value, onChange, onViewImage, careerPreferences }) => {
   if (field.type === "divider") {
     return (
       <Col xl={12}>
@@ -184,6 +535,25 @@ const RenderField = ({ field, value, onChange, onViewImage }) => {
             accept={field.accept}
             onChange={handleChange}
           />
+        ) : field.type === "multiselect" ? (
+          <MultiSelectWithSearch
+            value={value || []}
+            onChange={(newValue) => onChange(field.name, newValue)}
+            options={field.options || []}
+            placeholder={field.placeholder || `Select ${field.label}`}
+          />
+        ) : field.type === "multiselectfreetext" ? (
+          <MultiSelectWithFreeText
+            value={value || []}
+            onChange={(newValue) => onChange(field.name, newValue)}
+            placeholder={field.placeholder || `Enter ${field.label}`}
+          />
+        ) : field.type === "multiselectapi" ? (
+          <MultiSelectWithApiSearch
+            value={value || []}
+            onChange={(newValue) => onChange(field.name, newValue)}
+            placeholder={field.placeholder || `Search ${field.label}`}
+          />
         ) : (
           <FormControl
             type={field.type || "text"}
@@ -199,7 +569,7 @@ const RenderField = ({ field, value, onChange, onViewImage }) => {
 /* ---------------------------------------------------
    Step Builder
 ----------------------------------------------------*/
-const StepSection = ({ title, fields, data, next, prev, onChange, onSave, apiEndpoint, saving, customContent, additionalButtons, onViewImage }) => {
+const StepSection = ({ title, fields, data, next, prev, onChange, onSave, apiEndpoint, saving, customContent, additionalButtons, onViewImage, careerPreferences }) => {
   const { nextStep, previousStep } = useWizard();
 
   const handleSave = async () => {
@@ -218,6 +588,7 @@ const StepSection = ({ title, fields, data, next, prev, onChange, onSave, apiEnd
             value={data?.[field.name]} 
             onChange={onChange}
             onViewImage={onViewImage}
+            careerPreferences={careerPreferences}
           />
         ))}
       </Row>
@@ -285,12 +656,37 @@ const WizardStudentDetail = () => {
   const [imageModalShow, setImageModalShow] = useState(false);
   const [imageModalSrc, setImageModalSrc] = useState("");
   const [imageModalTitle, setImageModalTitle] = useState("");
+  const [careerPreferences, setCareerPreferences] = useState([]);
+
 
   const handleViewImage = (imageSrc, title) => {
     setImageModalSrc(imageSrc);
     setImageModalTitle(title);
     setImageModalShow(true);
   };
+
+  // Fetch career preferences
+  useEffect(() => {
+    const fetchCareerPreferences = async () => {
+      try {
+        const response = await axios.get('/job-categories/get_career_preferences_list');
+        if (response.data.status === 200) {
+          console.log('Fetched career preferences:', response.data.jsonData?.data);
+          const formatted = (response.data?.jsonData?.data || []).map(item => ({
+            value: item._id || item.value,
+            name: Array.isArray(item.careerPreferenceName) 
+              ? item.careerPreferenceName.join(', ') 
+              : item.careerPreferenceName || item.name || 'Unknown'
+          }));
+          console.log('Formatted career preferences:', formatted);
+          setCareerPreferences(formatted);
+        }
+      } catch (error) {
+        console.error('Error fetching career preferences:', error);
+      }
+    };
+    fetchCareerPreferences();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -346,6 +742,12 @@ const WizardStudentDetail = () => {
           }
         }
       });
+
+      // Special handling for Career Preferences - send array of IDs
+      if (endpoint.includes('updateStudentCareerPreferences')) {
+        payload.preferredJobCategory = sectionData.preferredJobCategory || [];
+        payload.preferredJobLocation = sectionData.preferredJobLocation || [];
+      }
 
       // Special handling for Address - needs nested structure
       if (endpoint.includes('updateStudentAddress')) {
@@ -775,6 +1177,7 @@ const WizardStudentDetail = () => {
       accountNumber: bankData?.accountNumber,
       ifscCode: bankData?.ifscCode,
       branchName: bankData?.branchName,
+      passbookUrl: bankData?.passbookUrl,
 
       // Body
       heightCm: bodyData?.heightCm,
@@ -812,12 +1215,13 @@ const WizardStudentDetail = () => {
       familyType: parentalData?.familyType,
 
       // Preferences
-      preferredJobCategory: Array.isArray(preferencesData?.preferredJobCategory)
-        ? preferencesData.preferredJobCategory.join(', ')
-        : (preferencesData?.preferredJobCategory || ''),
+      preferredJobCategory: Array.isArray(preferencesData?.preferredJobCategory)  
+      ? preferencesData.preferredJobCategory.map(item => item._id || item)
+      : [],
+
       preferredJobLocation: Array.isArray(preferencesData?.preferredJobLocation)
-        ? preferencesData.preferredJobLocation.join(', ')
-        : (preferencesData?.preferredJobLocation || ''),
+        ? preferencesData.preferredJobLocation
+        : (preferencesData?.preferredJobLocation ? [preferencesData.preferredJobLocation] : []),
       expectedSalaryMin: preferencesData?.expectedSalaryMin,
       expectedSalaryMax: preferencesData?.expectedSalaryMax,
       employmentType: Array.isArray(preferencesData?.employmentType)
@@ -1020,6 +1424,7 @@ const WizardStudentDetail = () => {
                   { name: "accountNumber", label: "Account Number", type: "text", cols: 4 },
                   { name: "ifscCode", label: "IFSC Code", type: "text", cols: 4 },
                   { name: "branchName", label: "Branch Name", type: "text", cols: 4 },
+                  { name: "passbookUrl", label: "Passbook Image", type: "file", cols: 4 },
                 ]}
               />
 
@@ -1120,9 +1525,23 @@ const WizardStudentDetail = () => {
                 apiEndpoint={`/student/updateStudentCareerPreferences/${id}`}
                 saving={saving}
                 onViewImage={handleViewImage}
+                careerPreferences={careerPreferences}
                 fields={[
-                  { name: "preferredJobCategory", label: "Preferred Job Category", type: "textarea", rows: 2, cols: 6 },
-                  { name: "preferredJobLocation", label: "Preferred Job Location", type: "textarea", rows: 2, cols: 6 },
+                  { 
+                    name: "preferredJobCategory", 
+                    label: "Preferred Job Category", 
+                    type: "multiselect", 
+                    cols: 6,
+                    options: careerPreferences,
+                    placeholder: "Select your preferred job categories"
+                  },
+                  { 
+                    name: "preferredJobLocation", 
+                    label: "Preferred Job Location", 
+                    type: "multiselectapi", 
+                    cols: 6,
+                    placeholder: "Search and select cities"
+                  },
                   { name: "expectedSalaryMin", label: "Expected Salary Min", type: "number", cols: 4 },
                   { name: "expectedSalaryMax", label: "Expected Salary Max", type: "number", cols: 4 },
                   { name: "employmentType", label: "Employment Type", type: "textarea", rows: 2, cols: 6 },
