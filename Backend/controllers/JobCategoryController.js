@@ -331,3 +331,23 @@ exports.privateSectorJobList = async (req, res) => {
         });
     }
 };
+
+// GOVERNMENT SECTOR JOB LIST CONTROLLER
+exports.governmentSectorJobList = async (req, res) => {
+    try {
+        const result = await JobCategoryService.governmentSectorJobList(req.query);
+
+        res.status(200).json({
+            status: 200,
+            message: 'Government sector job list fetched successfully',
+            jsonData: result,
+        });
+    } catch (error) {
+        console.error('Error in governmentSectorJobList Controller:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};
