@@ -1433,8 +1433,11 @@ exports.notificationListForStudent = async (studentId) => {
             };
         }
 
+        const studentSector = student.studentJobSector;
+
         const getNotificationsList = await NotificationModel.find({
-            notifyNotToStudents: { $ne: studentId }
+            notifyNotToStudents: { $nin: [studentId] }, // not blocked
+            notifyJobSector: studentSector
         }).sort({ notifyCreateAt: -1 });
 
         return {
