@@ -884,3 +884,31 @@ exports.psuSectorJobList = async (query) => {
         }
     };
 };
+
+// JOB FULL DETAILS BY ID SERVICE
+exports.jobFullDetailsById = async (jobId) => {
+    try {
+
+        const job = await Job.findById(jobId)
+            .populate('job_type', 'job_type_name')
+            .populate('job_sector', 'job_sector_name')
+            .populate('job_category', 'category_name');
+
+        if (!job) {
+            return { status: 404, message: "Job not found" };
+        }
+
+        return {
+            status: 200,
+            message: "Job details fetched successfully",
+            jsonData: job,
+        };
+
+    } catch (error) {
+        console.error("Error in jobFullDetailsById Service:", error);
+        return {
+            status: 500,
+            message: "Server error",
+        };
+    }
+};

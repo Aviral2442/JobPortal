@@ -43,5 +43,6 @@ router.get('/job_list_sector_wise/:studentId', JobCategoryController.jobListSect
 router.get('/private_sector_job_list', JobCategoryController.privateSectorJobList);
 router.get('/government_sector_job_list', JobCategoryController.governmentSectorJobList);
 router.get('/psu_sector_job_list', JobCategoryController.psuSectorJobList);
+router.get('/job_full_details/:jobId', JobCategoryController.jobFullDetailsById);
 
 module.exports = router;

@@ -371,3 +371,22 @@ exports.psuSectorJobList = async (req, res) => {
         });
     }
 };
+
+// JOB FULL DETAILS BY ID CONTROLLER
+exports.jobFullDetailsById = async (req, res) => {
+    try {
+        const jobId = req.params.jobId;
+        const response = await JobCategoryService.jobFullDetailsById(jobId);
+        return res.status(response.status).json({
+            status: response.status,
+            message: response.message,
+            jsonData: response.jsonData || null,
+        });
+    } catch (error) {
+        console.error("Job Full Details By Id Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
+};
