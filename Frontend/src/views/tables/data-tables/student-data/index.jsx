@@ -164,7 +164,7 @@ const StudentList = ({ refreshFlag }) => {
               </Dropdown.Item> */}
               <Dropdown.Item onClick={() => navigate(`/admin/student/detail/${rowData._id}`)}>
                 <TbEye className="me-2" />
-                View Wizard
+                View Details
               </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
