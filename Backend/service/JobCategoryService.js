@@ -555,8 +555,7 @@ exports.recommendJobsForStudent = async (studentId) => {
 
         const studentSector = student.studentJobSector;
 
-        const recommendedJobs = await Job.find({ job_sector: studentSector })
-            .limit(4);
+        const recommendedJobs = await Job.find({ job_sector: studentSector });
         
         return {
             status: 200,
