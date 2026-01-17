@@ -1,10 +1,18 @@
 const Job = require("../models/JobModel");
+const NotificationModel = require("../models/NotificationModel");
 
 class JobService {
   // Create a new job
   async createJob(jobData) {
     try {
       const job = await Job.create(jobData);
+
+      const createNofitication = await NotificationModel.create({
+        notifyJobId: job._id,
+        notifyTitle: `New Job Posted: ${job.job_title}`,
+        notifyDesc: `A new job titled "${job.job_title}" has been posted. Check it out!`,
+      });
+
       return { success: true, job };
     } catch (error) {
       return { success: false, error: error.message };
