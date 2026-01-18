@@ -338,7 +338,10 @@ exports.studentLogin = async (studentLoginData) => {
         if (!student) {
             return {
                 status: 404,
-                message: 'Student not found with the provided email or mobile number'
+                message: 'Student not found with the provided email or mobile number',
+                jsonData: {
+                    IsRedirectToRegister: true
+                }
             };
         }
 
