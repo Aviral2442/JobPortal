@@ -338,7 +338,10 @@ exports.studentLogin = async (studentLoginData) => {
         if (!student) {
             return {
                 status: 404,
-                message: 'Student not found with the provided email or mobile number'
+                message: 'Student not found with the provided email or mobile number',
+                jsonData: {
+                    IsRedirectToRegister: true
+                }
             };
         }
 
@@ -1452,7 +1455,10 @@ exports.notificationListForStudent = async (studentId) => {
         return {
             status: 200,
             message: 'Notification list for student fetched successfully',
-            jsonData: getNotificationsList
+            jsonData: {
+                getNotificationsList: getNotificationsList,
+                notificationsCount: getNotificationsList.length
+            }
         };
 
     } catch (error) {
