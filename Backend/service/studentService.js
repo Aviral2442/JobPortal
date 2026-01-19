@@ -721,6 +721,15 @@ exports.updateStudentBankDetails = async (studentId, studentBankData) => {
             };
         }
 
+        let studentBankPassbookUrl = null;
+        if (studentBankData.passbookUrl) {
+            studentBankPassbookUrl = saveBase64File(
+                studentBankData.passbookUrl,
+                'StudentBankPassbook',
+                'student'
+            );
+        }
+
         const updateStdBankData = await StudentBankInfo.findOneAndUpdate(
             { studentId },
             {
@@ -729,7 +738,7 @@ exports.updateStudentBankDetails = async (studentId, studentBankData) => {
                 accountNumber: studentBankData.accountNumber,
                 ifscCode: studentBankData.ifscCode,
                 branchName: studentBankData.branchName,
-                passbookUrl: studentBankData.passbookUrl,
+                passbookUrl: studentBankPassbookUrl,
                 updatedAt: currentUnixTimeStamp()
             },
             {

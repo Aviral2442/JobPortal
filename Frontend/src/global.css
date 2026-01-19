@@ -1,0 +1,31 @@
+:root {
+    --eye-color: #4a5e70;
+    --remark-color: #f0ac4d;
+    --edit-icon-color: #5bc0de;
+    --inputField-bg: #f7fafc;
+    /* --detailPage-header-bg: #ebf4ff; */
+    --status-active: #21c45d;
+    --status-inactive: #ff3e1d;
+    --cancel-button-bg: #929294;
+}
+
+.remark-icon {
+    background-color: crimson;
+    color: white;
+    border-radius: 20%;
+    border: none;
+}
+
+.eye-icon {
+    background-color: var(--eye-color);
+    color: white;
+    border: none;
+    border-radius: 20%;
+}
+
+.edit-icon {
+    background-color: var(--edit-icon-color);
+    color: white;
+    border: none;
+    border-radius: 20%;
+}
