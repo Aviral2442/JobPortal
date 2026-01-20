@@ -132,7 +132,7 @@ const FileUploader = ({
               </div>
               <h4 className="mb-2">Drop files here or click to upload</h4>
               <p className="text-muted fst-italic mb-3">
-                Supports images, PDFs, docs, videos and more.
+                Supports PDF Only.
               </p>
               <button type="button" className="btn btn-sm shadow btn-default">
                 Browse Files

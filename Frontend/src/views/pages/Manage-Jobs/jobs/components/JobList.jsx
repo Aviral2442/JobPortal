@@ -92,7 +92,7 @@ const JobList = () => {
                     setMessage("Job deleted successfully!");
                     setVariant("success");
                     fetchJobs();
-                  } catch (err) {
+                  } catch (err) { 
                     console.error(err);
                     setMessage("Failed to delete job");
                     setVariant("danger");

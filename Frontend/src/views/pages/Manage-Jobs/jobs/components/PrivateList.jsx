@@ -26,7 +26,7 @@ const PrivateList = ({ isActive }) => {
   const [variant, setVariant] = useState("success");
   const navigate = useNavigate();
   const tableRef = useRef(null);
-  
+
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -82,22 +82,25 @@ const PrivateList = ({ isActive }) => {
     { title: "Organization", data: "job_organization" },
     { title: "Job Sector", data: "job_sector.job_sector_name" },
     { title: "Category", data: "job_category.category_name" },
-    { title: "Date", data: "job_posted_date",
-        render: (data) => {
-            return formatDate(data);
-        }
+    {
+      title: "Date", data: "job_posted_date",
+      render: (data) => {
+        return formatDate(data);
+      }
     },
     {
       title: "Recommended",
       data: null,
       orderable: false,
+      className: "text-center",
       createdCell: (td, cellData, rowData) => {
         td.innerHTML = "";
+        td.style.textAlign = "center";
         const root = createRoot(td);
         root.render(
           <button
             onClick={() => handleToggle(rowData._id, 'jobRecommendation', rowData.jobRecommendation)}
-            className="btn btn-link p-0"
+            className="border-0 bg-transparent p-0"
           >
             {rowData.jobRecommendation ? (
               <MdOutlineToggleOn size={24} color="green" />
@@ -112,13 +115,15 @@ const PrivateList = ({ isActive }) => {
       title: "Featured",
       data: null,
       orderable: false,
+      className: "text-center",
       createdCell: (td, cellData, rowData) => {
         td.innerHTML = "";
+        td.style.textAlign = "center";
         const root = createRoot(td);
         root.render(
           <button
             onClick={() => handleToggle(rowData._id, 'jobFeatured', rowData.jobFeatured)}
-            className="btn btn-link p-0"
+            className="border-0 bg-transparent p-0"
           >
             {rowData.jobFeatured ? (
               <MdOutlineToggleOn size={24} color="green" />
@@ -133,13 +138,15 @@ const PrivateList = ({ isActive }) => {
       title: "Status",
       data: null,
       orderable: false,
+      className: "text-center",
       createdCell: (td, cellData, rowData) => {
         td.innerHTML = "";
+        td.style.textAlign = "center";
         const root = createRoot(td);
         root.render(
           <button
             onClick={() => handleToggle(rowData._id, 'job_status', rowData.job_status)}
-            className="btn btn-link p-0"
+            className="border-0 bg-transparent p-0"
           >
             {rowData.job_status === 1 ? (
               <MdOutlineToggleOn size={24} color="green" />
@@ -154,49 +161,48 @@ const PrivateList = ({ isActive }) => {
       title: "Actions",
       data: null,
       orderable: false,
-      createdCell: (td, cellData, rowData) => {
+      searchable: false,
+      render: () => "",
+      createdCell: (td, _cellData, rowData) => {
         td.innerHTML = "";
         const root = createRoot(td);
         root.render(
-          <Dropdown align="end" className="text-muted">
-            <Dropdown.Toggle variant="link" className="drop-arrow-none p-0">
-              <TbDotsVertical />
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item
-                onClick={() =>
-                  navigate(`/admin/jobs/view/${rowData._id || rowData.id}`, { state: rowData })
+          <div className="d-flex flex-row gap-1">
+            <button
+              className="eye-icon"
+              onClick={() =>
+                navigate(`/admin/jobs/view/${rowData._id || rowData.id}`, { state: rowData })
+              }
+            >
+              <TbEye className="" />
+            </button>
+            <button
+              className="edit-icon"
+              onClick={() =>
+                navigate(`/admin/jobs/edit/${rowData._id || rowData.id}`, { state: rowData })
+              }
+            >
+              <TbEdit className="" />
+            </button>
+            <button
+              className="remark-icon"
+              onClick={async () => {
+                if (!window.confirm("Are you sure you want to delete this job?")) return;
+                try {
+                  await fetch(`${BASE_URL}/api/jobs/${rowData._id || rowData.id}`, { method: "DELETE" });
+                  setMessage("Job deleted successfully!");
+                  setVariant("success");
+                  fetchJobs();
+                } catch (err) {
+                  console.error(err);
+                  setMessage("Failed to delete job");
+                  setVariant("danger");
                 }
-              >
-                <TbEye className="me-1" /> View
-              </Dropdown.Item>
-              <Dropdown.Item
-                onClick={() =>
-                  navigate(`/admin/jobs/edit/${rowData._id || rowData.id}`, { state: rowData })
-                }
-              >
-                <TbEdit className="me-1" /> Edit
-              </Dropdown.Item>
-              <Dropdown.Item
-                className="text-danger"
-                onClick={async () => {
-                  if (!window.confirm("Are you sure you want to delete this job?")) return;
-                  try {
-                    await fetch(`${BASE_URL}/api/jobs/${rowData._id || rowData.id}`, { method: "DELETE" });
-                    setMessage("Job deleted successfully!");
-                    setVariant("success");
-                    fetchJobs();
-                  } catch (err) {
-                    console.error(err);
-                    setMessage("Failed to delete job");
-                    setVariant("danger");
-                  }
-                }}
-              >
-                <TbTrash className="me-1" /> Delete
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
+              }}
+            >
+              <TbTrash className="" />
+            </button>
+          </div>
         );
       },
     },

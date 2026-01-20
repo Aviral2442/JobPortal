@@ -20,6 +20,7 @@ import "datatables.net-buttons/js/buttons.html5";
 import jszip from "jszip";
 import pdfmake from "pdfmake";
 import { formatDate } from "@/components/DateFormat";
+import "@/global.css";
 
 DataTable.use(DT);
 DT.Buttons.jszip(jszip);
@@ -132,9 +133,9 @@ const StudentList = ({ refreshFlag }) => {
       render: (data) => data?.job_sector_name || "N/A",
     },
     {
-        title: "Date Created",
-        data: "studentCreatedAt",
-        render: (data) => formatDate(data),
+      title: "Date Created",
+      data: "studentCreatedAt",
+      render: (data) => formatDate(data),
     },
     {
       title: "Status",
@@ -150,24 +151,14 @@ const StudentList = ({ refreshFlag }) => {
       createdCell: (td, cellData, rowData) => {
         const root = createRoot(td);
         root.render(
-          <Dropdown align="end">
-            <Dropdown.Toggle
-              variant="link"
-              className="drop-arrow-none fs-xxl link-reset p-0"
+          <div>
+            <button
+              className="eye-icon"
+              onClick={() => navigate(`/admin/student/detail/${rowData._id}`)}
             >
-              <TbDotsVertical />
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              {/* <Dropdown.Item onClick={() => handleView(rowData)}>
-                <TbEye className="me-2" />
-                View Details
-              </Dropdown.Item> */}
-              <Dropdown.Item onClick={() => navigate(`/admin/student/detail/${rowData._id}`)}>
-                <TbEye className="me-2" />
-                View Details
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
+              <TbEye className="" />
+            </button>
+          </div>
         );
       },
     },
@@ -188,7 +179,7 @@ const StudentList = ({ refreshFlag }) => {
           </Col>
         </Row>
       )}
-      
+
       {loading ? (
         <Row>
           <Col className="text-center py-5">

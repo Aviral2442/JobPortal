@@ -18,6 +18,7 @@ import { Wizard, useWizard } from "react-use-wizard";
 import PageTitle from "@/components/PageTitle";
 import ComponentCard from "@/components/ComponentCard";
 import ImageModal from "@/components/ImageModel";
+import FileUploader from "@/components/FileUploader";
 import Flatpickr from "react-flatpickr";
 import clsx from "clsx";
 import { useParams } from "react-router-dom";
@@ -41,6 +42,7 @@ import {
   TbBodyScan,
   TbMan,
   TbEye,
+  TbFile,
 } from "react-icons/tb";
 
 /* ---------------------------------------------------
@@ -113,7 +115,7 @@ const MultiSelectWithSearch = ({ value = [], onChange, options = [], placeholder
           ))
         )}
       </div>
-      
+
       {isOpen && (
         <div
           className="border rounded bg-white shadow-sm"
@@ -158,7 +160,7 @@ const MultiSelectWithSearch = ({ value = [], onChange, options = [], placeholder
                   <Form.Check
                     type="checkbox"
                     checked={value.includes(option.value)}
-                    onChange={() => {}}
+                    onChange={() => { }}
                     style={{ pointerEvents: "none" }}
                   />
                   <span>{option.name}</span>
@@ -267,7 +269,7 @@ const MultiSelectWithApiSearch = ({ value = [], onChange, placeholder = "Search 
         setLoading(true);
         const response = await fetch(`https://medcab.onrender.com/api/get_city_search?search=${searchTerm}`);
         const data = await response.json();
-        
+
         if (data.status === 200 && data.jsonData?.city_list) {
           const formatted = data.jsonData.city_list.map(city => ({
             value: city.city_name,
@@ -328,7 +330,7 @@ const MultiSelectWithApiSearch = ({ value = [], onChange, placeholder = "Search 
           ))
         )}
       </div>
-      
+
       {isOpen && (
         <div
           className="border rounded bg-white shadow-sm"
@@ -379,7 +381,7 @@ const MultiSelectWithApiSearch = ({ value = [], onChange, placeholder = "Search 
                   <Form.Check
                     type="checkbox"
                     checked={value.includes(city.value)}
-                    onChange={() => {}}
+                    onChange={() => { }}
                     style={{ pointerEvents: "none" }}
                   />
                   <span>{city.name}</span>
@@ -402,18 +404,19 @@ const Header = ({ withProgress }) => {
   const steps = [
     { icon: TbUserCircle, label: "Primary Info", desc: "Basic details" },
     { icon: TbUserCircle, label: "Basic Details", desc: "Personal info" },
-    { icon: TbMapPin, label: "Address", desc: "Where you live" },
+    { icon: TbMapPin, label: "Address", desc: "Address Info" },
     { icon: TbBuildingBank, label: "Bank Details", desc: "Financial" },
-    { icon: TbMan, label: "Body Details", desc: "Physical" },
-    { icon: TbPhone, label: "Emergency", desc: "Contact details" },
+    { icon: TbMan, label: "Body Detail", desc: "Physical" },
+    { icon: TbPhone, label: "Emergency", desc: "Contact detail" },
     { icon: TbUsers, label: "Parental Info", desc: "Guardian details" },
     { icon: TbSettings, label: "Preferences", desc: "Career goals" },
-    { icon: TbSchool, label: "Education", desc: "Academic details" },
-    { icon: TbSettings, label: "Skills", desc: "Your abilities" },
+    { icon: TbSchool, label: "Education", desc: "Academic detail" },
+    { icon: TbSettings, label: "Skills", desc: "Your Abilities" },
     { icon: TbLink, label: "Social Links", desc: "Online presence" },
     { icon: TbBriefcase, label: "Experience", desc: "Work history" },
     { icon: TbCertificate, label: "Certificates", desc: "Certifications" },
     { icon: TbFileText, label: "Documents", desc: "Upload files" },
+    { icon: TbFile, label: "Resume", desc: "Upload resume" },
   ];
 
   return (
@@ -512,7 +515,7 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
         </FormLabel>
 
         {field.type === "select" ? (
-          <FormSelect value={value || ""} onChange={handleChange}>
+          <FormSelect value={value || ""} onChange={handleChange} disabled={field.disabled}>
             <option value="">Select</option>
             {field.options?.map((opt, idx) => (
               <option key={idx} value={opt.value}>
@@ -526,6 +529,7 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
             value={value}
             options={{ dateFormat: "d M, Y" }}
             onChange={handleDateChange}
+            disabled={field.disabled}
           />
         ) : field.type === "textarea" ? (
           <Form.Control
@@ -533,12 +537,14 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
             rows={field.rows || 3}
             value={value || ""}
             onChange={handleChange}
+            disabled={field.disabled}
           />
         ) : field.type === "checkbox" ? (
           <Form.Check
             type="checkbox"
             checked={value || false}
             onChange={handleChange}
+            disabled={field.disabled}
           />
         ) : field.type === "file" ? (
           <>
@@ -547,6 +553,7 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
               accept={field.accept}
               onChange={handleChange}
               key={value ? 'has-file' : 'no-file'}
+              disabled={field.disabled}
             />
             {value && typeof value === "string" && (
               <small className="text-muted d-block mt-1">
@@ -578,6 +585,7 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
             type={field.type || "text"}
             value={value || ""}
             onChange={handleChange}
+            disabled={field.disabled}
           />
         )}
       </FormGroup>
@@ -598,13 +606,13 @@ const StepSection = ({ title, fields, data, next, prev, onChange, onSave, apiEnd
   return (
     <Form>
       {customContent && <div className="mb-3">{customContent}</div>}
-      
+
       <Row>
         {fields.map((field, idx) => (
-          <RenderField 
-            key={idx} 
-            field={field} 
-            value={data?.[field.name]} 
+          <RenderField
+            key={idx}
+            field={field}
+            value={data?.[field.name]}
             onChange={onChange}
             onViewImage={onViewImage}
             careerPreferences={careerPreferences}
@@ -620,9 +628,9 @@ const StepSection = ({ title, fields, data, next, prev, onChange, onSave, apiEnd
             </Button>
           )}
           {additionalButtons && additionalButtons.map((btn, idx) => (
-            <Button 
+            <Button
               key={idx}
-              variant={btn.variant || "secondary"} 
+              variant={btn.variant || "secondary"}
               onClick={btn.onClick}
               className="me-2"
             >
@@ -632,9 +640,9 @@ const StepSection = ({ title, fields, data, next, prev, onChange, onSave, apiEnd
           ))}
         </div>
         <div>
-          <Button 
-            variant="light" 
-            onClick={handleSave} 
+          <Button
+            variant="light"
+            onClick={handleSave}
             disabled={saving}
             className="me-2"
           >
@@ -676,6 +684,7 @@ const WizardStudentDetail = () => {
   const [imageModalSrc, setImageModalSrc] = useState("");
   const [imageModalTitle, setImageModalTitle] = useState("");
   const [careerPreferences, setCareerPreferences] = useState([]);
+  const [uploadedResumeFiles, setUploadedResumeFiles] = useState([]);
 
 
   const handleViewImage = (imageSrc, title) => {
@@ -693,8 +702,8 @@ const WizardStudentDetail = () => {
           console.log('Fetched career preferences:', response.data.jsonData?.data);
           const formatted = (response.data?.jsonData?.data || []).map(item => ({
             value: item._id || item.value,
-            name: Array.isArray(item.careerPreferenceName) 
-              ? item.careerPreferenceName.join(', ') 
+            name: Array.isArray(item.careerPreferenceName)
+              ? item.careerPreferenceName.join(', ')
               : item.careerPreferenceName || item.name || 'Unknown'
           }));
           console.log('Formatted career preferences:', formatted);
@@ -712,7 +721,7 @@ const WizardStudentDetail = () => {
       try {
         setLoading(true);
         const res = await axios.get(`/student/studentAllDetails/${id}`);
-        console.log("Fetched student details:", res.data); 
+        console.log("Fetched student details:", res.data);
         const flattened = flattenData(res.data.jsonData);
         setSectionData(flattened);
       } catch (error) {
@@ -729,7 +738,7 @@ const WizardStudentDetail = () => {
   const handleFieldChange = (fieldName, value) => {
     setSectionData((prev) => {
       const updated = { ...prev, [fieldName]: value };
-      
+
       // Auto-fill permanent address when "Same as Current" is checked
       if (fieldName === 'isPermanentSameAsCurrent' && value === true) {
         updated.permanentAddressLine1 = prev.currentAddressLine1 || '';
@@ -740,7 +749,7 @@ const WizardStudentDetail = () => {
         updated.permanentCountry = prev.currentCountry || '';
         updated.permanentPincode = prev.currentPincode || '';
       }
-      
+
       return updated;
     });
   };
@@ -748,7 +757,7 @@ const WizardStudentDetail = () => {
   const handleSave = async (endpoint, fields) => {
     try {
       setSaving(true);
-      
+
       // Prepare data based on the fields in the current section
       let payload = {};
       fields.forEach((field) => {
@@ -801,7 +810,7 @@ const WizardStudentDetail = () => {
           if (!value || value === '') return [];
           return value.split(',').map(s => s.trim()).filter(Boolean);
         };
-        
+
         payload = {
           hobbies: convertToArray(sectionData.hobbies),
           technicalSkills: convertToArray(sectionData.technicalSkills),
@@ -809,7 +818,7 @@ const WizardStudentDetail = () => {
           computerKnowledge: convertToArray(sectionData.computerKnowledge),
           languageProficiency: [] // Ensure this field is included as empty array
         };
-        
+
         console.log('Skills payload:', payload);
       }
 
@@ -818,7 +827,7 @@ const WizardStudentDetail = () => {
         const eduPayload = {
           highestQualification: sectionData.highestQualification,
         };
-        
+
         // 10th Standard
         if (sectionData.tenthSchoolName || sectionData.tenthBoard || sectionData.tenthPassingYear || sectionData.tenthPercentage || sectionData.tenthMarksheetFile) {
           eduPayload.tenth = {
@@ -828,7 +837,7 @@ const WizardStudentDetail = () => {
             percentage: sectionData.tenthPercentage,
           };
         }
-        
+
         // 12th Standard
         if (sectionData.twelfthSchoolCollegeName || sectionData.twelfthBoard || sectionData.twelfthStream || sectionData.twelfthPassingYear || sectionData.twelfthPercentage || sectionData.twelfthMarksheetFile) {
           eduPayload.twelfth = {
@@ -839,7 +848,7 @@ const WizardStudentDetail = () => {
             percentage: sectionData.twelfthPercentage,
           };
         }
-        
+
         // Graduation
         if (sectionData.graduationCollegeName || sectionData.graduationCourseName || sectionData.graduationSpecialization || sectionData.graduationPassingYear || sectionData.graduationPercentage || sectionData.graduationMarksheetFile) {
           eduPayload.graduation = {
@@ -850,7 +859,7 @@ const WizardStudentDetail = () => {
             percentage: sectionData.graduationPercentage,
           };
         }
-        
+
         // Post Graduation
         if (sectionData.postGraduationCollegeName || sectionData.postGraduationCourseName || sectionData.postGraduationSpecialization || sectionData.postGraduationPassingYear || sectionData.postGraduationPercentage || sectionData.postGraduationMarksheetFile) {
           eduPayload.postGraduation = {
@@ -861,12 +870,12 @@ const WizardStudentDetail = () => {
             percentage: sectionData.postGraduationPercentage,
           };
         }
-        
+
         // Additional Education
         if (sectionData.additionalEduName || sectionData.additionalInstitutionName || sectionData.additionalPassingYear || sectionData.additionalPercentage) {
           // Collect existing additional education entries from state
           const additionalEducationArray = additionalEducation || [];
-          
+
           // Add new entry if form has data
           const newEntry = {
             additionalEduName: sectionData.additionalEduName,
@@ -874,10 +883,10 @@ const WizardStudentDetail = () => {
             passingYear: sectionData.additionalPassingYear,
             percentage: sectionData.additionalPercentage,
           };
-          
+
           eduPayload.additionalEducation = [...additionalEducationArray, newEntry];
-        } 
-        
+        }
+
         payload = eduPayload;
       }
 
@@ -885,17 +894,17 @@ const WizardStudentDetail = () => {
       if (endpoint.includes('updateStudentWorkExperience')) {
         // Collect all work experiences from state
         const allExperiences = [...workExperiences];
-        
+
         // If we're adding/editing an experience, update the array
         if (payload.companyName && payload.jobTitle) {
           // Convert date strings to Unix timestamps (seconds)
-          const startTimestamp = payload.experienceStartDate 
-            ? Math.floor(new Date(payload.experienceStartDate).getTime() / 1000) 
+          const startTimestamp = payload.experienceStartDate
+            ? Math.floor(new Date(payload.experienceStartDate).getTime() / 1000)
             : null;
-          const endTimestamp = payload.experienceEndDate 
-            ? Math.floor(new Date(payload.experienceEndDate).getTime() / 1000) 
+          const endTimestamp = payload.experienceEndDate
+            ? Math.floor(new Date(payload.experienceEndDate).getTime() / 1000)
             : null;
-            
+
           const experienceData = {
             companyName: payload.companyName,
             jobTitle: payload.jobTitle,
@@ -905,7 +914,7 @@ const WizardStudentDetail = () => {
             endDate: endTimestamp,
             responsibilities: payload.responsibilities,
           };
-          
+
           if (editingExperienceIndex !== null) {
             // Update existing experience
             const existingExp = allExperiences[editingExperienceIndex];
@@ -918,12 +927,12 @@ const WizardStudentDetail = () => {
             allExperiences.push(experienceData);
           }
         }
-        
+
         // Backend auto-calculates totalExperienceMonths, so we don't send it
         payload = {
           experiences: allExperiences
         };
-        
+
         console.log('Work experience payload:', payload);
       }
 
@@ -936,7 +945,7 @@ const WizardStudentDetail = () => {
           setSaving(false);
           return;
         }
-        
+
         // If editing existing certificate, include the certificate ID
         if (editingCertificateIndex !== null) {
           const existingCert = certificates[editingCertificateIndex];
@@ -961,7 +970,7 @@ const WizardStudentDetail = () => {
 
       // Handle file uploads separately if needed
       const hasFiles = fields.some(f => f.type === "file");
-      
+
       if (hasFiles) {
         const formData = new FormData();
         // Append payload fields first
@@ -1006,7 +1015,7 @@ const WizardStudentDetail = () => {
       }
 
       toast.success("Changes saved successfully!");
-      
+
       // Clear certificate/experience form after save
       if (endpoint.includes('updateStudentCertificates')) {
         setEditingCertificateIndex(null);
@@ -1021,7 +1030,7 @@ const WizardStudentDetail = () => {
           certificateUrl: '',
         }));
       }
-      
+
       if (endpoint.includes('updateStudentWorkExperience')) {
         setEditingExperienceIndex(null);
         // Clear experience fields
@@ -1036,12 +1045,12 @@ const WizardStudentDetail = () => {
           responsibilities: '',
         }));
       }
-      
+
       // Refresh data
       const res = await axios.get(`/student/studentAllDetails/${id}`);
       const flattened = flattenData(res.data.jsonData);
       setSectionData(flattened);
-      
+
     } catch (error) {
       console.error("Error saving data:", error);
       console.error("Error response:", error.response?.data);
@@ -1101,7 +1110,7 @@ const WizardStudentDetail = () => {
   // Edit existing work experience
   const editExperience = (index) => {
     const exp = workExperiences[index];
-    
+
     // Convert Unix timestamps (seconds) to date strings for the form
     const formatDateFromTimestamp = (timestamp) => {
       if (!timestamp) return '';
@@ -1109,7 +1118,7 @@ const WizardStudentDetail = () => {
       const date = new Date(timestamp * 1000);
       return date.toISOString().split('T')[0];
     };
-    
+
     setSectionData(prev => ({
       ...prev,
       companyName: exp.companyName || '',
@@ -1122,6 +1131,44 @@ const WizardStudentDetail = () => {
     }));
     setEditingExperienceIndex(index);
     toast.success(`Editing experience: ${exp.companyName}`);
+  };
+
+  // Handle resume file upload
+  const handleResumeUpload = async () => {
+    if (!uploadedResumeFiles || uploadedResumeFiles.length === 0) {
+      toast.error('Please select a resume file to upload');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const formData = new FormData();
+      formData.append('studentResumeFile', uploadedResumeFiles[0]);
+
+      const response = await axios.put(`/student/uploadStudentResume/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.success) {
+        toast.success('Resume uploaded successfully');
+        setUploadedResumeFiles([]);
+        // Refresh data to get updated resume file path
+        const res = await axios.get(`/student/studentAllDetails/${id}`);
+        if (res.data.data) {
+          setSectionData(prev => ({
+            ...prev,
+            studentResumeFile: res.data.data.studentResumeFile
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error uploading resume:', error);
+      toast.error(error.response?.data?.message || 'Failed to upload resume');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const flattenData = (data) => {
@@ -1234,9 +1281,9 @@ const WizardStudentDetail = () => {
       familyType: parentalData?.familyType,
 
       // Preferences
-      preferredJobCategory: Array.isArray(preferencesData?.preferredJobCategory)  
-      ? preferencesData.preferredJobCategory.map(item => item._id || item)
-      : [],
+      preferredJobCategory: Array.isArray(preferencesData?.preferredJobCategory)
+        ? preferencesData.preferredJobCategory.map(item => item._id || item)
+        : [],
 
       preferredJobLocation: Array.isArray(preferencesData?.preferredJobLocation)
         ? preferencesData.preferredJobLocation
@@ -1337,22 +1384,22 @@ const WizardStudentDetail = () => {
                 saving={saving}
                 onViewImage={handleViewImage}
                 fields={[
-                  { name: "studentFirstName", label: "First Name", type: "text", cols: 4 },
-                  { name: "studentLastName", label: "Last Name", type: "text", cols: 4 },
-                  { name: "studentEmail", label: "Email", type: "email", cols: 4 },
-                  { name: "studentMobileNo", label: "Mobile Number", type: "tel", cols: 4 },
-                  { name: "studentJobSector", label: "Job Sector", type: "text", cols: 4 },
+                  { name: "studentFirstName", label: "First Name", type: "text", cols: 4, disabled: true },
+                  { name: "studentLastName", label: "Last Name", type: "text", cols: 4, disabled: true },
+                  { name: "studentEmail", label: "Email", type: "email", cols: 4, disabled: true },
+                  { name: "studentMobileNo", label: "Mobile Number", type: "tel", cols: 4, disabled: true },
+                  { name: "studentJobSector", label: "Job Sector", type: "text", cols: 4, disabled: true },
                   {
-                    name: "accountStatus", label: "Account Status", type: "select", cols: 4,
+                    name: "accountStatus", label: "Account Status", type: "select", cols: 4, disabled: true,
                     options: [
                       { value: "active", label: "Active" },
                       { value: "inactive", label: "Inactive" },
                       { value: "blocked", label: "Blocked" },
                     ]
                   },
-                  { name: "studentReferralCode", label: "Referral Code", type: "text", cols: 4 },
-                  { name: "studentReferralByCode", label: "Referred By Code", type: "text", cols: 4 },
-                  { name: "studentCreatedAt", label: "Created At", type: "date", cols: 4 },
+                  { name: "studentReferralCode", label: "Referral Code", type: "text", cols: 4, disabled: true },
+                  { name: "studentReferralByCode", label: "Referred By Code", type: "text", cols: 4, disabled: true },
+                  { name: "studentCreatedAt", label: "Created At", type: "date", cols: 4, disabled: true },
                 ]}
               />
 
@@ -1373,7 +1420,7 @@ const WizardStudentDetail = () => {
                     name: "studentGender", label: "Gender", type: "select", cols: 3,
                     options: [
                       { value: "male", label: "Male" },
-                      { value: "female", label: "Female" }, 
+                      { value: "female", label: "Female" },
                     ]
                   },
                   { name: "studentAlternateMobileNo", label: "Alternate Mobile", type: "tel", cols: 3 },
@@ -1546,18 +1593,18 @@ const WizardStudentDetail = () => {
                 onViewImage={handleViewImage}
                 careerPreferences={careerPreferences}
                 fields={[
-                  { 
-                    name: "preferredJobCategory", 
-                    label: "Preferred Job Category", 
-                    type: "multiselect", 
+                  {
+                    name: "preferredJobCategory",
+                    label: "Preferred Job Category",
+                    type: "multiselect",
                     cols: 6,
                     options: careerPreferences,
                     placeholder: "Select your preferred job categories"
                   },
-                  { 
-                    name: "preferredJobLocation", 
-                    label: "Preferred Job Location", 
-                    type: "multiselectapi", 
+                  {
+                    name: "preferredJobLocation",
+                    label: "Preferred Job Location",
+                    type: "multiselectapi",
                     cols: 6,
                     placeholder: "Search and select cities"
                   },
@@ -1718,7 +1765,7 @@ const WizardStudentDetail = () => {
                         </Col>
                       </Row>
                     </div>
-                    
+
                     {workExperiences.length > 0 && (
                       <div className="mb-3">
                         <h6 className="mb-3">Existing Work Experiences ({workExperiences.length})</h6>
@@ -1758,7 +1805,7 @@ const WizardStudentDetail = () => {
                         </div>
                       </div>
                     )}
-                    
+
                     <h6 className="mb-3 mt-4 text-primary border-bottom pb-2">
                       {editingExperienceIndex !== null ? 'Edit' : 'Add'} Individual Job/Internship Details
                     </h6>
@@ -1858,6 +1905,7 @@ const WizardStudentDetail = () => {
               <StepSection
                 title="Document Uploads"
                 data={sectionData}
+                next
                 prev
                 onChange={handleFieldChange}
                 onSave={handleSave}
@@ -1882,7 +1930,78 @@ const WizardStudentDetail = () => {
                 ]}
               />
 
-              
+              {/* Step 14: Resume Upload */}
+              <StepSection
+                title="Resume Upload"
+                data={sectionData}
+                prev
+                onChange={handleFieldChange}
+                onSave={handleSave}
+                apiEndpoint={`/student/uploadStudentResume/${id}`}
+                saving={saving}
+                onViewImage={handleViewImage}
+                customContent={
+                  <div>
+                    <div className="alert alert-info mb-3">
+                      <i className="bi bi-info-circle me-2"></i>
+                      Upload your latest resume in PDF, DOC, or DOCX format. Maximum file size: 10MB.
+                    </div>
+                    
+                    <div className="mb-3">
+                      <FormLabel className="fw-semibold mb-2">Select Resume File</FormLabel>
+                      <FileUploader 
+                        files={uploadedResumeFiles} 
+                        setFiles={setUploadedResumeFiles} 
+                        multiple={false}
+                        maxFileCount={1}
+                        accept={{
+                          'application/pdf': ['.pdf'],
+                          'application/msword': ['.doc'],
+                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
+                        }}
+                        maxSize={10 * 1024 * 1024}
+                      />
+                      <div className="text-end mt-3">
+                        <Button 
+                          variant="primary" 
+                          onClick={handleResumeUpload}
+                          disabled={saving || uploadedResumeFiles.length === 0}
+                        >
+                          {saving ? (
+                            <>
+                              <Spinner size="sm" className="me-2" />
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <i className="bi bi-upload me-2"></i>
+                              Upload Resume
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {sectionData.studentResumeFile && (
+                      <div className="alert alert-success mt-3">
+                        <i className="bi bi-check-circle me-2"></i>
+                        <strong>Current Resume:</strong> 
+                        <a 
+                          href={sectionData.studentResumeFile} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="ms-2 text-decoration-underline"
+                        >
+                          View/Download Resume
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                }
+                fields={[]}
+              />
+
+
             </Wizard>
           </ComponentCard>
         </Col>
