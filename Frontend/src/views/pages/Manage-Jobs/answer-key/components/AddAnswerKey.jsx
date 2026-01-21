@@ -241,7 +241,7 @@ const AddAnswerKey = () => {
                         )}
                       </Form.Group>
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       <Form.Group className="mb-2">
                         <div className="d-flex justify-content-between align-items-end">
                           <Form.Label className="mb-0 mt-1">
@@ -263,7 +263,7 @@ const AddAnswerKey = () => {
                         <Form.Control.Feedback type="invalid">{errors.admitCard_post_name}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       <FormInput
                         name="answerkey_Url"
                         label="Answer Key URL"
@@ -274,6 +274,19 @@ const AddAnswerKey = () => {
                         touched={touched.answerkey_Url}
                         errors={errors.answerkey_Url}
                         placeholder="https://example.com/admit-card"
+                        required
+                      />
+                    </Col>
+                    <Col md={4}>
+                      <FormInput
+                        name="answer_key_date"
+                        label="Answer Key Date"
+                        type="date"
+                        value={values.answer_key_date}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        touched={touched.answer_key_date}
+                        errors={errors.answer_key_date}
                         required
                       />
                     </Col>

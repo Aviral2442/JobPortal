@@ -241,7 +241,7 @@ const AddResult = () => {
                         )}
                       </Form.Group>
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       <Form.Group className="mb-2">
                         <div className="d-flex justify-content-between align-items-end">
                           <Form.Label className="mb-0 mt-1">
@@ -263,7 +263,7 @@ const AddResult = () => {
                         <Form.Control.Feedback type="invalid">{errors.admitCard_post_name}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       <FormInput
                         name="result_Url"
                         label="Result URL"
@@ -274,6 +274,19 @@ const AddResult = () => {
                         touched={touched.result_Url}
                         errors={errors.result_Url}
                         placeholder="https://example.com/admit-card"
+                        required
+                      />
+                    </Col>
+                    <Col md={4}>
+                      <FormInput
+                        name="result_date"
+                        label="Result Date"
+                        type="date"
+                        value={values.result_date}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        touched={touched.result_date}
+                        errors={errors.result_date}
                         required
                       />
                     </Col>

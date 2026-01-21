@@ -54,8 +54,8 @@ const AdmitCardPSUList = ({ isActive }) => {
   const columns = [
     { title: "Post Name", data: "job_title" },
     { title: "Organization", data: "job_organization" },
-    { title: "Job Type", data: "job_type" },
-    { title: "Category", data: "job_category" },
+    { title: "Job Type", data: "job_type.job_type_name" },
+    { title: "Category", data: "job_category.category_name" },
     {
       title: "Actions",
       data: null,

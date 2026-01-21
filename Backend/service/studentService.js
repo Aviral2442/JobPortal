@@ -149,7 +149,8 @@ exports.studentProgressMeter = async (studentId) => {
         if (!fetchStudent) {
             return {
                 result: 404,
-                message: "Student not found"
+                message: "Student not found",
+                jsonData: {}
             };
         }
 
@@ -188,7 +189,8 @@ exports.studentAllDetails = async (studentId) => {
         if (!studentDetails) {
             return {
                 result: 404,
-                message: "Student not found"
+                message: "Student not found",
+                jsonData: {}
             };
         }
 
@@ -244,12 +246,12 @@ exports.studentRegistration = async (studentData) => {
     try {
         const emailExists = await studentModel.findOne({ studentEmail: studentData.studentEmail });
         if (emailExists) {
-            return { status: 409, message: 'Student Entered Email is already registered' };
+            return { status: 409, message: 'Student Entered Email is already registered', jsonData: {} };
         }
 
         const mobileExists = await studentModel.findOne({ studentMobileNo: studentData.studentMobileNo });
         if (mobileExists) {
-            return { status: 409, message: 'Student Entered Mobile No. is already registered' };
+            return { status: 409, message: 'Student Entered Mobile No. is already registered', jsonData: {} };
         }
 
         // Referral logic (unchanged)
@@ -259,7 +261,7 @@ exports.studentRegistration = async (studentData) => {
             });
 
             if (!refStudent) {
-                return { status: 400, message: 'Invalid referral code provided' };
+                return { status: 400, message: 'Invalid referral code provided', jsonData: {} };
             }
 
             studentData.studentReferralById = refStudent._id;
@@ -320,7 +322,7 @@ exports.studentRegistration = async (studentData) => {
         };
     } catch (error) {
         console.error('Error in studentRegistration:', error);
-        return { status: 500, message: 'An error occurred during student registration' };
+        return { status: 500, message: 'An error occurred during student registration', jsonData: {} };
     }
 };
 
@@ -349,7 +351,8 @@ exports.studentLogin = async (studentLoginData) => {
         if (student.studentPassword !== studentLoginData.studentPassword) {
             return {
                 status: 401,
-                message: 'Incorrect password'
+                message: 'Incorrect password',
+                jsonData: {}
             };
         }
 
@@ -395,7 +398,8 @@ exports.studentLogout = async (studentId) => {
         if (!student) {
             return {
                 status: 404,
-                message: 'Student not found with the provided ID'
+                message: 'Student not found with the provided ID',
+                jsonData: {}
             };
         }
 
@@ -413,7 +417,8 @@ exports.studentLogout = async (studentId) => {
 
         return {
             status: 200,
-            message: 'Student logged out successfully'
+            message: 'Student logged out successfully',
+            jsonData: {}
         };
 
     } catch (error) {
@@ -434,7 +439,8 @@ exports.studentForgetPassword = async (studentForgetData) => {
         if (!forgetEmailOrMobileNo) {
             return {
                 status: 400,
-                message: 'Email or mobile number is required'
+                message: 'Email or mobile number is required',
+                jsonData: {}
             };
         }
 
@@ -458,7 +464,8 @@ exports.studentForgetPassword = async (studentForgetData) => {
         if (!student) {
             return {
                 status: 404,
-                message: 'Student not found with the provided email or mobile number'
+                message: 'Student not found with the provided email or mobile number',
+                jsonData: {}
             };
         }
 
@@ -500,7 +507,8 @@ exports.studentForgetPassword = async (studentForgetData) => {
         if (sendMobileOtp.success === false) {
             return {
                 status: 500,
-                message: 'Failed to send OTP to mobile number'
+                message: 'Failed to send OTP to mobile number',
+                jsonData: {}
             };
         }
         return {
@@ -539,21 +547,24 @@ exports.verifyStudentOtp = async (studentOtpData) => {
         if (!studentEmailOrMobile) {
             return {
                 status: 404,
-                message: 'Student not found with the provided email or mobile number'
+                message: 'Student not found with the provided email or mobile number',
+                jsonData: {}
             };
         }
 
         if (studentEmailOrMobile.studentOtp !== studentEnterOtp) {
             return {
                 status: 400,
-                message: 'Invalid OTP provided'
+                message: 'Invalid OTP provided',
+                jsonData: {}
             };
         }
 
         if (Date.now() > studentEmailOrMobile.studentOtpExpiry) {
             return {
                 status: 400,
-                message: 'OTP has expired'
+                message: 'OTP has expired',
+                jsonData: {}
             };
         }
 
@@ -564,7 +575,8 @@ exports.verifyStudentOtp = async (studentOtpData) => {
 
         return {
             status: 200,
-            message: 'OTP verified successfully'
+            message: 'OTP verified successfully',
+            jsonData: {}
         };
 
     } catch (error) {
@@ -592,7 +604,8 @@ exports.resetStudentPassword = async (studentPasswordData) => {
         if (!studentEmailOrMobile) {
             return {
                 status: 404,
-                message: 'Student not found with the provided email or mobile number'
+                message: 'Student not found with the provided email or mobile number',
+                jsonData: {}
             };
         }
 
@@ -601,7 +614,8 @@ exports.resetStudentPassword = async (studentPasswordData) => {
 
         return {
             status: 200,
-            message: 'Password updated successfully'
+            message: 'Password updated successfully',
+            jsonData: {}
         };
 
     } catch (error) {
@@ -670,7 +684,8 @@ exports.updateStudentBasicDetail = async (studentId, studentBasicDetailData) => 
         if (!fetchStudent) {
             return {
                 status: 404,
-                message: 'Student not found with the provided ID'
+                message: 'Student not found with the provided ID',
+                jsonData: {}
             };
         }
 
@@ -720,7 +735,8 @@ exports.updateStudentBankDetails = async (studentId, studentBankData) => {
         if (!fetchStudent) {
             return {
                 status: 404,
-                message: 'Student not found with the provided ID'
+                message: 'Student not found with the provided ID',
+                jsonData: {}
             };
         }
 
@@ -778,7 +794,8 @@ exports.updateStudentBodyDetails = async (studentId, studentBodyDetailsData) => 
         if (!fetchStudent) {
             return {
                 status: 404,
-                message: 'Student not found with the provided ID'
+                message: 'Student not found with the provided ID',
+                jsonData: {}
             };
         }
 
@@ -831,7 +848,8 @@ exports.updateStudentPreferences = async (studentId, studentPreferencesData) => 
         if (!fetchStudent) {
             return {
                 status: 404,
-                message: 'Student not found with the provided ID'
+                message: 'Student not found with the provided ID',
+                jsonData: {}
             };
         }
 
@@ -881,7 +899,8 @@ exports.updateStudentCertificates = async (studentId, studentCertificateData) =>
         if (!fetchStudent) {
             return {
                 status: 404,
-                message: 'Student not found with the provided ID'
+                message: 'Student not found with the provided ID',
+                jsonData: {}
             };
         }
 
@@ -1022,7 +1041,8 @@ exports.updateStudentEducation = async (studentId, studentEducationData) => {
         if (!fetchStudent) {
             return {
                 status: 404,
-                message: 'Student not found with the provided ID'
+                message: 'Student not found with the provided ID',
+                jsonData: {}
             };
         }
 
@@ -1075,7 +1095,8 @@ exports.updateStudentEmergencyData = async (studentId, studentEmergencyData) => 
         if (!fetchStudent) {
             return {
                 status: 404,
-                message: 'Student not found with the provided ID'
+                message: 'Student not found with the provided ID',
+                jsonData: {}
             };
         }
 
@@ -1119,7 +1140,8 @@ exports.updateStudentParentsInfo = async (studentId, studentParentsData) => {
         if (!fetchStudent) {
             return {
                 status: 404,
-                message: 'Student not found with the provided ID'
+                message: 'Student not found with the provided ID',
+                jsonData: {}
             };
         }
 
@@ -1176,7 +1198,8 @@ exports.updateStudentSkills = async (studentId, studentSkillsData) => {
         if (!fetchStudent) {
             return {
                 status: 404,
-                message: 'Student not found with the provided ID'
+                message: 'Student not found with the provided ID',
+                jsonData: {}
             };
         }
 
@@ -1240,7 +1263,8 @@ exports.updateStudentSocialLink = async (studentId, studentSocial) => {
         if (!fetchStudent) {
             return {
                 status: 404,
-                message: 'Student not found with the provided ID'
+                message: 'Student not found with the provided ID',
+                jsonData: {}
             };
         }
 
@@ -1283,7 +1307,8 @@ exports.updateStudentWorkExperience = async (studentId, studentWorkExperienceDat
         if (!fetchStudent) {
             return {
                 status: 404,
-                message: 'Student not found with the provided ID'
+                message: 'Student not found with the provided ID',
+                jsonData: {}
             };
         }
 
@@ -1361,7 +1386,8 @@ exports.uploadStudentResume = async (studentId, studentResumeData) => {
         if (!fetchStudent) {
             return {
                 status: 404,
-                message: 'Student not found with the provided ID'
+                message: 'Student not found with the provided ID',
+                jsonData: {}
             };
         }
 
@@ -1409,7 +1435,8 @@ exports.studentRemoveNotification = async (data) => {
         if (!notification) {
             return {
                 status: 404,
-                message: 'Notification not found with the provided ID'
+                message: 'Notification not found with the provided ID',
+                jsonData: {}
             };
         }
 
@@ -1442,7 +1469,8 @@ exports.notificationListForStudent = async (studentId) => {
         if (!student) {
             return {
                 status: 404,
-                message: 'Student not found with the provided ID'
+                message: 'Student not found with the provided ID',
+                jsonData: {}
             };
         }
 
