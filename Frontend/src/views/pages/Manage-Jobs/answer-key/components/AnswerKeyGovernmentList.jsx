@@ -16,7 +16,7 @@ import {
 } from "react-icons/tb";
 import axios from "@/api/axios";
 
-const JobList = () => {
+const AnswerKeyGovernmentList = ({ isActive }) => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -26,17 +26,19 @@ const JobList = () => {
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-  // Fetch jobs
+  // Fetch jobs - government sector
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/jobs/`);
+      const res = await axios.get(`${BASE_URL}/api/jobs`);
       console.log("Fetched jobs:", res.data);
-      setJobs(res.data);
+      // Filter for government sector jobs
+      const governmentJobs = res.data?.filter(job => job.job_sector?.job_sector_name === "Government") || [];
+      setJobs(governmentJobs);
     } catch (err) {
       console.error(err);
       setJobs([]);
-      setMessage("Failed to fetch jobs.");
+      setMessage("Failed to fetch answer keys.");
       setVariant("danger");
     } finally {
       setLoading(false);
@@ -44,15 +46,16 @@ const JobList = () => {
   };
 
   useEffect(() => {
-    fetchJobs();
-  }, []);
+    if (isActive) {
+      fetchJobs();
+    }
+  }, [isActive]);
 
   const columns = [
-    { title: "Post", data: "job_title" },
+    { title: "Post Name", data: "job_title" },
     { title: "Organization", data: "job_organization" },
-    { title: "Sector", data: "job_sector.job_sector_name" },
-    { title: "Category", data: "job_category.category_name" },
-    // { title: "Location", data: "jobLocation" },
+    { title: "Job Type", data: "job_type" },
+    { title: "Category", data: "job_category" },
     {
       title: "Actions",
       data: null,
@@ -68,14 +71,14 @@ const JobList = () => {
             <Dropdown.Menu>
               <Dropdown.Item
                 onClick={() =>
-                  navigate(`/admin/jobs/view/${rowData._id || rowData.id}`, { state: rowData })
+                  navigate(`/admin/answer-key/view/${rowData._id || rowData.id}`, { state: rowData })
                 }
               >
                 <TbEye className="me-1" /> View
               </Dropdown.Item>
               <Dropdown.Item
                 onClick={() =>
-                  navigate(`/admin/jobs/edit/${rowData._id || rowData.id}`, { state: rowData })
+                  navigate(`/admin/answer-key/edit/${rowData._id || rowData.id}`, { state: rowData })
                 }
               >
                 <TbEdit className="me-1" /> Edit
@@ -83,15 +86,15 @@ const JobList = () => {
               <Dropdown.Item
                 className="text-danger"
                 onClick={async () => {
-                  if (!window.confirm("Are you sure you want to delete this job?")) return;
+                  if (!window.confirm("Are you sure you want to delete this answer key?")) return;
                   try {
                     await fetch(`${BASE_URL}/api/jobs/${rowData._id || rowData.id}`, { method: "DELETE" });
-                    setMessage("Job deleted successfully!");
+                    setMessage("Answer key deleted successfully!");
                     setVariant("success");
                     fetchJobs();
                   } catch (err) {
                     console.error(err);
-                    setMessage("Failed to delete job");
+                    setMessage("Failed to delete answer key");
                     setVariant("danger");
                   }
                 }}
@@ -104,10 +107,6 @@ const JobList = () => {
       },
     },
   ];
-
-
-  
-
 
   return (
     <Container fluid className="py-3">
@@ -155,4 +154,4 @@ const JobList = () => {
   );
 };
 
-export default JobList;
+export default AnswerKeyGovernmentList;

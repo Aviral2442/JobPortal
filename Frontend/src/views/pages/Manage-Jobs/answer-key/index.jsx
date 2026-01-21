@@ -6,27 +6,43 @@ import { Col, Nav, NavItem, NavLink, Row, TabContainer, TabContent, TabPane } fr
 import { TbBriefcase, TbHome, TbInfoCircle, TbMail, TbSettings, TbUser, TbUserCircle } from 'react-icons/tb';
 import { appTitle } from '@/helpers';
 import AnswerKeyList from './components/AnswerKeyList';
+import AnswerKeyGovernmentList from './components/AnswerKeyGovernmentList';
+import AnswerKeyPSUList from './components/AnswerKeyPSUList';
+import { useState } from 'react';
 
 const Results = () => {
+    const [activeTab, setActiveTab] = useState("Government");
+
     return <>
         <div className="mt-4 pb-3 ">
            
-            <TabContainer defaultActiveKey="Answer-Key-List">
+            <TabContainer activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
                 <Nav className="nav-tabs nav-bordered mb-3">
-                    <NavItem>
-                        <NavLink eventKey="Answer-Key-List" id='1'>
-                            Results
+                    <NavItem className="nav-tabs-nav d-flex">
+                        <NavLink eventKey="Government" id='1'>
+                            Government Sector
+                        </NavLink>
+                        <NavLink eventKey="PSU" id='2'>
+                            PSU Sector
                         </NavLink>
                     </NavItem>
 
                 </Nav>
-                <ComponentCard title="Answer Key List" className="py-2"  isLink={<Link to="/admin/answer-key/add"  >
+                <ComponentCard title={
+                    <div className="d-flex align-items-center justify-content-between">
+                        <h4 className="mb-0 ">{activeTab} Answer Keys</h4>
+                    </div>
+                } className="py-2"  isLink={<Link to="/admin/answer-key/add"  >
                     + Add Answer Key 
                 </Link>}>
-                    <TabPane eventKey="Answer-Key-List" >
-                        <AnswerKeyList />
-                        {/* <SnowEditor/> */}
-                    </TabPane>
+                    <TabContent className="pt-2">
+                        <TabPane eventKey="Government" >
+                            <AnswerKeyGovernmentList isActive={activeTab === "Government"} />
+                        </TabPane>
+                        <TabPane eventKey="PSU" >
+                            <AnswerKeyPSUList isActive={activeTab === "PSU"} />
+                        </TabPane>
+                    </TabContent>
                 </ComponentCard>
             </TabContainer>
         </div >

@@ -6,28 +6,44 @@ import { Col, Nav, NavItem, NavLink, Row, TabContainer, TabContent, TabPane } fr
 import { TbBriefcase, TbHome, TbInfoCircle, TbMail, TbSettings, TbUser, TbUserCircle } from 'react-icons/tb';
 import { appTitle } from '@/helpers';
 import ResultsList from './components/ResultsList';
+import ResultsGovernmentList from './components/ResultsGovernmentList';
+import ResultsPSUList from './components/ResultsPSUList';
+import { useState } from 'react';
 
 
 const Results = () => {
+    const [activeTab, setActiveTab] = useState("Government");
+
     return <>
         <div className="mt-4 pb-3 ">
            
-            <TabContainer defaultActiveKey="Results-List">
+            <TabContainer activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
                 <Nav className="nav-tabs nav-bordered mb-3">
-                    <NavItem>
-                        <NavLink eventKey="Results-List" id='1'>
-                            Results
+                    <NavItem className="nav-tabs-nav d-flex">
+                        <NavLink eventKey="Government" id='1'>
+                            Government Sector
+                        </NavLink>
+                        <NavLink eventKey="PSU" id='2'>
+                            PSU Sector
                         </NavLink>
                     </NavItem>
 
                 </Nav>
-                <ComponentCard title="Results List" className="py-2"  isLink={<Link to="/admin/result/add"  >
+                <ComponentCard title={
+                    <div className="d-flex align-items-center justify-content-between">
+                        <h4 className="mb-0 ">{activeTab} Results</h4>
+                    </div>
+                } className="py-2"  isLink={<Link to="/admin/result/add"  >
                     + Add Result
                 </Link>}>
-                    <TabPane eventKey="Results-List" >
-                        <ResultsList />
-                        {/* <SnowEditor/> */}
-                    </TabPane>
+                    <TabContent className="pt-2">
+                        <TabPane eventKey="Government" >
+                            <ResultsGovernmentList isActive={activeTab === "Government"} />
+                        </TabPane>
+                        <TabPane eventKey="PSU" >
+                            <ResultsPSUList isActive={activeTab === "PSU"} />
+                        </TabPane>
+                    </TabContent>
                 </ComponentCard>
             </TabContainer>
         </div >

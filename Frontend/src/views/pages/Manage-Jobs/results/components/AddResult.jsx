@@ -204,13 +204,13 @@ const AddResult = () => {
           {({ values, errors, touched, handleChange, handleBlur, setFieldValue }) => (
             <Form onSubmit={(e) => e.preventDefault()}>
               {/* Basic Admit Card Details */}
-              <ComponentCard className="mb-3" title="Answer Key Details">
+              <ComponentCard className="mb-3" title="Result Details">
                 <Card.Body>
                   <Row>
                     <Col md={12}>
                       <Form.Group className="mb-2">
                         <Form.Label className="mb-1">
-                          Answer Key File <span className="text-danger ms-1">*</span>
+                          Result File <span className="text-danger ms-1">*</span>
                         </Form.Label>
                         <div className="d-flex align-items-center gap-3">
                           <Form.Control
@@ -242,21 +242,31 @@ const AddResult = () => {
                       </Form.Group>
                     </Col>
                     <Col md={6}>
-                      <FormInput
-                        name="result_post_name"
-                        label="Post Name"
-                        value={values.result_post_name}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        touched={touched.result_post_name}
-                        errors={errors.result_post_name}
-                        required
-                      />
+                      <Form.Group className="mb-2">
+                        <div className="d-flex justify-content-between align-items-end">
+                          <Form.Label className="mb-0 mt-1">
+                            Post Name <span className="text-danger ms-1">*</span>
+                          </Form.Label>
+                        </div>
+                        <Form.Select
+                          name="admitCard_post_name"
+                          value={values.admitCard_post_name}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          isInvalid={touched.admitCard_post_name && errors.admitCard_post_name}
+                        >
+                          <option value="">Select Post Name</option>
+                          <option value="Post A">Post A</option>
+                          <option value="Post B">Post B</option>
+                          <option value="Post C">Post C</option>
+                        </Form.Select>
+                        <Form.Control.Feedback type="invalid">{errors.admitCard_post_name}</Form.Control.Feedback>
+                      </Form.Group>
                     </Col>
                     <Col md={6}>
                       <FormInput
                         name="result_Url"
-                        label="Answer Key URL"
+                        label="Result URL"
                         type="url"
                         value={values.result_Url}
                         onChange={handleChange}
