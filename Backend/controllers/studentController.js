@@ -296,8 +296,8 @@ exports.studentRemoveNotification = async (req, res) => {
     try {
 
         const data = {
-            studentId: req.params.studentId,
-            notificationId: req.params.notificationId
+            studentId: req.body.studentId,
+            notificationId: req.body.notificationId
         };
 
         const result = await studentService.studentRemoveNotification(data);

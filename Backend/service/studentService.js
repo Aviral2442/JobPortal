@@ -1400,7 +1400,8 @@ exports.studentRemoveNotification = async (data) => {
         if (!student) {
             return {
                 status: 404,
-                message: 'Student not found with the provided ID'
+                message: 'Student not found with the provided ID',
+                jsonData: null
             };
         }
 
@@ -1421,7 +1422,7 @@ exports.studentRemoveNotification = async (data) => {
         return {
             status: 200,
             message: 'Student notification removed successfully',
-            jsonData: removeNotification
+            jsonData: null
         };
 
     } catch (error) {
