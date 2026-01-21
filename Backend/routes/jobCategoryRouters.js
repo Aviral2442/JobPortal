@@ -46,4 +46,7 @@ router.get('/government_sector_job_list', JobCategoryController.governmentSector
 router.get('/psu_sector_job_list', JobCategoryController.psuSectorJobList);
 router.get('/job_full_details/:jobId', JobCategoryController.jobFullDetailsById);
 
+// GOVERNMENT ADMIT CARD ROUTES
+router.get('/government_admit_card_list', JobCategoryController.govAdminCardList);
+
 module.exports = router;

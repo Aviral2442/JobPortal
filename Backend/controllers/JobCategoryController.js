@@ -409,3 +409,22 @@ exports.jobFullDetailsById = async (req, res) => {
         });
     }
 };
+
+// GOVERNMENT ADMIN CARD LIST CONTROLLER
+exports.govAdminCardList = async (req, res) => {
+    try {
+        const result = await JobCategoryService.govAdminCardList(req.query);
+
+        res.status(200).json({
+            status: 200,
+            message: 'Government admin card list fetched successfully',
+            jsonData: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};

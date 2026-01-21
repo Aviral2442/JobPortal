@@ -4,6 +4,9 @@ const Student = require("../models/studentModel");
 const JobAppliedMapper = require("../models/JobAppliedMapperModel");
 const JobCategoryModel = require("../models/JobCategoryModel");
 const JobSubCategoryModel = require("../models/JobSubCategoryModel");
+const AdmitCardModel = require("../models/AdmitCardModel");
+const AnswerKeyModel = require("../models/AnswerKeyModel");
+const ResultModel = require("../models/ResultModel");
 const moment = require("moment");
 
 // Job Category List Service with Filters and Pagination
@@ -987,4 +990,84 @@ exports.jobFullDetailsById = async (jobId) => {
       message: "Server error",
     };
   }
+};
+
+// GOV ADMIN JOB CATEGORY CARD LIST SERVICE WITH FILTERS AND PAGINATION
+exports.govAdminCardList = async (query) => {
+  const {
+    dateFilter,
+    fromDate,
+    toDate,
+    searchFilter,
+    page = 1,
+    limit = 10,
+  } = query;
+
+  const skip = (page - 1) * limit;
+  const filter = {};
+
+  if (searchFilter) {
+    filter.admitCard_Title = { $regex: searchFilter, $options: "i" },
+      filter.job_title = { $regex: searchFilter, $options: "i" };
+  }
+
+  if (dateFilter) {
+    const today = moment().startOf("day");
+    const now = moment().endOf("day");
+    let startDate, endDate;
+
+    switch (dateFilter) {
+      case "today":
+        startDate = today.unix();
+        endDate = now.unix();
+        break;
+
+      case "yesterday":
+        startDate = today.subtract(1, "days").unix();
+        endDate = now.subtract(1, "days").unix();
+        break;
+
+      case "this_week":
+        startDate = moment().startOf("week").unix();
+        endDate = moment().endOf("week").unix();
+        break;
+
+      case "this_month":
+        startDate = moment().startOf("month").unix();
+        endDate = moment().endOf("month").unix();
+        break;
+
+      case "custom":
+        if (fromDate && toDate) {
+          startDate = moment(fromDate, "YYYY-MM-DD").startOf("day").unix();
+          endDate = moment(toDate, "YYYY-MM-DD").endOf("day").unix();
+        }
+        break;
+    }
+
+    if (startDate && endDate) {
+      filter.admitCard_CreatedAt = { $gte: startDate, $lte: endDate };
+    }
+  }
+
+  const total = await AdmitCardModel.countDocuments(filter);
+
+  const data = await AdmitCardModel.find(filter)
+    .populate({
+      path: "admitCard_JobId",
+      model: "Jobs",
+      select: "job_title",
+      match: { job_sector: "government" }
+    })
+    .skip(skip)
+    .limit(limit)
+    .sort({ admitCard_CreatedAt: -1 });
+
+  return {
+    total,
+    page: parseInt(page),
+    limit: parseInt(limit),
+    totalPages: Math.ceil(total / limit),
+    data,
+  };
 };
