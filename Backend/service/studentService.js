@@ -1440,14 +1440,12 @@ exports.uploadStudentResume = async (studentId, studentResumeData) => {
             };
         }
 
-        /* -------- SAVE RESUME FILE -------- */
         const resumeFilePath = saveBase64File(
             studentResumeData.studentResumeFile,
             "StudentResume",
             "resume"
         );
 
-        /* -------- UPDATE STUDENT -------- */
         fetchStudent.studentResumeFile = resumeFilePath;
         fetchStudent.profileCompletion.studentResume = 1;
         await fetchStudent.save();
