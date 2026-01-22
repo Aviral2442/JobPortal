@@ -1463,7 +1463,9 @@ exports.uploadStudentResume = async (studentId, studentResumeData) => {
         return {
             status: 500,
             message: 'An error occurred during student resume upload',
-            error: error.message
+            jsonData:{
+                error: error.message
+            }
         };
     }
 };
