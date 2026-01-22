@@ -254,7 +254,6 @@ exports.studentRegistration = async (studentData) => {
             return { status: 409, message: 'Student Entered Mobile No. is already registered', jsonData: {} };
         }
 
-        // Referral logic (unchanged)
         if (studentData.studentReferralByCode) {
             const refStudent = await studentModel.findOne({
                 studentReferralCode: studentData.studentReferralByCode
@@ -267,8 +266,7 @@ exports.studentRegistration = async (studentData) => {
             studentData.studentReferralById = refStudent._id;
             studentData.studentReferralByCode = refStudent.studentReferralCode;
         }
-        console.log('Student Data Received for Registration:', studentData);
-        // ✅ Handle base64 profile image
+
         let studentProfilePic = null;
         if (studentData.studentProfilePic) {
             studentProfilePic = saveBase64File(
@@ -303,7 +301,7 @@ exports.studentRegistration = async (studentData) => {
             studentReferralById: studentData.studentReferralById || null,
             studentReferralByCode: studentData.studentReferralByCode || null,
         });
-        console.log('New Student Object Created:', newStudent);
+
         await newStudent.save();
 
         return {
@@ -321,7 +319,6 @@ exports.studentRegistration = async (studentData) => {
             },
         };
     } catch (error) {
-        console.error('Error in studentRegistration:', error);
         return { status: 500, message: 'An error occurred during student registration', jsonData: {} };
     }
 };
