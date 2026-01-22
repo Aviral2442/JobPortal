@@ -1043,20 +1043,64 @@ exports.updateStudentEducation = async (studentId, studentEducationData) => {
             };
         }
 
+        if (studentEducationData.tenth?.marksheetFile) {
+            studentEducationData.tenth.marksheetFile = saveBase64File(
+                studentEducationData.tenth.marksheetFile,
+                "StudentEducation",
+                "tenth"
+            );
+        }
+
+        if (studentEducationData.twelfth?.marksheetFile) {
+            studentEducationData.twelfth.marksheetFile = saveBase64File(
+                studentEducationData.twelfth.marksheetFile,
+                "StudentEducation",
+                "twelfth"
+            );
+        }
+
+        if (studentEducationData.graduation?.marksheetFile) {
+            studentEducationData.graduation.marksheetFile = saveBase64File(
+                studentEducationData.graduation.marksheetFile,
+                "StudentEducation",
+                "graduation"
+            );
+        }
+
+        if (studentEducationData.postGraduation?.marksheetFile) {
+            studentEducationData.postGraduation.marksheetFile = saveBase64File(
+                studentEducationData.postGraduation.marksheetFile,
+                "StudentEducation",
+                "postGraduation"
+            );
+        }
+
         let additionalEducation = [];
 
         if (studentEducationData.additionalEducation) {
             additionalEducation = Array.isArray(studentEducationData.additionalEducation)
                 ? studentEducationData.additionalEducation
                 : [studentEducationData.additionalEducation];
+
+            additionalEducation = additionalEducation.map((item) => {
+                if (item.marksheetFile) {
+                    item.marksheetFile = saveBase64File(
+                        item.marksheetFile,
+                        "StudentEducation",
+                        "additional"
+                    );
+                }
+                return item;
+            });
         }
 
         const updatestudentEducationData = {
+            highestQualification: studentEducationData.highestQualification,
             tenth: studentEducationData.tenth,
             twelfth: studentEducationData.twelfth,
             graduation: studentEducationData.graduation,
             postGraduation: studentEducationData.postGraduation,
-            additionalEducation: additionalEducation,
+            additionalEducation,
             updatedAt: currentUnixTimeStamp()
         };
 

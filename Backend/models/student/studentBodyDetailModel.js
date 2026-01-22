@@ -1,13 +1,13 @@
 // models/StudentBodyDetails.js
 const mongoose = require("mongoose");
-const {currentUnixTimeStamp} = require("../../utils/currentUnixTimeStamp");
+const { currentUnixTimeStamp } = require("../../utils/currentUnixTimeStamp");
 
 const StudentBodyDetailsSchema = new mongoose.Schema({
   studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true, index: true },
 
   heightCm: { type: Number, required: true },
   weightKg: { type: Number, required: true },
-  bloodGroup: { type: String, required: true },
+  bloodGroup: { type: String, enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', "Don't Know"], default: null, required: true },
   eyeColor: { type: String, default: null },
   hairColor: { type: String, default: null },
 
@@ -22,7 +22,7 @@ const StudentBodyDetailsSchema = new mongoose.Schema({
   updatedAt: { type: Number, default: () => currentUnixTimeStamp() }
 });
 
-StudentBodyDetailsSchema.pre("save", function(next){
+StudentBodyDetailsSchema.pre("save", function (next) {
   this.updatedAt = currentUnixTimeStamp();
   next();
 });
