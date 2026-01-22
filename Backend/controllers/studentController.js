@@ -23,7 +23,6 @@ exports.studentLoginLogoutHistory = async (req, res) => {
 // STUDENT REGISTRATION CONTROLLER
 exports.studentRegistration = async (req, res) => {
     try {
-        console.log('REQ BODY:', req.body);
         const result = await studentService.studentRegistration(req.body);
         return res.status(result.status).json(result);
     } catch (error) {
@@ -129,10 +128,7 @@ exports.updateStudentBasicDetail = async (req, res) => {
 exports.updateStudentBankDetails = async (req, res) => {
     try {
         const studentId = req.params.studentId;
-        const passbookUrl = req.file ? `/uploads/StudentBankDetails/${req.file.filename}` : null;
-        const studentBankData = { ...req.body, passbookUrl };
-        console.log('Student Bank Data:', studentBankData);
-        const result = await studentService.updateStudentBankDetails(studentId, studentBankData);
+        const result = await studentService.updateStudentBankDetails(studentId, req.body);
         return res.status(result.status).json(result);
     } catch (error) {
         return res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
