@@ -278,8 +278,7 @@ exports.studentProgressMeter = async (req, res) => {
 exports.uploadStudentResume = async (req, res) => {
     try {
         const studentId = req.params.studentId;
-        const studentResumeData = req.file ? { studentResumeFile: `/uploads/StudentResume/${req.file.filename}` } : null;
-        const result = await studentService.uploadStudentResume(studentId, studentResumeData);
+        const result = await studentService.uploadStudentResume(studentId, req.body);
         return res.status(result.status).json(result);
     } catch (error) {
         return res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });

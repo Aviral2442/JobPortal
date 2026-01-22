@@ -1432,9 +1432,23 @@ exports.uploadStudentResume = async (studentId, studentResumeData) => {
             };
         }
 
-        const studentResumeFilePath = studentResumeData.studentResumeFile;
+        if (!studentResumeData.studentResumeFile) {
+            return {
+                status: 400,
+                message: 'Resume file is required',
+                jsonData: {}
+            };
+        }
 
-        fetchStudent.studentResumeFile = studentResumeFilePath;
+        /* -------- SAVE RESUME FILE -------- */
+        const resumeFilePath = saveBase64File(
+            studentResumeData.studentResumeFile,
+            "StudentResume",
+            "resume"
+        );
+
+        /* -------- UPDATE STUDENT -------- */
+        fetchStudent.studentResumeFile = resumeFilePath;
         fetchStudent.profileCompletion.studentResume = 1;
         await fetchStudent.save();
 
@@ -1443,7 +1457,7 @@ exports.uploadStudentResume = async (studentId, studentResumeData) => {
             message: 'Student resume uploaded successfully',
             jsonData: {
                 studentId: fetchStudent._id,
-                studentResumeFile: fetchStudent.studentResumeFile
+                studentResumeFile: resumeFilePath
             }
         };
 

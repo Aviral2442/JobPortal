@@ -26,7 +26,7 @@ router.put('/updateStudentParentalInfo/:studentId', studentController.updateStud
 router.put('/updateStudentSkills/:studentId', studentController.updateStudentSkills);
 router.put('/updateStudentSocialLinks/:studentId', studentController.updateStudentSocialLink);
 router.put('/updateStudentWorkExperience/:studentId', studentController.updateStudentWorkExperience);
-router.put('/uploadStudentResume/:studentId', upload('StudentResume').single('studentResumeFile'), studentController.uploadStudentResume);
+router.put('/uploadStudentResume/:studentId', studentController.uploadStudentResume);
 router.put('/removeNotification', studentController.studentRemoveNotification);
 router.get('/studentNotifications/:studentId', studentController.notificationListForStudent);
 
