@@ -25,6 +25,7 @@ import { useParams } from "react-router-dom";
 import axios from "@/api/axios";
 import toast from "react-hot-toast";
 import axios2 from "axios";
+import "@/global.css";
 
 import {
   TbUserCircle,
@@ -43,8 +44,9 @@ import {
   TbMan,
   TbEye,
   TbFile,
+  TbEdit,
 } from "react-icons/tb";
-
+import { formatDate } from "@/components/DateFormat";
 /* ---------------------------------------------------
    Custom MultiSelect with Search
 ----------------------------------------------------*/
@@ -479,8 +481,9 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
       if (file) {
         const reader = new FileReader();
         reader.onloadend = () => {
-          const base64String = reader.result;
-          onChange(field.name, base64String);
+          const result = reader.result;
+          const pureBase64 = result.split(',')[1];
+          onChange(field.name, pureBase64);
         };
         reader.onerror = () => {
           toast.error("Failed to read file");
@@ -496,6 +499,15 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
     onChange(field.name, dates[0]);
   };
 
+
+  // for image/file preview
+  const getPreviewSrc = (base64) => {
+    if (!base64) return "";
+    if (base64.startsWith("data:")) return base64;
+    return `data:image/png;base64,${base64}`;
+  };
+
+
   return (
     <Col xl={field.cols || 4}>
       <FormGroup className="mb-3">
@@ -506,7 +518,7 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
               size="sm"
               variant="link"
               className="p-0 text-primary"
-              onClick={() => onViewImage && onViewImage(value, field.label)}
+              onClick={() => onViewImage && onViewImage(getPreviewSrc(value), field.label)}
               title="View uploaded file"
             >
               <TbEye size={20} />
@@ -526,7 +538,19 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
         ) : field.type === "date" ? (
           <Flatpickr
             className="form-control"
-            value={value}
+            value={(() => {
+              // Don't use formatDate here - Flatpickr needs actual Date or valid date string
+              if (!value || value === '-' || value === '') return '';
+              // If it's a Unix timestamp (number or numeric string)
+              const numValue = Number(value);
+              if (!isNaN(numValue) && numValue > 0) {
+                // Convert seconds to milliseconds if needed
+                return new Date(numValue < 10000000000 ? numValue * 1000 : numValue);
+              }
+              // If it's already a date string, return as-is
+              const parsed = new Date(value);
+              return isNaN(parsed.getTime()) ? '' : parsed;
+            })()}
             options={{ dateFormat: "d M, Y" }}
             onChange={handleDateChange}
             disabled={field.disabled}
@@ -685,6 +709,7 @@ const WizardStudentDetail = () => {
   const [imageModalTitle, setImageModalTitle] = useState("");
   const [careerPreferences, setCareerPreferences] = useState([]);
   const [uploadedResumeFiles, setUploadedResumeFiles] = useState([]);
+  const [languageProficiency, setLanguageProficiency] = useState([]);
 
 
   const handleViewImage = (imageSrc, title) => {
@@ -802,93 +827,140 @@ const WizardStudentDetail = () => {
         };
       }
 
+      // 🔥 BANK DETAILS FIX
+      if (endpoint.includes('updateStudentBankDetails')) {
+        payload = {
+          bankHolderName: sectionData.bankHolderName || '',
+          bankName: sectionData.bankName || '',
+          accountNumber: sectionData.accountNumber || '',
+          ifscCode: sectionData.ifscCode || '',
+          branchName: sectionData.branchName || '',
+          passbookBase64: sectionData.passbookUrl || '' // 👈 rename for clarity
+        };
+
+        await axios.put(endpoint, payload); // JSON ONLY
+        toast.success("Bank details saved successfully");
+        return;
+      }
+
+
       // Special handling for Skills - backend expects arrays
       if (endpoint.includes('updateStudentSkills')) {
-        // Convert comma-separated strings to arrays - same approach as StudentDetail.jsx
-        // Filter out empty values and ensure we send empty arrays instead of null/undefined
-        const convertToArray = (value) => {
-          if (!value || value === '') return [];
-          return value.split(',').map(s => s.trim()).filter(Boolean);
-        };
+        const convertToArray = (value) =>
+          typeof value === 'string'
+            ? value.split(',').map(v => v.trim()).filter(Boolean)
+            : Array.isArray(value)
+              ? value
+              : [];
 
         payload = {
           hobbies: convertToArray(sectionData.hobbies),
           technicalSkills: convertToArray(sectionData.technicalSkills),
           softSkills: convertToArray(sectionData.softSkills),
           computerKnowledge: convertToArray(sectionData.computerKnowledge),
-          languageProficiency: [] // Ensure this field is included as empty array
+          languageProficiency: languageProficiency || []
         };
+        const sanitize = (arr = []) =>
+          arr.filter(v => v && v.trim() !== "");
+
+        payload.technicalSkills = sanitize(payload.technicalSkills);
+        payload.softSkills = sanitize(payload.softSkills);
+        payload.hobbies = sanitize(payload.hobbies);
+        payload.computerKnowledge = sanitize(payload.computerKnowledge);
 
         console.log('Skills payload:', payload);
+        await axios.put(endpoint, payload);
+        toast.success('Skills updated successfully!');
+        return;
       }
 
-      // Special handling for Education - backend expects objects for each level
+
+
+      // 🔥 EDUCATION SAVE FIX
       if (endpoint.includes('updateStudentEducationDetails')) {
-        const eduPayload = {
-          highestQualification: sectionData.highestQualification,
+        // Build additional education array from existing entries
+        const additionalEduArray = [...(additionalEducation || [])];
+
+        // If form fields have values, add/update entry
+        if (sectionData.additionalEduName || sectionData.additionalInstitutionName ||
+          sectionData.additionalPassingYear || sectionData.additionalPercentage) {
+
+          const newAdditionalEdu = {
+            additionalEduName: sectionData.additionalEduName || '',
+            institutionName: sectionData.additionalInstitutionName || '',
+            passingYear: sectionData.additionalPassingYear || '',
+            percentage: sectionData.additionalPercentage || '',
+            marksheetBase64: sectionData.additionalMarksheetFile || ''
+          };
+
+          // Add to array if it's new data
+          if (editingAdditionalEduIndex !== null) {
+            additionalEduArray[editingAdditionalEduIndex] = newAdditionalEdu;
+          } else {
+            additionalEduArray.push(newAdditionalEdu);
+          }
+          setEditingAdditionalEduIndex(null);
+        }
+
+        const payload = {
+          highestQualification: sectionData.highestQualification || null,
+
+          tenth: {
+            schoolName: sectionData.tenthSchoolName || '',
+            board: sectionData.tenthBoard || '',
+            passingYear: sectionData.tenthPassingYear || '',
+            percentage: sectionData.tenthPercentage || '',
+            marksheetBase64: sectionData.tenthMarksheetFile || ''
+          },
+
+          twelfth: {
+            schoolCollegeName: sectionData.twelfthSchoolCollegeName || '',
+            board: sectionData.twelfthBoard || '',
+            stream: sectionData.twelfthStream || '',
+            passingYear: sectionData.twelfthPassingYear || '',
+            percentage: sectionData.twelfthPercentage || '',
+            marksheetBase64: sectionData.twelfthMarksheetFile || ''
+          },
+
+          graduation: {
+            collegeName: sectionData.graduationCollegeName || '',
+            courseName: sectionData.graduationCourseName || '',
+            specialization: sectionData.graduationSpecialization || '',
+            passingYear: sectionData.graduationPassingYear || '',
+            percentage: sectionData.graduationPercentage || '',
+            marksheetBase64: sectionData.graduationMarksheetFile || ''
+          },
+
+          postGraduation: {
+            collegeName: sectionData.postGraduationCollegeName || '',
+            courseName: sectionData.postGraduationCourseName || '',
+            specialization: sectionData.postGraduationSpecialization || '',
+            passingYear: sectionData.postGraduationPassingYear || '',
+            percentage: sectionData.postGraduationPercentage || '',
+            marksheetBase64: sectionData.postGraduationMarksheetFile || ''
+          },
+
+          additionalEducation: additionalEduArray
+
         };
 
-        // 10th Standard
-        if (sectionData.tenthSchoolName || sectionData.tenthBoard || sectionData.tenthPassingYear || sectionData.tenthPercentage || sectionData.tenthMarksheetFile) {
-          eduPayload.tenth = {
-            schoolName: sectionData.tenthSchoolName,
-            board: sectionData.tenthBoard,
-            passingYear: sectionData.tenthPassingYear,
-            percentage: sectionData.tenthPercentage,
-          };
-        }
+        console.log('Education payload being sent:', payload);
+        await axios.put(endpoint, payload); // JSON ONLY
+        toast.success("Education details saved successfully");
 
-        // 12th Standard
-        if (sectionData.twelfthSchoolCollegeName || sectionData.twelfthBoard || sectionData.twelfthStream || sectionData.twelfthPassingYear || sectionData.twelfthPercentage || sectionData.twelfthMarksheetFile) {
-          eduPayload.twelfth = {
-            schoolCollegeName: sectionData.twelfthSchoolCollegeName,
-            board: sectionData.twelfthBoard,
-            stream: sectionData.twelfthStream,
-            passingYear: sectionData.twelfthPassingYear,
-            percentage: sectionData.twelfthPercentage,
-          };
-        }
+        // Clear additional education form fields after save
+        setSectionData(prev => ({
+          ...prev,
+          additionalEduName: '',
+          additionalInstitutionName: '',
+          additionalPassingYear: '',
+          additionalPercentage: '',
+          additionalMarksheetFile: '',
+        }));
 
-        // Graduation
-        if (sectionData.graduationCollegeName || sectionData.graduationCourseName || sectionData.graduationSpecialization || sectionData.graduationPassingYear || sectionData.graduationPercentage || sectionData.graduationMarksheetFile) {
-          eduPayload.graduation = {
-            collegeName: sectionData.graduationCollegeName,
-            courseName: sectionData.graduationCourseName,
-            specialization: sectionData.graduationSpecialization,
-            passingYear: sectionData.graduationPassingYear,
-            percentage: sectionData.graduationPercentage,
-          };
-        }
-
-        // Post Graduation
-        if (sectionData.postGraduationCollegeName || sectionData.postGraduationCourseName || sectionData.postGraduationSpecialization || sectionData.postGraduationPassingYear || sectionData.postGraduationPercentage || sectionData.postGraduationMarksheetFile) {
-          eduPayload.postGraduation = {
-            collegeName: sectionData.postGraduationCollegeName,
-            courseName: sectionData.postGraduationCourseName,
-            specialization: sectionData.postGraduationSpecialization,
-            passingYear: sectionData.postGraduationPassingYear,
-            percentage: sectionData.postGraduationPercentage,
-          };
-        }
-
-        // Additional Education
-        if (sectionData.additionalEduName || sectionData.additionalInstitutionName || sectionData.additionalPassingYear || sectionData.additionalPercentage) {
-          // Collect existing additional education entries from state
-          const additionalEducationArray = additionalEducation || [];
-
-          // Add new entry if form has data
-          const newEntry = {
-            additionalEduName: sectionData.additionalEduName,
-            institutionName: sectionData.additionalInstitutionName,
-            passingYear: sectionData.additionalPassingYear,
-            percentage: sectionData.additionalPercentage,
-          };
-
-          eduPayload.additionalEducation = [...additionalEducationArray, newEntry];
-        }
-
-        payload = eduPayload;
+        return;
       }
+
 
       // Special handling for Work Experience - backend expects array of experiences
       if (endpoint.includes('updateStudentWorkExperience')) {
@@ -913,6 +985,7 @@ const WizardStudentDetail = () => {
             startDate: startTimestamp,
             endDate: endTimestamp,
             responsibilities: payload.responsibilities,
+            experienceCertificateFile: payload.experienceCertificateFile || ''
           };
 
           if (editingExperienceIndex !== null) {
@@ -945,6 +1018,17 @@ const WizardStudentDetail = () => {
           setSaving(false);
           return;
         }
+
+        // Convert issueDate and expirationDate to Unix timestamps (seconds)
+        const issueTimestamp = payload.issueDate
+          ? Math.floor(new Date(payload.issueDate).getTime() / 1000)
+          : null;
+        const expirationTimestamp = payload.expirationDate
+          ? Math.floor(new Date(payload.expirationDate).getTime() / 1000)
+          : null;
+
+        payload.issueDate = issueTimestamp;
+        payload.expirationDate = expirationTimestamp;
 
         // If editing existing certificate, include the certificate ID
         if (editingCertificateIndex !== null) {
@@ -979,7 +1063,12 @@ const WizardStudentDetail = () => {
           if (value instanceof File) {
             formData.append(key, value);
           } else if (value !== undefined && value !== null) {
-            formData.append(key, value.toString());
+            // Use JSON.stringify for arrays and objects to preserve structure
+            if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
+              formData.append(key, JSON.stringify(value));
+            } else {
+              formData.append(key, value.toString());
+            }
           }
         });
 
@@ -1043,6 +1132,7 @@ const WizardStudentDetail = () => {
           experienceStartDate: '',
           experienceEndDate: '',
           responsibilities: '',
+          experienceCertificateFile: '',
         }));
       }
 
@@ -1102,6 +1192,7 @@ const WizardStudentDetail = () => {
       experienceStartDate: '',
       experienceEndDate: '',
       responsibilities: '',
+      experienceCertificateFile: '',
     }));
     setEditingExperienceIndex(null);
     toast.success('Fill in new work experience details and click Save');
@@ -1113,10 +1204,16 @@ const WizardStudentDetail = () => {
 
     // Convert Unix timestamps (seconds) to date strings for the form
     const formatDateFromTimestamp = (timestamp) => {
-      if (!timestamp) return '';
-      // Backend stores as seconds, convert to milliseconds for JS Date
-      const date = new Date(timestamp * 1000);
-      return date.toISOString().split('T')[0];
+      if (!timestamp || timestamp === 0 || isNaN(timestamp)) return '';
+      try {
+        // Backend stores as seconds, convert to milliseconds for JS Date
+        const date = new Date(timestamp * 1000);
+        if (isNaN(date.getTime())) return '';
+        return date.toISOString().split('T')[0];
+      } catch (error) {
+        console.error('Error formatting date:', error);
+        return '';
+      }
     };
 
     setSectionData(prev => ({
@@ -1128,9 +1225,25 @@ const WizardStudentDetail = () => {
       experienceStartDate: formatDateFromTimestamp(exp.startDate),
       experienceEndDate: formatDateFromTimestamp(exp.endDate),
       responsibilities: exp.responsibilities || '',
+      experienceCertificateFile: exp.experienceCertificateFile || '',
     }));
     setEditingExperienceIndex(index);
     toast.success(`Editing experience: ${exp.companyName}`);
+  };
+
+  // Edit existing additional education
+  const editAdditionalEducation = (index) => {
+    const edu = additionalEducation[index];
+    setSectionData(prev => ({
+      ...prev,
+      additionalEduName: edu.additionalEduName || '',
+      additionalInstitutionName: edu.institutionName || '',
+      additionalPassingYear: edu.passingYear || '',
+      additionalPercentage: edu.percentage || '',
+      additionalMarksheetFile: edu.marksheetFile || '',
+    }));
+    setEditingAdditionalEduIndex(index);
+    toast.success(`Editing additional education: ${edu.additionalEduName}`);
   };
 
   // Handle resume file upload
@@ -1195,6 +1308,8 @@ const WizardStudentDetail = () => {
     setWorkExperiences(validExperiences);
     const validAdditionalEdu = (educationData?.additionalEducation || []).filter(edu => edu !== null);
     setAdditionalEducation(validAdditionalEdu);
+    const validLanguageProficiency = (skillsData?.languageProficiency || []).filter(lang => lang !== null);
+    setLanguageProficiency(validLanguageProficiency);
 
     const firstExperience = validExperiences[0] || {};
     const firstCertificate = validCertificates[0] || {};
@@ -1334,24 +1449,33 @@ const WizardStudentDetail = () => {
       facebookUrl: socialLinksData?.facebookUrl,
       instagramUrl: socialLinksData?.instagramUrl,
 
-      // Work Experience
+      // Work Experience - format dates properly
       totalExperienceMonths: workExperienceData?.totalExperienceMonths || 0,
       companyName: firstExperience.companyName || '',
       jobTitle: firstExperience.jobTitle || '',
       jobType: firstExperience.jobType || '',
       experienceDurationMonths: firstExperience.experienceDurationMonths || 0,
-      experienceStartDate: firstExperience.startDate || '',
-      experienceEndDate: firstExperience.endDate || '',
+      experienceStartDate: firstExperience.startDate && !isNaN(firstExperience.startDate) && firstExperience.startDate > 0
+        ? new Date(firstExperience.startDate * 1000).toISOString().split('T')[0]
+        : '',
+      experienceEndDate: firstExperience.endDate && !isNaN(firstExperience.endDate) && firstExperience.endDate > 0
+        ? new Date(firstExperience.endDate * 1000).toISOString().split('T')[0]
+        : '',
       responsibilities: firstExperience.responsibilities || '',
+      experienceCertificateFile: firstExperience.experienceCertificateFile || '',
 
       // Certificates
       certificationName: firstCertificate.certificationName || '',
       issuingOrganization: firstCertificate.issuingOrganization || '',
-      issueDate: firstCertificate.issueDate || '',
-      expirationDate: firstCertificate.expirationDate || '',
+      issueDate: firstCertificate.issueDate && !isNaN(firstCertificate.issueDate) && firstCertificate.issueDate > 0
+        ? new Date(firstCertificate.issueDate * 1000).toISOString().split('T')[0]
+        : '',
+      expirationDate: firstCertificate.expirationDate && !isNaN(firstCertificate.expirationDate) && firstCertificate.expirationDate > 0
+        ? new Date(firstCertificate.expirationDate * 1000).toISOString().split('T')[0]
+        : '',
       credentialId: firstCertificate.credentialId || '',
       certificateUrl: firstCertificate.certificateUrl || '',
-
+      certificateFile: firstCertificate.certificateFile || '',
       // Documents
       aadharNumber: documentData?.identityDocuments?.aadharNumber,
       panNumber: documentData?.identityDocuments?.panNumber,
@@ -1423,7 +1547,7 @@ const WizardStudentDetail = () => {
                       { value: "female", label: "Female" },
                     ]
                   },
-                  { name: "studentAlternateMobileNo", label: "Alternate Mobile", type: "tel", cols: 3 },
+                  { name: "studentAlternateMobileNo", label: "Alternate Mobile", type: "number", cols: 3 },
                   {
                     name: "studentMaritalStatus", label: "Marital Status", type: "select", cols: 3,
                     options: [
@@ -1458,7 +1582,7 @@ const WizardStudentDetail = () => {
                   { name: "currentDistrict", label: "District", type: "text", cols: 2 },
                   { name: "currentState", label: "State", type: "text", cols: 2 },
                   { name: "currentCountry", label: "Country", type: "text", cols: 2 },
-                  { name: "currentPincode", label: "Pincode", type: "text", cols: 2 },
+                  { name: "currentPincode", label: "Pincode", type: "number", cols: 2 },
 
                   { label: "Permanent Address", type: "divider", cols: 12 },
                   { name: "isPermanentSameAsCurrent", label: "Same as Current", type: "checkbox", cols: 12 },
@@ -1468,7 +1592,7 @@ const WizardStudentDetail = () => {
                   { name: "permanentDistrict", label: "District", type: "text", cols: 2 },
                   { name: "permanentState", label: "State", type: "text", cols: 2 },
                   { name: "permanentCountry", label: "Country", type: "text", cols: 2 },
-                  { name: "permanentPincode", label: "Pincode", type: "text", cols: 2 },
+                  { name: "permanentPincode", label: "Pincode", type: "number", cols: 2 },
                 ]}
               />
 
@@ -1508,7 +1632,19 @@ const WizardStudentDetail = () => {
                   { label: "Body Details", type: "divider", cols: 12 },
                   { name: "heightCm", label: "Height (cm)", type: "number", cols: 2 },
                   { name: "weightKg", label: "Weight (kg)", type: "number", cols: 2 },
-                  { name: "bloodGroup", label: "Blood Group", type: "text", cols: 2 },
+                  {
+                    name: "bloodGroup", label: "Blood Group", type: "select", cols: 2,
+                    options: [
+                      { value: "A+", label: "A+" },
+                      { value: "A-", label: "A-" },
+                      { value: "B+", label: "B+" },
+                      { value: "B-", label: "B-" },
+                      { value: "AB+", label: "AB+" },
+                      { value: "AB-", label: "AB-" },
+                      { value: "O+", label: "O+" },
+                      { value: "O-", label: "O-" },
+                    ]
+                  },
                   { name: "eyeColor", label: "Eye Color", type: "text", cols: 2 },
                   { name: "hairColor", label: "Hair Color", type: "text", cols: 2 },
                   { name: "identificationMark1", label: "Identification Mark 1", type: "text", cols: 6 },
@@ -1533,7 +1669,7 @@ const WizardStudentDetail = () => {
                 fields={[
                   { name: "emergencyContactName", label: "Contact Name", type: "text", cols: 4 },
                   { name: "emergencyRelation", label: "Relation", type: "text", cols: 4 },
-                  { name: "emergencyPhoneNumber", label: "Phone Number", type: "tel", cols: 4 },
+                  { name: "emergencyPhoneNumber", label: "Phone Number", type: "number", cols: 4 },
                   { name: "emergencyAddress", label: "Address", type: "textarea", rows: 2, cols: 12 },
                 ]}
               />
@@ -1552,14 +1688,14 @@ const WizardStudentDetail = () => {
                 fields={[
                   { label: "Father's Information", type: "divider", cols: 12 },
                   { name: "fatherName", label: "Father's Name", type: "text", cols: 4 },
-                  { name: "fatherContactNumber", label: "Contact Number", type: "tel", cols: 4 },
+                  { name: "fatherContactNumber", label: "Contact Number", type: "number", cols: 4 },
                   { name: "fatherOccupation", label: "Occupation", type: "text", cols: 4 },
                   { name: "fatherEmail", label: "Email", type: "email", cols: 4 },
                   { name: "fatherAnnualIncome", label: "Annual Income", type: "number", cols: 4 },
 
                   { label: "Mother's Information", type: "divider", cols: 12 },
                   { name: "motherName", label: "Mother's Name", type: "text", cols: 4 },
-                  { name: "motherContactNumber", label: "Contact Number", type: "tel", cols: 4 },
+                  { name: "motherContactNumber", label: "Contact Number", type: "number", cols: 4 },
                   { name: "motherOccupation", label: "Occupation", type: "text", cols: 4 },
                   { name: "motherEmail", label: "Email", type: "email", cols: 4 },
                   { name: "motherAnnualIncome", label: "Annual Income", type: "number", cols: 4 },
@@ -1567,7 +1703,8 @@ const WizardStudentDetail = () => {
                   { label: "Guardian's Information", type: "divider", cols: 12 },
                   { name: "guardianName", label: "Guardian Name", type: "text", cols: 4 },
                   { name: "guardianRelation", label: "Relation", type: "text", cols: 4 },
-                  { name: "guardianContactNumber", label: "Contact Number", type: "tel", cols: 4 },
+                  { name: "guardianContactNumber", label: "Contact Number", type: "number", cols: 4 },
+                  { label: "Additional's Info", type: "divider", cols: 12 },
                   { name: "numberOfFamilyMembers", label: "Family Members", type: "number", cols: 4 },
                   {
                     name: "familyType", label: "Family Type", type: "select", cols: 4,
@@ -1626,6 +1763,70 @@ const WizardStudentDetail = () => {
                 apiEndpoint={`/student/updateStudentEducationDetails/${id}`}
                 saving={saving}
                 onViewImage={handleViewImage}
+                additionalButtons={[
+                  {
+                    label: "Add New Additional Education",
+                    variant: "primary",
+                    onClick: () => {
+                      setSectionData(prev => ({
+                        ...prev,
+                        additionalEduName: '',
+                        additionalInstitutionName: '',
+                        additionalPassingYear: '',
+                        additionalPercentage: '',
+                        additionalMarksheetFile: '',
+                      }));
+                      toast.success('Fill in new additional education details and click Save');
+                    },
+                    icon: "plus"
+                  }
+                ]}
+                customContent={
+                  <>
+                    {additionalEducation.length > 0 && (
+                      <div className="mb-3">
+                        <h6 className="mb-3">Existing Additional Education ({additionalEducation.length})</h6>
+                        <div className="table-responsive">
+                          <Table bordered hover>
+                            <thead className="table-light">
+                              <tr>
+                                <th style={{ width: '5%' }}>#</th>
+                                <th style={{ width: '40%' }}>Course/Certification Name</th>
+                                <th style={{ width: '30%' }}>Institution</th>
+                                <th style={{ width: '12%' }}>Year</th>
+                                <th style={{ width: '13%' }}>Percentage</th>
+                                <th style={{ width: '10%' }}>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {additionalEducation.map((edu, index) => (
+                                <tr key={index}>
+                                  <td>{index + 1}</td>
+                                  <td>{edu.additionalEduName}</td>
+                                  <td>{edu.institutionName}</td>
+                                  <td>{edu.passingYear}</td>
+                                  <td>{edu.percentage}%</td>
+                                  <td>
+                                    <button
+                                      type="button"
+                                      className="eye-icon"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        editAdditionalEducation(index);
+                                      }}
+                                    >
+                                      <TbEdit />
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </Table>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                }
                 fields={[
                   {
                     name: "highestQualification", label: "Highest Qualification", type: "select", cols: 12,
@@ -1698,11 +1899,111 @@ const WizardStudentDetail = () => {
                 apiEndpoint={`/student/updateStudentSkills/${id}`}
                 saving={saving}
                 onViewImage={handleViewImage}
+                customContent={
+                  <>
+                    {languageProficiency.length > 0 && (
+                      <div className="mb-3">
+                        <h6 className="mb-3">Language Proficiency ({languageProficiency.length})</h6>
+                        <div className="table-responsive">
+                          <Table bordered hover>
+                            <thead className="table-light">
+                              <tr>
+                                <th style={{ width: '5%' }}>#</th>
+                                <th style={{ width: '35%' }}>Language</th>
+                                <th style={{ width: '20%' }}>Read</th>
+                                <th style={{ width: '20%' }}>Write</th>
+                                <th style={{ width: '20%' }}>Speak</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {languageProficiency.map((lang, index) => (
+                                <tr key={index}>
+                                  <td>{index + 1}</td>
+                                  <td>{lang.language}</td>
+                                  <td>{lang.read ? '✓ Yes' : '✗ No'}</td>
+                                  <td>{lang.write ? '✓ Yes' : '✗ No'}</td>
+                                  <td>{lang.speak ? '✓ Yes' : '✗ No'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </Table>
+                        </div>
+                      </div>
+                    )}
+                    <div className="mb-4 p-3 bg-light rounded">
+                      <h6 className="mb-3 text-primary border-bottom pb-2">Add Language Proficiency</h6>
+                      <Row>
+                        <Col xl={4}>
+                          <FormGroup>
+                            <FormLabel>Language</FormLabel>
+                            <FormControl
+                              type="text"
+                              placeholder="e.g., English, Hindi, Marathi"
+                              value={sectionData.newLanguage || ''}
+                              onChange={(e) => handleFieldChange('newLanguage', e.target.value)}
+                            />
+                          </FormGroup>
+                        </Col>
+                        <Col xl={8}>
+                          <FormLabel>Proficiency</FormLabel>
+                          <div className="d-flex gap-4 align-items-center" style={{ marginTop: '8px' }}>
+                            <Form.Check
+                              type="checkbox"
+                              label="Read"
+                              checked={sectionData.newLanguageRead || false}
+                              onChange={(e) => handleFieldChange('newLanguageRead', e.target.checked)}
+                            />
+                            <Form.Check
+                              type="checkbox"
+                              label="Write"
+                              checked={sectionData.newLanguageWrite || false}
+                              onChange={(e) => handleFieldChange('newLanguageWrite', e.target.checked)}
+                            />
+                            <Form.Check
+                              type="checkbox"
+                              label="Speak"
+                              checked={sectionData.newLanguageSpeak || false}
+                              onChange={(e) => handleFieldChange('newLanguageSpeak', e.target.checked)}
+                            />
+                          </div>
+                        </Col>
+                      </Row>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => {
+                          if (!sectionData.newLanguage) {
+                            toast.error('Please enter a language name');
+                            return;
+                          }
+                          const newLang = {
+                            language: sectionData.newLanguage,
+                            read: sectionData.newLanguageRead || false,
+                            write: sectionData.newLanguageWrite || false,
+                            speak: sectionData.newLanguageSpeak || false
+                          };
+                          setLanguageProficiency([...languageProficiency, newLang]);
+                          setSectionData(prev => ({
+                            ...prev,
+                            newLanguage: '',
+                            newLanguageRead: false,
+                            newLanguageWrite: false,
+                            newLanguageSpeak: false
+                          }));
+                          toast.success('Language added! Click Save Changes to save.');
+                        }}
+                      >
+                        <i className="bi bi-plus-circle me-1"></i> Add Language
+                      </Button>
+                    </div>
+                  </>
+                }
                 fields={[
-                  { name: "hobbies", label: "Hobbies", type: "textarea", rows: 2, cols: 12 },
-                  { name: "technicalSkills", label: "Technical Skills", type: "textarea", rows: 2, cols: 12 },
-                  { name: "softSkills", label: "Soft Skills", type: "textarea", rows: 2, cols: 12 },
-                  { name: "computerKnowledge", label: "Computer Knowledge", type: "textarea", rows: 2, cols: 12 },
+                  { name: "hobbies", label: "Hobbies (comma-separated)", type: "textarea", rows: 2, cols: 12 },
+                  { name: "technicalSkills", label: "Technical Skills (comma-separated)", type: "textarea", rows: 2, cols: 12 },
+                  { name: "softSkills", label: "Soft Skills (comma-separated)", type: "textarea", rows: 2, cols: 12 },
+                  { name: "computerKnowledge", label: "Computer Knowledge (comma-separated)", type: "textarea", rows: 2, cols: 12 },
                 ]}
               />
 
@@ -1946,12 +2247,12 @@ const WizardStudentDetail = () => {
                       <i className="bi bi-info-circle me-2"></i>
                       Upload your latest resume in PDF, DOC, or DOCX format. Maximum file size: 10MB.
                     </div>
-                    
+
                     <div className="mb-3">
                       <FormLabel className="fw-semibold mb-2">Select Resume File</FormLabel>
-                      <FileUploader 
-                        files={uploadedResumeFiles} 
-                        setFiles={setUploadedResumeFiles} 
+                      <FileUploader
+                        files={uploadedResumeFiles}
+                        setFiles={setUploadedResumeFiles}
                         multiple={false}
                         maxFileCount={1}
                         accept={{
@@ -1962,8 +2263,8 @@ const WizardStudentDetail = () => {
                         maxSize={10 * 1024 * 1024}
                       />
                       <div className="text-end mt-3">
-                        <Button 
-                          variant="primary" 
+                        <Button
+                          variant="primary"
                           onClick={handleResumeUpload}
                           disabled={saving || uploadedResumeFiles.length === 0}
                         >
@@ -1985,10 +2286,10 @@ const WizardStudentDetail = () => {
                     {sectionData.studentResumeFile && (
                       <div className="alert alert-success mt-3">
                         <i className="bi bi-check-circle me-2"></i>
-                        <strong>Current Resume:</strong> 
-                        <a 
-                          href={sectionData.studentResumeFile} 
-                          target="_blank" 
+                        <strong>Current Resume:</strong>
+                        <a
+                          href={sectionData.studentResumeFile}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="ms-2 text-decoration-underline"
                         >

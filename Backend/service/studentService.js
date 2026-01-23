@@ -768,7 +768,7 @@ exports.updateStudentBankDetails = async (studentId, studentBankData) => {
             fetchStudent.profileCompletion.studentBankData = 1;
             await fetchStudent.save();
         }
-
+        console.log("Student bank details updated for studentId:", studentId, updateStdBankData);
         return {
             status: 200,
             message: 'Student bank detail saved successfully',
@@ -902,7 +902,7 @@ exports.updateStudentCertificates = async (studentId, studentCertificateData) =>
         }
 
         let studentCert = await StudentCertifications.findOne({ studentId });
-
+        console.log("Fetched student certificates:", studentCert);
         // CASE 1: First time student uploads certificates → create document
         if (!studentCert) {
             studentCert = new StudentCertifications({
@@ -911,6 +911,8 @@ exports.updateStudentCertificates = async (studentId, studentCertificateData) =>
                     ? studentCertificateData
                     : [studentCertificateData]
             });
+
+            console.log("Saving new student certificates:", studentCert);
 
             await studentCert.save();
         } else {
@@ -1008,6 +1010,24 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
                 existing.identityDocuments[field] = data[field];
             }
         });
+
+        // Handle identity text fields (aadharNumber, panNumber, etc.)
+        const identityTextFields = [
+            "aadharNumber",
+            "panNumber",
+            "voterId",
+            "passportNumber",
+            "drivingLicenseNo"
+        ];
+
+        identityTextFields.forEach(field => {
+            if (data[field] !== undefined && data[field] !== null) {
+                existing.identityDocuments[field] = data[field];
+            }
+        });
+
+        // Mark identityDocuments as modified so Mongoose saves nested changes
+        existing.markModified('identityDocuments');
 
         existing.updatedAt = currentUnixTimeStamp();
         await existing.save();
@@ -1232,69 +1252,45 @@ exports.updateStudentParentsInfo = async (studentId, studentParentsData) => {
 };
 
 // UPDATE STUDENT SKILLS SERVICE
-exports.updateStudentSkills = async (studentId, studentSkillsData) => {
-    try {
+const cleanArray = (arr = []) =>
+  Array.isArray(arr)
+    ? arr.filter(v => typeof v === "string" && v.trim() !== "")
+    : [];
 
-        const fetchStudent = await studentModel.findById(studentId);
-        if (!fetchStudent) {
-            return {
-                status: 404,
-                message: 'Student not found with the provided ID',
-                jsonData: {}
-            };
-        }
+exports.updateStudentSkills = async (studentId, data) => {
+  try {
+    const updateData = {
+      hobbies: cleanArray(data.hobbies),
+      technicalSkills: cleanArray(data.technicalSkills),
+      softSkills: cleanArray(data.softSkills),
+      computerKnowledge: cleanArray(data.computerKnowledge),
+      languageProficiency: Array.isArray(data.languageProficiency)
+        ? data.languageProficiency
+        : []
+    };
 
-        // Ensure arrays
-        const technicalSkills = Array.isArray(studentSkillsData.technicalSkills)
-            ? studentSkillsData.technicalSkills
-            : (studentSkillsData.technicalSkills ? [studentSkillsData.technicalSkills] : []);
+    const result = await StudentSkills.findOneAndUpdate(
+      { studentId },
+      { $set: updateData },
+      { upsert: true, new: true }
+    );
 
-        const softSkills = Array.isArray(studentSkillsData.softSkills)
-            ? studentSkillsData.softSkills
-            : (studentSkillsData.softSkills ? [studentSkillsData.softSkills] : []);
+    return {
+      status: 200,
+      message: "Student skills updated successfully",
+      data: result
+    };
 
-        const computerKnowledge = Array.isArray(studentSkillsData.computerKnowledge)
-            ? studentSkillsData.computerKnowledge
-            : (studentSkillsData.computerKnowledge ? [studentSkillsData.computerKnowledge] : []);
-
-        const hobbies = Array.isArray(studentSkillsData.hobbies)
-            ? studentSkillsData.hobbies
-            : (studentSkillsData.hobbies ? [studentSkillsData.hobbies] : []);
-
-        const languageProficiency = Array.isArray(studentSkillsData.languageProficiency)
-            ? studentSkillsData.languageProficiency
-            : (studentSkillsData.languageProficiency ? [studentSkillsData.languageProficiency] : []);
-
-        const updateStdSkillData = await StudentSkills.findOneAndUpdate(
-            { studentId },
-            {
-                technicalSkills,
-                softSkills,
-                computerKnowledge,
-                hobbies,
-                languageProficiency,
-                updatedAt: currentUnixTimeStamp()
-            },
-            { new: true, upsert: true, setDefaultsOnInsert: true }
-        );
-
-        fetchStudent.profileCompletion.studentSkillsData = 1;
-        await fetchStudent.save();
-
-        return {
-            status: 200,
-            message: 'Student skills updated successfully',
-            jsonData: updateStdSkillData
-        };
-
-    } catch (error) {
-        return {
-            status: 500,
-            message: 'An error occurred during student skills update',
-            error: error.message
-        };
-    }
+  } catch (error) {
+    console.error("updateStudentSkills error:", error);
+    return {
+      status: 500,
+      message: "An error occurred during student skills update",
+      error: error.message
+    };
+  }
 };
+
 
 // UPDATE STUDENT SOCIAL LINK SERVICE
 exports.updateStudentSocialLink = async (studentId, studentSocial) => {
@@ -1359,33 +1355,54 @@ exports.updateStudentWorkExperience = async (studentId, studentWorkExperienceDat
             experiences = [experiences];
         }
 
-        experiences = experiences
-            .filter(exp => exp && Object.keys(exp).length > 0) // remove empty objects
-            .map(exp => {
-                // Handle startDate: if it's already a number (Unix timestamp), keep it; otherwise convert from string
-                if (exp.startDate) {
-                    if (typeof exp.startDate === 'number') {
-                        // Already a Unix timestamp, keep as is
-                        exp.startDate = exp.startDate;
-                    } else {
-                        // Convert from date string to Unix timestamp in seconds
-                        const timestamp = convertIntoUnixTimeStamp(exp.startDate);
-                        exp.startDate = timestamp ? Math.floor(timestamp / 1000) : null;
+        experiences = await Promise.all(
+            experiences
+                .filter(exp => exp && Object.keys(exp).length > 0) // remove empty objects
+                .map(async (exp) => {
+                    // Handle startDate: if it's already a number (Unix timestamp), keep it; otherwise convert from string
+                    if (exp.startDate) {
+                        if (typeof exp.startDate === 'number') {
+                            // Already a Unix timestamp, keep as is
+                            exp.startDate = exp.startDate;
+                        } else {
+                            // Convert from date string to Unix timestamp in seconds
+                            const timestamp = convertIntoUnixTimeStamp(exp.startDate);
+                            exp.startDate = timestamp ? Math.floor(timestamp / 1000) : null;
+                        }
                     }
-                }
-                // Handle endDate: if it's already a number (Unix timestamp), keep it; otherwise convert from string
-                if (exp.endDate) {
-                    if (typeof exp.endDate === 'number') {
-                        // Already a Unix timestamp, keep as is
-                        exp.endDate = exp.endDate;
-                    } else {
-                        // Convert from date string to Unix timestamp in seconds
-                        const timestamp = convertIntoUnixTimeStamp(exp.endDate);
-                        exp.endDate = timestamp ? Math.floor(timestamp / 1000) : null;
+                    // Handle endDate: if it's already a number (Unix timestamp), keep it; otherwise convert from string
+                    if (exp.endDate) {
+                        if (typeof exp.endDate === 'number') {
+                            // Already a Unix timestamp, keep as is
+                            exp.endDate = exp.endDate;
+                        } else {
+                            // Convert from date string to Unix timestamp in seconds
+                            const timestamp = convertIntoUnixTimeStamp(exp.endDate);
+                            exp.endDate = timestamp ? Math.floor(timestamp / 1000) : null;
+                        }
                     }
-                }
-                return exp;
-            });
+
+                    // Handle certificate file upload (supports both data:URI and pure base64)
+                    if (exp.experienceCertificateFile) {
+                        const fileData = exp.experienceCertificateFile;
+                        // Check if it's a base64 string (with or without data: prefix) and not already a file path
+                        const isBase64 = fileData.startsWith('data:') || 
+                            (fileData.length > 100 && /^[A-Za-z0-9+/=]+$/.test(fileData.replace(/\s/g, '')));
+                        const isFilePath = fileData.startsWith('/') || fileData.startsWith('uploads');
+                        
+                        if (isBase64 && !isFilePath) {
+                            const savedPath = await saveBase64File(
+                                fileData,
+                                'StudentWorkExperience',
+                                `experience_cert_${studentId}_${Date.now()}`
+                            );
+                            exp.experienceCertificateFile = savedPath;
+                        }
+                    }
+
+                    return exp;
+                })
+        );
 
         // Calculate total experience months from all experiences
         const totalExperienceMonths = experiences.reduce((sum, exp) => {

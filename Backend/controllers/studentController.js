@@ -128,6 +128,7 @@ exports.updateStudentBasicDetail = async (req, res) => {
 exports.updateStudentBankDetails = async (req, res) => {
     try {
         const studentId = req.params.studentId;
+        console.log("Updating bank details for studentId:", studentId, "with data:", req.body);
         const result = await studentService.updateStudentBankDetails(studentId, req.body);
         return res.status(result.status).json(result);
     } catch (error) {
@@ -164,6 +165,7 @@ exports.updateStudentCertificates = async (req, res) => {
     try {
         const studentId = req.params.studentId;
         const studentCertificateData = req.body;
+        console.log("Updating certificates for studentId:", studentId, "with data:", studentCertificateData);
         const result = await studentService.updateStudentCertificates(studentId, studentCertificateData);
         return res.status(result.status).json(result);
     } catch (error) {
@@ -231,8 +233,8 @@ exports.updateStudentParentsInfo = async (req, res) => {
 exports.updateStudentSkills = async (req, res) => {
     try {
         const studentId = req.params.studentId;
-        const studentSkillsData = req.body;
-        const result = await studentService.updateStudentSkills(studentId, studentSkillsData);
+        const data = req.body;
+        const result = await studentService.updateStudentSkills(studentId, data);
         return res.status(result.status).json(result);
     } catch (error) {
         return res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
@@ -255,8 +257,20 @@ exports.updateStudentSocialLink = async (req, res) => {
 exports.updateStudentWorkExperience = async (req, res) => {
     try {
         const studentId = req.params.studentId;
-        const studentWorkExperienceData = req.body;
-        const result = await studentService.updateStudentWorkExperience(studentId, studentWorkExperienceData);
+        let data = req.body;
+        
+        // Parse experiences if it's a JSON string (from FormData)
+        if (data.experiences && typeof data.experiences === 'string') {
+            try {
+                data.experiences = JSON.parse(data.experiences);
+            } catch (parseError) {
+                console.error("Failed to parse experiences JSON:", parseError);
+                return res.status(400).json({ status: 400, message: 'Invalid experiences data format' });
+            }
+        }
+        
+        console.log("Updating work experience for studentId:", studentId, "with data:", data);
+        const result = await studentService.updateStudentWorkExperience(studentId, data);
         return res.status(result.status).json(result);
     } catch (error) {
         return res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });

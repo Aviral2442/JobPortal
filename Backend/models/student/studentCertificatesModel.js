@@ -4,8 +4,8 @@ const { currentUnixTimeStamp } = require("../../utils/currentUnixTimeStamp");
 const CertificateItemSchema = new mongoose.Schema({
   certificationName: { type: String, required: true },
   issuingOrganization: { type: String, required: true },
-  issueDate: { type: Date, required: true },
-  expirationDate: { type: Date, default: null },
+  issueDate: { type: Number, required: true },
+  expirationDate: { type: Number, default: null },
   credentialId: { type: String, default: null },
   certificateUrl: { type: String, default: null },
   certificateFile: { type: String }

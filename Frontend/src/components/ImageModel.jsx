@@ -10,7 +10,7 @@ const ImageModal = ({
 }) => {
   const [rotation, setRotation] = useState(0);
   const [scale, setScale] = useState(1);
-  const imgRef = useRef<HTMLImageElement | null>(null);
+  const imgRef = useRef(null);
   const [isPdf, setIsPdf] = useState(false);
 
   // Reset transforms when modal opens or image changes

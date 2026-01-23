@@ -4,7 +4,7 @@ const { currentUnixTimeStamp } = require("../../utils/currentUnixTimeStamp");
 const ExperienceItemSchema = new mongoose.Schema({
   companyName: { type: String, required: true },
   jobTitle: { type: String, required: true },
-  jobType: { type: String, required: true },
+  jobType: { type: String }, // String values: Full-time, Part-time, Contract, Internship, Freelance
 
   experienceDurationMonths: { type: Number, default: 0 },
 
