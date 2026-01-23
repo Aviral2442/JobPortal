@@ -19,7 +19,7 @@ router.put('/updateStudentBankDetails/:studentId', studentController.updateStude
 router.put('/updateStudentBodyDetails/:studentId', studentController.updateStudentBodyDetails);
 router.put('/updateStudentCareerPreferences/:studentId', studentController.updateStudentPreferences);
 router.put('/updateStudentCertificates/:studentId', studentController.updateStudentCertificates);
-router.put('/updateStudentDocumentUpload/:studentId', upload('StudentDocuments').any(), studentController.updateStudentDocumentUpload);
+router.put('/updateStudentDocumentUpload/:studentId', studentController.updateStudentDocumentUpload);
 router.put('/updateStudentEducationDetails/:studentId', studentController.updateStudentEducation);
 router.put('/updateStudentEmergencyContact/:studentId', studentController.updateStudentEmergencyData);
 router.put('/updateStudentParentalInfo/:studentId', studentController.updateStudentParentsInfo);
