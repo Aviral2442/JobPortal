@@ -428,3 +428,22 @@ exports.govAdminCardList = async (req, res) => {
         });
     }
 };
+
+// PSU ADMIN CARD LIST CONTROLLER
+exports.psuAdminCardList = async (req, res) => {
+    try {
+        const result = await JobCategoryService.psuAdminCardList(req.query);
+
+        res.status(200).json({
+            status: 200,
+            message: 'PSU admin card list fetched successfully',
+            jsonData: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};

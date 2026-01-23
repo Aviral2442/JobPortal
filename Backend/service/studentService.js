@@ -961,7 +961,7 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
     try {
         const student = await studentModel.findById(studentId);
         if (!student) {
-            return { status: 404, message: "Student not found" };
+            return { status: 404, message: "Student not found", jsonData: {} };
         }
 
         let existing = await StudentDocumentUpload.findOne({ studentId });

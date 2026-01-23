@@ -177,13 +177,6 @@ exports.updateStudentCertificates = async (req, res) => {
 exports.updateStudentDocumentUpload = async (req, res) => {
     try {
         const studentId = req.params.studentId;
-
-        if (req.files && req.files.length > 0) {
-            req.files.forEach(file => {
-                req.body[file.fieldname] = `/uploads/StudentDocuments/${file.filename}`;
-            });
-        }
-
         const studentDocumentData = req.body;
         const result = await studentService.updateStudentDocumentUpload(studentId, studentDocumentData);
 
