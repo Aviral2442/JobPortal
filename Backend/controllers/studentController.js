@@ -178,6 +178,7 @@ exports.updateStudentDocumentUpload = async (req, res) => {
     try {
         const studentId = req.params.studentId;
         const studentDocumentData = req.body;
+        console.log("Updating documents for studentId:", studentId, "with data:", studentDocumentData);
         const result = await studentService.updateStudentDocumentUpload(studentId, studentDocumentData);
 
         return res.status(result.status).json(result);
@@ -191,6 +192,7 @@ exports.updateStudentDocumentUpload = async (req, res) => {
 exports.updateStudentEducation = async (req, res) => {
     try {
         const studentId = req.params.studentId;
+        console.log(req.body)
         const result = await studentService.updateStudentEducation(studentId, req.body);
         return res.status(result.status).json(result);
     } catch (error) {

@@ -726,63 +726,79 @@ exports.updateStudentBasicDetail = async (studentId, studentBasicDetailData) => 
 
 // UPDATE STUDENT BANK DETAILS SERVICE
 exports.updateStudentBankDetails = async (studentId, studentBankData) => {
-    try {
-
-        const fetchStudent = await studentModel.findById(studentId);
-        if (!fetchStudent) {
-            return {
-                status: 404,
-                message: 'Student not found with the provided ID',
-                jsonData: {}
-            };
-        }
-
-        let studentBankPassbookUrl = null;
-        if (studentBankData.passbookUrl) {
-            studentBankPassbookUrl = saveBase64File(
-                studentBankData.passbookUrl,
-                'StudentBankPassbook',
-                'student'
-            );
-        }
-
-        const updateStdBankData = await StudentBankInfo.findOneAndUpdate(
-            { studentId },
-            {
-                bankHolderName: studentBankData.bankHolderName,
-                bankName: studentBankData.bankName,
-                accountNumber: studentBankData.accountNumber,
-                ifscCode: studentBankData.ifscCode,
-                branchName: studentBankData.branchName,
-                passbookUrl: studentBankPassbookUrl,
-                updatedAt: currentUnixTimeStamp()
-            },
-            {
-                new: true,
-                upsert: true,
-                setDefaultsOnInsert: true
-            }
-        );
-
-        if (studentId) {
-            fetchStudent.profileCompletion.studentBankData = 1;
-            await fetchStudent.save();
-        }
-        console.log("Student bank details updated for studentId:", studentId, updateStdBankData);
-        return {
-            status: 200,
-            message: 'Student bank detail saved successfully',
-            jsonData: updateStdBankData
-        };
-
-    } catch (error) {
-        return {
-            status: 500,
-            message: 'An error occurred during student bank detail update',
-            error: error.message
-        };
+  try {
+    const fetchStudent = await studentModel.findById(studentId);
+    if (!fetchStudent) {
+      return {
+        status: 404,
+        message: "Student not found with the provided ID",
+        jsonData: {}
+      };
     }
+
+    console.log("Received bank data for update:", studentBankData);
+
+    let studentBankPassbookUrl;
+
+    // ✅ Save passbook ONLY if base64 is sent
+    if (studentBankData.passbookBase64) {
+      studentBankPassbookUrl = saveBase64File(
+        studentBankData.passbookBase64,
+        "StudentBankPassbook",
+        "student"
+      );
+    }
+
+    // ✅ Build update object safely
+    const updateData = {
+      bankHolderName: studentBankData.bankHolderName,
+      bankName: studentBankData.bankName,
+      accountNumber: studentBankData.accountNumber,
+      ifscCode: studentBankData.ifscCode,
+      branchName: studentBankData.branchName,
+      updatedAt: currentUnixTimeStamp()
+    };
+
+    // ✅ Only set passbookUrl if new file uploaded
+    if (studentBankPassbookUrl) {
+      updateData.passbookUrl = studentBankPassbookUrl;
+    }
+
+    const updateStdBankData = await StudentBankInfo.findOneAndUpdate(
+      { studentId },
+      { $set: updateData },
+      {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true
+      }
+    );
+
+    // ✅ Profile completion update
+    fetchStudent.profileCompletion.studentBankData = 1;
+    await fetchStudent.save();
+
+    console.log(
+      "Student bank details updated for studentId:",
+      studentId,
+      updateStdBankData
+    );
+
+    return {
+      status: 200,
+      message: "Student bank detail saved successfully",
+      jsonData: updateStdBankData
+    };
+
+  } catch (error) {
+    return {
+      status: 500,
+      message: "An error occurred during student bank detail update",
+      error: error.message
+    };
+  }
 };
+
 
 // UPDATE STUDENT BODY DETAILS SERVICE
 exports.updateStudentBodyDetails = async (studentId, studentBodyDetailsData) => {
@@ -1005,11 +1021,18 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
             "birthCertificateImg"
         ];
 
+        // convent base64 files to urls and update
         identityFileFields.forEach(field => {
             if (data[field]) {
-                existing.identityDocuments[field] = data[field];
+                existing.identityDocuments[field] = saveBase64File(
+                    data[field],
+                    "StudentDocuments",
+                    field
+                );
             }
         });
+
+        
 
         // Handle identity text fields (aadharNumber, panNumber, etc.)
         const identityTextFields = [
@@ -1063,33 +1086,33 @@ exports.updateStudentEducation = async (studentId, studentEducationData) => {
             };
         }
 
-        if (studentEducationData.tenth?.marksheetFile) {
+        if (studentEducationData.tenth?.marksheetBase64) {
             studentEducationData.tenth.marksheetFile = saveBase64File(
-                studentEducationData.tenth.marksheetFile,
+                studentEducationData.tenth.marksheetBase64,
                 "StudentEducation",
                 "tenth"
             );
         }
 
-        if (studentEducationData.twelfth?.marksheetFile) {
+        if (studentEducationData.twelfth?.marksheetBase64) {
             studentEducationData.twelfth.marksheetFile = saveBase64File(
-                studentEducationData.twelfth.marksheetFile,
+                studentEducationData.twelfth.marksheetBase64,
                 "StudentEducation",
                 "twelfth"
             );
         }
 
-        if (studentEducationData.graduation?.marksheetFile) {
+        if (studentEducationData.graduation?.marksheetBase64) {
             studentEducationData.graduation.marksheetFile = saveBase64File(
-                studentEducationData.graduation.marksheetFile,
+                studentEducationData.graduation.marksheetBase64,
                 "StudentEducation",
                 "graduation"
             );
         }
 
-        if (studentEducationData.postGraduation?.marksheetFile) {
+        if (studentEducationData.postGraduation?.marksheetBase64) {
             studentEducationData.postGraduation.marksheetFile = saveBase64File(
-                studentEducationData.postGraduation.marksheetFile,
+                studentEducationData.postGraduation.marksheetBase64,
                 "StudentEducation",
                 "postGraduation"
             );
@@ -1103,9 +1126,9 @@ exports.updateStudentEducation = async (studentId, studentEducationData) => {
                 : [studentEducationData.additionalEducation];
 
             additionalEducation = additionalEducation.map((item) => {
-                if (item.marksheetFile) {
+                if (item.marksheetBase64) {
                     item.marksheetFile = saveBase64File(
-                        item.marksheetFile,
+                        item.marksheetBase64,
                         "StudentEducation",
                         "additional"
                     );

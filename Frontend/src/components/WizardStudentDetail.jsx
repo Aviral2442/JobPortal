@@ -504,6 +504,7 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
   const getPreviewSrc = (base64) => {
     if (!base64) return "";
     if (base64.startsWith("data:")) return base64;
+    const head = "https://jobportal-84q1.onrender.com";
     return `data:image/png;base64,${base64}`;
   };
 
