@@ -975,7 +975,7 @@ exports.jobFullDetailsById = async (jobId) => {
       .populate("job_category", "category_name");
 
     if (!job) {
-      return { status: 404, message: "Job not found" };
+      return { status: 404, message: "Job not found", jsonData: {} };
     }
 
     return {
@@ -988,6 +988,7 @@ exports.jobFullDetailsById = async (jobId) => {
     return {
       status: 500,
       message: "Server error",
+      jsonData: {},
     };
   }
 };
@@ -1156,3 +1157,4 @@ exports.psuAdminCardList = async (query) => {
     data,
   };
 };
+
