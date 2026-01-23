@@ -3,9 +3,8 @@ const path = require("path");
 
 /**
  * Save raw base64 file (IMAGE / PDF)
- * ✔ works with /iVBORw0KGgo...
  * ✔ works without data:mime;base64,
- * ✔ auto-detects file via magic numbers
+ * ✔ detects file via magic numbers
  */
 exports.saveBase64File = (
   base64Data,
@@ -14,34 +13,24 @@ exports.saveBase64File = (
 ) => {
   if (!base64Data || typeof base64Data !== "string") return null;
 
-  let fileData = base64Data.trim();
+  let fileData = base64Data;
   let ext = "bin";
 
-  // 1️⃣ Remove data:mime;base64, if exists
-  const match = fileData.match(/^data:(.+);base64,(.*)$/);
+  // Remove data:mime;base64, if exists
+  const match = base64Data.match(/^data:(.+);base64,(.*)$/);
   if (match) {
     fileData = match[2];
   }
 
-  // 2️⃣ Remove INVALID leading slash (🔥 MAIN FIX 🔥)
-  if (fileData.startsWith("/")) {
-    fileData = fileData.substring(1);
-  }
-
-  // 3️⃣ Normalize base64 (URL-safe → standard)
+  // 2️⃣ CLEAN base64 (🔥 VERY IMPORTANT 🔥) 
   fileData = fileData
     .replace(/\s/g, "")
     .replace(/-/g, "+")
     .replace(/_/g, "/");
 
-  // 4️⃣ Fix missing padding
-  while (fileData.length % 4 !== 0) {
-    fileData += "=";
-  }
-
   const buffer = Buffer.from(fileData, "base64");
 
-  // 5️⃣ Detect file type using magic numbers
+  // Detect file type using magic numbers
   if (buffer.slice(0, 4).toString() === "%PDF") {
     ext = "pdf";
   } else if (buffer.slice(0, 8).toString("hex") === "89504e470d0a1a0a") {
@@ -50,18 +39,19 @@ exports.saveBase64File = (
     ext = "jpg";
   }
 
-  // 6️⃣ Create directory if not exists
+  // Create directory if not exists
   const uploadDir = path.join("uploads", folderName);
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
 
-  // 7️⃣ Create file
+  // Create file name
   const fileName = `${prefix}-${Date.now()}-${Math.random()
     .toString(36)
     .slice(2)}.${ext}`;
 
   const filePath = path.join(uploadDir, fileName);
+
   fs.writeFileSync(filePath, buffer);
 
   return `/${uploadDir}/${fileName}`.replace(/\\/g, "/");
