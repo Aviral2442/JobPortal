@@ -862,7 +862,7 @@ const WizardStudentDetail = () => {
           accountNumber: sectionData.accountNumber || '',
           ifscCode: sectionData.ifscCode || '',
           branchName: sectionData.branchName || '',
-          passbookBase64: sectionData.passbookUrl || '', // Send pure base64
+          passbookUrl: sectionData.passbookUrl || '', // Send pure base64
           extension: sectionData.passbookUrlExtension
         };
 
