@@ -137,10 +137,14 @@ const Register = () => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
 
-    reader.onload = () => {
-      const base64Image = reader.result;
-      setFieldValue("studentProfilePic", base64Image);
-      setProfilePicPreview(base64Image);
+    reader.onloadend = () => {
+      const result = reader.result;
+      const pureBase64 = result.split(',')[1];
+      const extension = file.name.split('.').pop();
+      
+      setFieldValue('studentProfilePic', pureBase64);
+      setProfilePicPreview(result);
+      setProfilePicFile({ base64: pureBase64, extension });
     };
 
     reader.onerror = () => {
@@ -373,7 +377,7 @@ const Register = () => {
                     <Col md={6}>
                       <Form.Group className="mb-3">
                         <Form.Label>
-                          Preferred Job Type <span className="text-danger">*</span>
+                          Preferred Sector<span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Select
                           name="studentJobSector"
@@ -382,7 +386,7 @@ const Register = () => {
                           onBlur={handleBlur}
                           isInvalid={touched.studentJobSector && errors.studentJobSector}
                         >
-                          <option value="">Select Job Type</option>
+                          <option value="">Select Sector</option>
                           {jobTypeList.map((jobType) => (
                             <option key={jobType._id} value={jobType._id}>
                               {jobType.job_sector_name}

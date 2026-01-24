@@ -482,8 +482,18 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
         const reader = new FileReader();
         reader.onloadend = () => {
           const result = reader.result;
-          const pureBase64 = result.split(',')[1];
+          // Extract pure base64 without data:mime;base64, prefix
+          const pureBase64 = result.includes(',') ? result.split(',')[1] : result;
+          
+          // Extract file extension
+          const fileExtension = file.name.split('.').pop().toLowerCase();
+          
+          // Store pure base64 and extension separately
           onChange(field.name, pureBase64);
+          onChange(`${field.name}Extension`, fileExtension);
+          
+          // Store full data URI for preview
+          onChange(`${field.name}Preview`, result);
         };
         reader.onerror = () => {
           toast.error("Failed to read file");
@@ -501,11 +511,27 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
 
 
   // for image/file preview
-  const getPreviewSrc = (base64) => {
-    if (!base64) return "";
-    if (base64.startsWith("data:")) return base64;
-    const head = "https://jobportal-84q1.onrender.com";
-    return `${head}${base64}`;
+  const getPreviewSrc = (fieldName) => {
+    const previewField = `${fieldName}Preview`;
+    const baseValue = value;
+    
+    // If we have a preview data URI stored, use it
+    const previewValue = typeof sectionData !== 'undefined' ? sectionData[previewField] : null;
+    if (previewValue && previewValue.startsWith("data:")) {
+      return previewValue;
+    }
+    
+    // If base value is already a data URI
+    if (baseValue && baseValue.startsWith("data:")) {
+      return baseValue;
+    }
+    
+    // If base value is a file path from backend
+    if (baseValue && (baseValue.startsWith("/") || baseValue.startsWith("uploads"))) {
+      return `http://localhost:5000${baseValue}`;
+    }
+    
+    return "";
   };
 
 
@@ -519,7 +545,7 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
               size="sm"
               variant="link"
               className="p-0 text-primary"
-              onClick={() => onViewImage && onViewImage(getPreviewSrc(value), field.label)}
+              onClick={() => onViewImage && onViewImage(getPreviewSrc(field.name), field.label)}
               title="View uploaded file"
             >
               <TbEye size={20} />
@@ -836,9 +862,11 @@ const WizardStudentDetail = () => {
           accountNumber: sectionData.accountNumber || '',
           ifscCode: sectionData.ifscCode || '',
           branchName: sectionData.branchName || '',
-          passbookBase64: sectionData.passbookUrl || '' // 👈 rename for clarity
+          passbookBase64: sectionData.passbookUrl || '', // Send pure base64
+          extension: sectionData.passbookUrlExtension
         };
 
+        console.log('Bank details payload:', payload);
         await axios.put(endpoint, payload); // JSON ONLY
         toast.success("Bank details saved successfully");
         return;
@@ -891,7 +919,8 @@ const WizardStudentDetail = () => {
             institutionName: sectionData.additionalInstitutionName || '',
             passingYear: sectionData.additionalPassingYear || '',
             percentage: sectionData.additionalPercentage || '',
-            marksheetBase64: sectionData.additionalMarksheetFile || ''
+            marksheetBase64: sectionData.additionalMarksheetFile || '',
+            extension: sectionData.additionalMarksheetFileExtension || 'pdf'
           };
 
           // Add to array if it's new data
@@ -911,7 +940,8 @@ const WizardStudentDetail = () => {
             board: sectionData.tenthBoard || '',
             passingYear: sectionData.tenthPassingYear || '',
             percentage: sectionData.tenthPercentage || '',
-            marksheetBase64: sectionData.tenthMarksheetFile || ''
+            marksheetBase64: sectionData.tenthMarksheetFile || '',
+            extension: sectionData.tenthMarksheetFileExtension || 'pdf'
           },
 
           twelfth: {
@@ -920,7 +950,8 @@ const WizardStudentDetail = () => {
             stream: sectionData.twelfthStream || '',
             passingYear: sectionData.twelfthPassingYear || '',
             percentage: sectionData.twelfthPercentage || '',
-            marksheetBase64: sectionData.twelfthMarksheetFile || ''
+            marksheetBase64: sectionData.twelfthMarksheetFile || '',
+            extension: sectionData.twelfthMarksheetFileExtension || 'pdf'
           },
 
           graduation: {
@@ -929,7 +960,8 @@ const WizardStudentDetail = () => {
             specialization: sectionData.graduationSpecialization || '',
             passingYear: sectionData.graduationPassingYear || '',
             percentage: sectionData.graduationPercentage || '',
-            marksheetBase64: sectionData.graduationMarksheetFile || ''
+            marksheetBase64: sectionData.graduationMarksheetFile || '',
+            extension: sectionData.graduationMarksheetFileExtension || 'pdf'
           },
 
           postGraduation: {
@@ -937,8 +969,9 @@ const WizardStudentDetail = () => {
             courseName: sectionData.postGraduationCourseName || '',
             specialization: sectionData.postGraduationSpecialization || '',
             passingYear: sectionData.postGraduationPassingYear || '',
-            percentage: sectionData.postGraduationPercentage || '',
-            marksheetBase64: sectionData.postGraduationMarksheetFile || ''
+            percentage: sectionData.postGraduationMarksheetFile || '',
+            marksheetBase64: sectionData.postGraduationMarksheetFile || '',
+            extension: sectionData.postGraduationMarksheetFileExtension || 'pdf'
           },
 
           additionalEducation: additionalEduArray
@@ -986,7 +1019,8 @@ const WizardStudentDetail = () => {
             startDate: startTimestamp,
             endDate: endTimestamp,
             responsibilities: payload.responsibilities,
-            experienceCertificateFile: payload.experienceCertificateFile || ''
+            experienceCertificateFile: payload.experienceCertificateFile || '',
+            extension: sectionData.experienceCertificateFileExtension || 'pdf'
           };
 
           if (editingExperienceIndex !== null) {
