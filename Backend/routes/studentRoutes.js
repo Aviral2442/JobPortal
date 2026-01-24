@@ -18,14 +18,14 @@ router.put('/updateStudentBasicDetails/:studentId', studentController.updateStud
 router.put('/updateStudentBankDetails/:studentId', studentController.updateStudentBankDetails);
 router.put('/updateStudentBodyDetails/:studentId', studentController.updateStudentBodyDetails);
 router.put('/updateStudentCareerPreferences/:studentId', studentController.updateStudentPreferences);
-router.put('/updateStudentCertificates/:studentId', upload('certificateFile').single("certificateFile"), studentController.updateStudentCertificates);
-router.put('/updateStudentDocumentUpload/:studentId', upload('StudentDocuments').any(), studentController.updateStudentDocumentUpload);
-router.put('/updateStudentEducationDetails/:studentId', upload('educationDocuments').any(), studentController.updateStudentEducation);
+router.put('/updateStudentCertificates/:studentId', studentController.updateStudentCertificates);
+router.put('/updateStudentDocumentUpload/:studentId', studentController.updateStudentDocumentUpload);
+router.put('/updateStudentEducationDetails/:studentId', studentController.updateStudentEducation);
 router.put('/updateStudentEmergencyContact/:studentId', studentController.updateStudentEmergencyData);
 router.put('/updateStudentParentalInfo/:studentId', studentController.updateStudentParentsInfo);
 router.put('/updateStudentSkills/:studentId', studentController.updateStudentSkills);
 router.put('/updateStudentSocialLinks/:studentId', studentController.updateStudentSocialLink);
-router.put('/updateStudentWorkExperience/:studentId', upload('StudentWorkExperience').single('experienceCertificateFile'), studentController.updateStudentWorkExperience);
+router.put('/updateStudentWorkExperience/:studentId', studentController.updateStudentWorkExperience);
 router.put('/uploadStudentResume/:studentId', studentController.uploadStudentResume);
 router.put('/removeNotification', studentController.studentRemoveNotification);
 router.get('/studentNotifications/:studentId', studentController.notificationListForStudent);
