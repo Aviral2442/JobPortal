@@ -3,8 +3,8 @@ const path = require("path");
 
 exports.saveBase64File = (
   base64Data,
-  folderName = "MiscFiles",
-  fileName = "file",
+  folderName,
+  fileName,
   extension
 ) => {
   // remove data:mime;base64, if present

@@ -726,78 +726,74 @@ exports.updateStudentBasicDetail = async (studentId, studentBasicDetailData) => 
 
 // UPDATE STUDENT BANK DETAILS SERVICE
 exports.updateStudentBankDetails = async (studentId, studentBankData) => {
-  try {
-    const fetchStudent = await studentModel.findById(studentId);
-    if (!fetchStudent) {
-      return {
-        status: 404,
-        message: "Student not found with the provided ID",
-        jsonData: {}
-      };
+    try {
+        const fetchStudent = await studentModel.findById(studentId);
+        if (!fetchStudent) {
+            return {
+                status: 404,
+                message: "Student not found with the provided ID",
+                jsonData: {}
+            };
+        }
+
+        console.log("Received bank data for update:", studentBankData);
+
+        let studentBankPassbookUrl = null;
+
+        if (studentBankData.passbookUrl) {
+            studentBankPassbookUrl = saveBase64File(
+                studentBankData.passbookUrl,
+                "StudentBankPassbook",
+                "student-passbook",
+                studentBankData.extension
+            );
+        }
+
+        const updateData = {
+            bankHolderName: studentBankData.bankHolderName,
+            bankName: studentBankData.bankName,
+            accountNumber: studentBankData.accountNumber,
+            ifscCode: studentBankData.ifscCode,
+            branchName: studentBankData.branchName,
+            updatedAt: currentUnixTimeStamp()
+        };
+
+        if (studentBankPassbookUrl) {
+            updateData.passbookUrl = studentBankPassbookUrl;
+        }
+
+        const updateStdBankData = await StudentBankInfo.findOneAndUpdate(
+            { studentId },
+            { $set: updateData },
+            {
+                new: true,
+                upsert: true,
+                setDefaultsOnInsert: true
+            }
+        );
+
+        fetchStudent.profileCompletion.studentBankData = 1;
+        await fetchStudent.save();
+
+        console.log(
+            "Student bank details updated for studentId:",
+            studentId,
+            updateStdBankData
+        );
+
+        return {
+            status: 200,
+            message: "Student bank detail saved successfully",
+            jsonData: updateStdBankData
+        };
+
+    } catch (error) {
+        return {
+            status: 500,
+            message: "An error occurred during student bank detail update",
+            error: error.message
+        };
     }
-
-    console.log("Received bank data for update:", studentBankData);
-
-    let studentBankPassbookUrl = null;
-
-    // ✅ Save passbook if base64 sent
-    if (studentBankData.passbookBase64) {
-      studentBankPassbookUrl = saveBase64File(
-        studentBankData.passbookBase64,
-        "StudentBankPassbook",
-        "student-passbook",
-        studentBankData.extension
-      );
-    }
-
-    // ✅ Build update object safely
-    const updateData = {
-      bankHolderName: studentBankData.bankHolderName,
-      bankName: studentBankData.bankName,
-      accountNumber: studentBankData.accountNumber,
-      ifscCode: studentBankData.ifscCode,
-      branchName: studentBankData.branchName,
-      updatedAt: currentUnixTimeStamp()
-    };
-
-    // ✅ Only set passbookUrl if new file uploaded
-    if (studentBankPassbookUrl) {
-      updateData.passbookUrl = studentBankPassbookUrl;
-    }
-
-    const updateStdBankData = await StudentBankInfo.findOneAndUpdate(
-      { studentId },
-      { $set: updateData },
-      {
-        new: true,
-        upsert: true,
-        setDefaultsOnInsert: true
-      }
-    );
-
-    // ✅ Profile completion update
-    fetchStudent.profileCompletion.studentBankData = 1;
-    await fetchStudent.save();
-
-    console.log(
-      "Student bank details updated for studentId:",
-      studentId,
-      updateStdBankData
-    );
-
-    return {
-      status: 200,
-      message: "Student bank detail saved successfully",
-      jsonData: updateStdBankData
-    };
-
-  } catch (error) {
-    return {
-      status: 500,
-      message: "An error occurred during student bank detail update",
-      error: error.message
-    };
-  }
 };
 
 
@@ -1033,7 +1029,7 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
             }
         });
 
-        
+
 
         // Handle identity text fields (aadharNumber, panNumber, etc.)
         const identityTextFields = [
@@ -1277,42 +1273,42 @@ exports.updateStudentParentsInfo = async (studentId, studentParentsData) => {
 
 // UPDATE STUDENT SKILLS SERVICE
 const cleanArray = (arr = []) =>
-  Array.isArray(arr)
-    ? arr.filter(v => typeof v === "string" && v.trim() !== "")
-    : [];
+    Array.isArray(arr)
+        ? arr.filter(v => typeof v === "string" && v.trim() !== "")
+        : [];
 
 exports.updateStudentSkills = async (studentId, data) => {
-  try {
-    const updateData = {
-      hobbies: cleanArray(data.hobbies),
-      technicalSkills: cleanArray(data.technicalSkills),
-      softSkills: cleanArray(data.softSkills),
-      computerKnowledge: cleanArray(data.computerKnowledge),
-      languageProficiency: Array.isArray(data.languageProficiency)
-        ? data.languageProficiency
-        : []
-    };
+    try {
+        const updateData = {
+            hobbies: cleanArray(data.hobbies),
+            technicalSkills: cleanArray(data.technicalSkills),
+            softSkills: cleanArray(data.softSkills),
+            computerKnowledge: cleanArray(data.computerKnowledge),
+            languageProficiency: Array.isArray(data.languageProficiency)
+                ? data.languageProficiency
+                : []
+        };
 
-    const result = await StudentSkills.findOneAndUpdate(
-      { studentId },
-      { $set: updateData },
-      { upsert: true, new: true }
-    );
+        const result = await StudentSkills.findOneAndUpdate(
+            { studentId },
+            { $set: updateData },
+            { upsert: true, new: true }
+        );
 
-    return {
-      status: 200,
-      message: "Student skills updated successfully",
-      data: result
-    };
+        return {
+            status: 200,
+            message: "Student skills updated successfully",
+            data: result
+        };
 
-  } catch (error) {
-    console.error("updateStudentSkills error:", error);
-    return {
-      status: 500,
-      message: "An error occurred during student skills update",
-      error: error.message
-    };
-  }
+    } catch (error) {
+        console.error("updateStudentSkills error:", error);
+        return {
+            status: 500,
+            message: "An error occurred during student skills update",
+            error: error.message
+        };
+    }
 };
 
 
@@ -1410,10 +1406,10 @@ exports.updateStudentWorkExperience = async (studentId, studentWorkExperienceDat
                     if (exp.experienceCertificateFile) {
                         const fileData = exp.experienceCertificateFile;
                         // Check if it's a base64 string (with or without data: prefix) and not already a file path
-                        const isBase64 = fileData.startsWith('data:') || 
+                        const isBase64 = fileData.startsWith('data:') ||
                             (fileData.length > 100 && /^[A-Za-z0-9+/=]+$/.test(fileData.replace(/\s/g, '')));
                         const isFilePath = fileData.startsWith('/') || fileData.startsWith('uploads');
-                        
+
                         if (isBase64 && !isFilePath) {
                             const savedPath = await saveBase64File(
                                 fileData,
@@ -1504,7 +1500,7 @@ exports.uploadStudentResume = async (studentId, studentResumeData) => {
         return {
             status: 500,
             message: 'An error occurred during student resume upload',
-            jsonData:{
+            jsonData: {
                 error: error.message
             }
         };
