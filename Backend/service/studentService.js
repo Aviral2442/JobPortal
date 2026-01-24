@@ -738,14 +738,15 @@ exports.updateStudentBankDetails = async (studentId, studentBankData) => {
 
     console.log("Received bank data for update:", studentBankData);
 
-    let studentBankPassbookUrl;
+    let studentBankPassbookUrl = null;
 
-    // ✅ Save passbook ONLY if base64 is sent
+    // ✅ Save passbook if base64 sent
     if (studentBankData.passbookBase64) {
       studentBankPassbookUrl = saveBase64File(
         studentBankData.passbookBase64,
         "StudentBankPassbook",
-        "student"
+        "student-passbook",
+        studentBankData.extension || "pdf"
       );
     }
 

@@ -4,7 +4,8 @@ const path = require("path");
 exports.saveBase64File = (
   base64Data,
   folderName = "MiscFiles",
-  fileName = "file"
+  fileName = "file",
+  extension = "bin" // 👈 extension from user
 ) => {
   // remove data:mime;base64, if present
   const cleanBase64 = base64Data.includes(",")
@@ -17,8 +18,8 @@ exports.saveBase64File = (
   const uploadDir = path.join("uploads", folderName);
   fs.mkdirSync(uploadDir, { recursive: true });
 
-  // save file
-  const finalFileName = `${fileName}-${Date.now()}`;
+  // save file with extension
+  const finalFileName = `${fileName}-${Date.now()}.${extension}`;
   const filePath = path.join(uploadDir, finalFileName);
 
   fs.writeFileSync(filePath, buffer);
