@@ -528,7 +528,7 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
     
     // If base value is a file path from backend
     if (baseValue && (baseValue.startsWith("/") || baseValue.startsWith("uploads"))) {
-      return `http://localhost:5000${baseValue}`;
+      return `https://jobportalbackend-3ew9.onrender.com${baseValue}`;
     }
     
     return "";
