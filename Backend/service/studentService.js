@@ -746,7 +746,7 @@ exports.updateStudentBankDetails = async (studentId, studentBankData) => {
         studentBankData.passbookBase64,
         "StudentBankPassbook",
         "student-passbook",
-        studentBankData.extension || "pdf"
+        studentBankData.extension
       );
     }
 
