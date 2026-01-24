@@ -796,7 +796,6 @@ exports.updateStudentBankDetails = async (studentId, studentBankData) => {
     }
 };
 
-
 // UPDATE STUDENT BODY DETAILS SERVICE
 exports.updateStudentBodyDetails = async (studentId, studentBodyDetailsData) => {
     try {
@@ -1310,7 +1309,6 @@ exports.updateStudentSkills = async (studentId, data) => {
         };
     }
 };
-
 
 // UPDATE STUDENT SOCIAL LINK SERVICE
 exports.updateStudentSocialLink = async (studentId, studentSocial) => {
