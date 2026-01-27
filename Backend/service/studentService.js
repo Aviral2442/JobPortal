@@ -1091,6 +1091,7 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
           data[field],
           "StudentDocuments",
           field,
+          data[`${field}Extension`],
         );
       }
     });
@@ -1150,7 +1151,7 @@ exports.updateStudentEducation = async (studentId, studentEducationData) => {
         studentEducationData.tenth.marksheetFile,
         "StudentEducation",
         "tenth",
-        studentEducationData.tenth.extension
+        studentEducationData.tenth.extension,
       );
     }
 
@@ -1159,7 +1160,7 @@ exports.updateStudentEducation = async (studentId, studentEducationData) => {
         studentEducationData.twelfth.marksheetFile,
         "StudentEducation",
         "twelfth",
-        studentEducationData.twelfth.extension
+        studentEducationData.twelfth.extension,
       );
     }
 
@@ -1168,7 +1169,7 @@ exports.updateStudentEducation = async (studentId, studentEducationData) => {
         studentEducationData.graduation.marksheetFile,
         "StudentEducation",
         "graduation",
-        studentEducationData.graduation.extension
+        studentEducationData.graduation.extension,
       );
     }
 
@@ -1177,7 +1178,7 @@ exports.updateStudentEducation = async (studentId, studentEducationData) => {
         studentEducationData.postGraduation.marksheetFile,
         "StudentEducation",
         "postGraduation",
-        studentEducationData.postGraduation.extension
+        studentEducationData.postGraduation.extension,
       );
     }
 
@@ -1196,7 +1197,7 @@ exports.updateStudentEducation = async (studentId, studentEducationData) => {
             item.marksheetFile,
             "StudentEducation",
             "additional",
-            item.extension
+            item.extension,
           );
         }
         return item;

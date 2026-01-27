@@ -538,19 +538,8 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
   return (
     <Col xl={field.cols || 4}>
       <FormGroup className="mb-3">
-        <FormLabel className="d-flex align-items-center gap-2">
+        <FormLabel>
           {field.label}
-          {field.type === "file" && value && typeof value === "string" && (
-            <Button
-              size="sm"
-              variant="link"
-              className="p-0 text-primary"
-              onClick={() => onViewImage && onViewImage(getPreviewSrc(field.name), field.label)}
-              title="View uploaded file"
-            >
-              <TbEye size={20} />
-            </Button>
-          )}
         </FormLabel>
 
         {field.type === "select" ? (
@@ -599,16 +588,86 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
           />
         ) : field.type === "file" ? (
           <>
+            {value && typeof value === "string" && (
+              <div className="border rounded p-3 mb-2 bg-light d-flex align-items-center justify-content-between">
+                <div className="d-flex align-items-center gap-3">
+                  {/* Preview Thumbnail */}
+                  <div 
+                    className="border rounded bg-white d-flex align-items-center justify-content-center"
+                    style={{ 
+                      width: '80px', 
+                      height: '80px',
+                      overflow: 'hidden',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    {(() => {
+                      const previewSrc = getPreviewSrc(field.name);
+                      const isImage = field.accept?.includes('image') || 
+                                    previewSrc.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
+                                    previewSrc.startsWith('data:image');
+                      
+                      if (isImage && previewSrc) {
+                        return (
+                          <img 
+                            src={previewSrc} 
+                            alt="Preview" 
+                            style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              objectFit: 'cover' 
+                            }} 
+                          />
+                        );
+                      } else {
+                        return (
+                          <div className="text-center text-muted">
+                            <i className="bi bi-file-earmark-text" style={{ fontSize: '2rem' }}></i>
+                          </div>
+                        );
+                      }
+                    })()}
+                  </div>
+                  
+                  {/* File Info */}
+                  <div>
+                    <div className="fw-semibold text-success mb-1">
+                      <i className="bi bi-check-circle-fill me-2"></i>
+                      File Uploaded Successfully
+                    </div>
+                    <small className="text-muted d-block">
+                      Click the eye icon to view full file
+                    </small>
+                  </div>
+                </div>
+                
+                {/* View Button */}
+                <Button
+                  size="sm"
+                  variant="outline-primary"
+                  onClick={() => onViewImage && onViewImage(getPreviewSrc(field.name), field.label)}
+                  title="View uploaded file"
+                  className="d-flex align-items-center gap-1"
+                >
+                  <TbEye size={18} />
+                  View
+                </Button>
+              </div>
+            )}
+            
             <FormControl
               type="file"
               accept={field.accept}
               onChange={handleChange}
               key={value ? 'has-file' : 'no-file'}
               disabled={field.disabled}
+              className={value ? 'mt-2' : ''}
             />
-            {value && typeof value === "string" && (
+            
+            {!value && (
               <small className="text-muted d-block mt-1">
-                File uploaded successfully. Click the eye icon above to view.
+                <i className="bi bi-info-circle me-1"></i>
+                {field.accept ? `Accepted formats: ${field.accept}` : 'Select a file to upload'}
               </small>
             )}
           </>
@@ -796,7 +855,6 @@ const WizardStudentDetail = () => {
         updated.permanentAddressLine1 = prev.currentAddressLine1 || '';
         updated.permanentAddressLine2 = prev.currentAddressLine2 || '';
         updated.permanentCity = prev.currentCity || '';
-        updated.permanentDistrict = prev.currentDistrict || '';
         updated.permanentState = prev.currentState || '';
         updated.permanentCountry = prev.currentCountry || '';
         updated.permanentPincode = prev.currentPincode || '';
@@ -836,7 +894,6 @@ const WizardStudentDetail = () => {
             addressLine1: sectionData.currentAddressLine1 || '',
             addressLine2: sectionData.currentAddressLine2 || '',
             city: sectionData.currentCity || '',
-            district: sectionData.currentDistrict || '',
             state: sectionData.currentState || '',
             country: sectionData.currentCountry || '',
             pincode: sectionData.currentPincode || '',
@@ -845,7 +902,6 @@ const WizardStudentDetail = () => {
             addressLine1: sectionData.permanentAddressLine1 || '',
             addressLine2: sectionData.permanentAddressLine2 || '',
             city: sectionData.permanentCity || '',
-            district: sectionData.permanentDistrict || '',
             state: sectionData.permanentState || '',
             country: sectionData.permanentCountry || '',
             pincode: sectionData.permanentPincode || '',
@@ -1294,11 +1350,23 @@ const WizardStudentDetail = () => {
 
     try {
       setSaving(true);
-      const formData = new FormData();
-      formData.append('studentResumeFile', uploadedResumeFiles[0]);
-      formData.append('extension', uploadedResumeFiles[0].name.split('.').pop().toLowerCase());
+      const file = uploadedResumeFiles[0];
+      const extension = file.name.split('.').pop().toLowerCase();
 
-      const response = await axios.put(`/student/uploadStudentResume/${id}`, formData, {
+      // Convert file to base64
+      const toBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+      });
+
+      const base64String = await toBase64(file);
+
+      const response = await axios.put(`/student/uploadStudentResume/${id}`, {
+        studentResumeFile: base64String,
+        extension: extension
+      }, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -1381,14 +1449,12 @@ const WizardStudentDetail = () => {
       currentAddressLine2: addressData?.current?.addressLine2,
       currentCity: addressData?.current?.city,
       currentState: addressData?.current?.state,
-      currentDistrict: addressData?.current?.district,
       currentCountry: addressData?.current?.country,
       currentPincode: addressData?.current?.pincode,
       permanentAddressLine1: addressData?.permanent?.addressLine1,
       permanentAddressLine2: addressData?.permanent?.addressLine2,
       permanentCity: addressData?.permanent?.city,
       permanentState: addressData?.permanent?.state,
-      permanentDistrict: addressData?.permanent?.district,
       permanentCountry: addressData?.permanent?.country,
       permanentPincode: addressData?.permanent?.pincode,
       isPermanentSameAsCurrent: addressData?.isPermanentSameAsCurrent,
@@ -1621,7 +1687,6 @@ const WizardStudentDetail = () => {
                   { name: "currentAddressLine1", label: "Address Line 1", type: "text", cols: 6 },
                   { name: "currentAddressLine2", label: "Address Line 2", type: "text", cols: 6 },
                   { name: "currentCity", label: "City", type: "text", cols: 2 },
-                  { name: "currentDistrict", label: "District", type: "text", cols: 2 },
                   { name: "currentState", label: "State", type: "text", cols: 2 },
                   { name: "currentCountry", label: "Country", type: "text", cols: 2 },
                   { name: "currentPincode", label: "Pincode", type: "number", cols: 2 },
@@ -1631,7 +1696,6 @@ const WizardStudentDetail = () => {
                   { name: "permanentAddressLine1", label: "Address Line 1", type: "text", cols: 6 },
                   { name: "permanentAddressLine2", label: "Address Line 2", type: "text", cols: 6 },
                   { name: "permanentCity", label: "City", type: "text", cols: 2 },
-                  { name: "permanentDistrict", label: "District", type: "text", cols: 2 },
                   { name: "permanentState", label: "State", type: "text", cols: 2 },
                   { name: "permanentCountry", label: "Country", type: "text", cols: 2 },
                   { name: "permanentPincode", label: "Pincode", type: "number", cols: 2 },
@@ -2331,7 +2395,7 @@ const WizardStudentDetail = () => {
                         <i className="bi bi-check-circle me-2"></i>
                         <strong>Current Resume:</strong>
                         <a
-                          href={`http://localhost:5000${sectionData.studentResumeFile}`}
+                          href={`${sectionData.studentResumeFile}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="ms-2 text-decoration-underline"

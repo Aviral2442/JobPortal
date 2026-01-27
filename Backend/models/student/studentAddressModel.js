@@ -10,7 +10,6 @@ const StudentAddressSchema = new mongoose.Schema({
     addressLine2: String,
     city: String,
     state: String,
-    district: String,
     country: String,
     pincode: String
   },
@@ -20,7 +19,6 @@ const StudentAddressSchema = new mongoose.Schema({
     addressLine2: String,
     city: String,
     state: String,
-    district: String,
     country: String,
     pincode: String
   },
