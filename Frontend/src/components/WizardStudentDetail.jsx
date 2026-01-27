@@ -1062,8 +1062,11 @@ const WizardStudentDetail = () => {
           ? Math.floor(new Date(payload.expirationDate).getTime() / 1000)
           : null;
 
+          console.log("certificate")
+
         payload.issueDate = issueTimestamp;
         payload.expirationDate = expirationTimestamp;
+        payload.extension = sectionData.certificateFileExtension || 'pdf';
 
         // If editing existing certificate, include the certificate ID
         if (editingCertificateIndex !== null) {
@@ -1128,7 +1131,7 @@ const WizardStudentDetail = () => {
         console.log('Sending FormData with files');
         const response = await axios.put(endpoint, formData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': 'application/json',
           },
         });
         console.log('Response:', response.data);
