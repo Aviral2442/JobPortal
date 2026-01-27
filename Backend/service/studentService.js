@@ -1466,23 +1466,12 @@ exports.updateStudentWorkExperience = async (
 
           // Handle certificate file upload (supports both data:URI and pure base64)
           if (exp.experienceCertificateFile) {
-            const fileData = exp.experienceCertificateFile;
-            // Check if it's a base64 string (with or without data: prefix) and not already a file path
-            const isBase64 =
-              fileData.startsWith("data:") ||
-              (fileData.length > 100 &&
-                /^[A-Za-z0-9+/=]+$/.test(fileData.replace(/\s/g, "")));
-            const isFilePath =
-              fileData.startsWith("/") || fileData.startsWith("uploads");
-
-            if (isBase64 && !isFilePath) {
-              const savedPath = await saveBase64File(
-                fileData,
-                "StudentWorkExperience",
-                `experience_cert_${studentId}_${Date.now()}`,
-              );
-              exp.experienceCertificateFile = savedPath;
-            }
+            exp.experienceCertificateFile = saveBase64File(
+              exp.experienceCertificateFile,
+              "StudentWorkExperience",
+              "experience-certificate",
+              exp.extension,
+            );
           }
 
           return exp;
