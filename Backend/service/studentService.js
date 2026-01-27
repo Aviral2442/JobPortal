@@ -1145,35 +1145,39 @@ exports.updateStudentEducation = async (studentId, studentEducationData) => {
       };
     }
 
-    if (studentEducationData.tenth?.marksheetBase64) {
+    if (studentEducationData.tenth?.marksheetFile) {
       studentEducationData.tenth.marksheetFile = saveBase64File(
-        studentEducationData.tenth.marksheetBase64,
+        studentEducationData.tenth.marksheetFile,
         "StudentEducation",
         "tenth",
+        studentEducationData.tenth.extension
       );
     }
 
-    if (studentEducationData.twelfth?.marksheetBase64) {
+    if (studentEducationData.twelfth?.marksheetFile) {
       studentEducationData.twelfth.marksheetFile = saveBase64File(
-        studentEducationData.twelfth.marksheetBase64,
+        studentEducationData.twelfth.marksheetFile,
         "StudentEducation",
         "twelfth",
+        studentEducationData.twelfth.extension
       );
     }
 
-    if (studentEducationData.graduation?.marksheetBase64) {
+    if (studentEducationData.graduation?.marksheetFile) {
       studentEducationData.graduation.marksheetFile = saveBase64File(
-        studentEducationData.graduation.marksheetBase64,
+        studentEducationData.graduation.marksheetFile,
         "StudentEducation",
         "graduation",
+        studentEducationData.graduation.extension
       );
     }
 
-    if (studentEducationData.postGraduation?.marksheetBase64) {
+    if (studentEducationData.postGraduation?.marksheetFile) {
       studentEducationData.postGraduation.marksheetFile = saveBase64File(
-        studentEducationData.postGraduation.marksheetBase64,
+        studentEducationData.postGraduation.marksheetFile,
         "StudentEducation",
         "postGraduation",
+        studentEducationData.postGraduation.extension
       );
     }
 
@@ -1187,11 +1191,12 @@ exports.updateStudentEducation = async (studentId, studentEducationData) => {
         : [studentEducationData.additionalEducation];
 
       additionalEducation = additionalEducation.map((item) => {
-        if (item.marksheetBase64) {
+        if (item.marksheetFile) {
           item.marksheetFile = saveBase64File(
-            item.marksheetBase64,
+            item.marksheetFile,
             "StudentEducation",
             "additional",
+            item.extension
           );
         }
         return item;
@@ -1535,6 +1540,7 @@ exports.uploadStudentResume = async (studentId, studentResumeData) => {
       studentResumeData.studentResumeFile,
       "StudentResume",
       "resume",
+      studentResumeData.extension,
     );
 
     fetchStudent.studentResumeFile = resumeFilePath;

@@ -481,6 +481,7 @@ exports.uploadStudentResume = async (req, res) => {
       studentId,
       req.body,
     );
+    console.log("Upload resume result:", result);
     return res.status(result.status).json(result);
   } catch (error) {
     return res

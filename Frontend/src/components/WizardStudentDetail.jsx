@@ -919,7 +919,7 @@ const WizardStudentDetail = () => {
             institutionName: sectionData.additionalInstitutionName || '',
             passingYear: sectionData.additionalPassingYear || '',
             percentage: sectionData.additionalPercentage || '',
-            marksheetBase64: sectionData.additionalMarksheetFile || '',
+            marksheetFile: sectionData.additionalMarksheetFile || '',
             extension: sectionData.additionalMarksheetFileExtension || 'pdf'
           };
 
@@ -940,7 +940,7 @@ const WizardStudentDetail = () => {
             board: sectionData.tenthBoard || '',
             passingYear: sectionData.tenthPassingYear || '',
             percentage: sectionData.tenthPercentage || '',
-            marksheetBase64: sectionData.tenthMarksheetFile || '',
+            marksheetFile: sectionData.tenthMarksheetFile || '',
             extension: sectionData.tenthMarksheetFileExtension || 'pdf'
           },
 
@@ -950,7 +950,7 @@ const WizardStudentDetail = () => {
             stream: sectionData.twelfthStream || '',
             passingYear: sectionData.twelfthPassingYear || '',
             percentage: sectionData.twelfthPercentage || '',
-            marksheetBase64: sectionData.twelfthMarksheetFile || '',
+            marksheetFile: sectionData.twelfthMarksheetFile || '',
             extension: sectionData.twelfthMarksheetFileExtension || 'pdf'
           },
 
@@ -960,7 +960,7 @@ const WizardStudentDetail = () => {
             specialization: sectionData.graduationSpecialization || '',
             passingYear: sectionData.graduationPassingYear || '',
             percentage: sectionData.graduationPercentage || '',
-            marksheetBase64: sectionData.graduationMarksheetFile || '',
+            marksheetFile: sectionData.graduationMarksheetFile || '',
             extension: sectionData.graduationMarksheetFileExtension || 'pdf'
           },
 
@@ -969,8 +969,8 @@ const WizardStudentDetail = () => {
             courseName: sectionData.postGraduationCourseName || '',
             specialization: sectionData.postGraduationSpecialization || '',
             passingYear: sectionData.postGraduationPassingYear || '',
-            percentage: sectionData.postGraduationMarksheetFile || '',
-            marksheetBase64: sectionData.postGraduationMarksheetFile || '',
+            percentage: sectionData.postGraduationPercentage || '',
+            marksheetFile: sectionData.postGraduationMarksheetFile || '',
             extension: sectionData.postGraduationMarksheetFileExtension || 'pdf'
           },
 
@@ -1019,6 +1019,7 @@ const WizardStudentDetail = () => {
             startDate: startTimestamp,
             endDate: endTimestamp,
             responsibilities: payload.responsibilities,
+            currentlyWorking: sectionData.currentlyWorking || false,
             experienceCertificateFile: payload.experienceCertificateFile || '',
             extension: sectionData.experienceCertificateFileExtension || 'pdf'
           };
@@ -1295,10 +1296,11 @@ const WizardStudentDetail = () => {
       setSaving(true);
       const formData = new FormData();
       formData.append('studentResumeFile', uploadedResumeFiles[0]);
+      formData.append('extension', uploadedResumeFiles[0].name.split('.').pop().toLowerCase());
 
       const response = await axios.put(`/student/uploadStudentResume/${id}`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json',
         },
       });
 
@@ -1307,10 +1309,10 @@ const WizardStudentDetail = () => {
         setUploadedResumeFiles([]);
         // Refresh data to get updated resume file path
         const res = await axios.get(`/student/studentAllDetails/${id}`);
-        if (res.data.data) {
+        if (res.data.jsonData) {
           setSectionData(prev => ({
             ...prev,
-            studentResumeFile: res.data.data.studentResumeFile
+              studentResumeFile: res.data?.jsonData?.studentPrimaryData?.studentResumeFile,
           }));
         }
       }
@@ -1362,6 +1364,7 @@ const WizardStudentDetail = () => {
       accountStatus: data.studentPrimaryData?.accountStatus,
       studentReferralCode: data.studentPrimaryData?.studentReferralCode,
       studentReferralByCode: data.studentPrimaryData?.studentReferralByCode,
+      studentResumeFile: data.studentPrimaryData?.studentResumeFile || '',
       studentCreatedAt: data.studentPrimaryData?.studentCreatedAt,
 
       // Basic Data
@@ -1493,6 +1496,7 @@ const WizardStudentDetail = () => {
       jobTitle: firstExperience.jobTitle || '',
       jobType: firstExperience.jobType || '',
       experienceDurationMonths: firstExperience.experienceDurationMonths || 0,
+      currentlyWorking: firstExperience.currentlyWorking || false,
       experienceStartDate: firstExperience.startDate && !isNaN(firstExperience.startDate) && firstExperience.startDate > 0
         ? new Date(firstExperience.startDate * 1000).toISOString().split('T')[0]
         : '',
@@ -2167,6 +2171,7 @@ const WizardStudentDetail = () => {
                   { name: "experienceStartDate", label: "Start Date", type: "date", cols: 4 },
                   { name: "experienceEndDate", label: "End Date", type: "date", cols: 4 },
                   { name: "experienceCertificateFile", label: "Certificate File", type: "file", cols: 4 },
+                  { name: "currentlyWorking", label: "Currently Working", type: "checkbox", cols: 4 },
                   { name: "responsibilities", label: "Responsibilities", type: "textarea", rows: 3, cols: 12 },
                 ]}
               />
@@ -2326,7 +2331,7 @@ const WizardStudentDetail = () => {
                         <i className="bi bi-check-circle me-2"></i>
                         <strong>Current Resume:</strong>
                         <a
-                          href={sectionData.studentResumeFile}
+                          href={`http://localhost:5000${sectionData.studentResumeFile}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="ms-2 text-decoration-underline"

@@ -5,7 +5,7 @@ exports.saveBase64File = (
   base64Data,
   folderName,
   fileName,
-  extension
+  extension = "jpg"
 ) => {
   // remove data:mime;base64, if present
   const cleanBase64 = base64Data.includes(",")
