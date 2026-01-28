@@ -1128,7 +1128,14 @@ const WizardStudentDetail = () => {
             domicileCertificateImgExtension: sectionData.domicileCertificateImgExtension || '',
             incomeCertificateImgExtension: sectionData.incomeCertificateImgExtension || '',
             birthCertificateImgExtension: sectionData.birthCertificateImgExtension || '',
-          }
+          },
+          // otherDocuments: [
+          //   {
+          //     documentName: sectionData.documentName || '',
+          //     documentFile: sectionData.documentFile || '',
+          //     extension: sectionData.documentFileExtension || ''
+          //   }
+          // ]
         };
 
         console.log('Document upload payload:', payload);
