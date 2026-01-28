@@ -395,16 +395,23 @@ exports.updateStudentSkills = async (req, res) => {
   try {
     const studentId = req.params.studentId;
     const data = req.body;
+
+    if (!studentId) {
+      return res.status(400).json({
+        status: 400,
+        message: "studentId is required"
+      });
+    }
+
     const result = await studentService.updateStudentSkills(studentId, data);
     return res.status(result.status).json(result);
   } catch (error) {
-    return res
-      .status(500)
-      .json({
-        status: 500,
-        message: "Internal server error",
-        error: error.message,
-      });
+    console.error("Controller error:", error);
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      error: error.message
+    });
   }
 };
 

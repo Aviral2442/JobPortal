@@ -1114,9 +1114,9 @@ const WizardStudentDetail = () => {
             aadharFrontImg: sectionData.aadharFrontImg || '',
             aadharBackImg: sectionData.aadharBackImg || '',
             panImg: sectionData.panImg || '',
-            categoryCertificateImg: sectionData.categoryCertificateImg || '',
-            drivingLicenseFrontImg: sectionData.drivingLicenseFrontImg || '',
-            domicileCertificateImg: sectionData.domicileCertificateImg || '',
+            categoryCertificateImg: sectionData.categoryCertificateImg,
+            drivingLicenseFrontImg: sectionData.drivingLicenseFrontImg,
+            domicileCertificateImg: sectionData.domicileCertificateImg,
             incomeCertificateImg: sectionData.incomeCertificateImg || '',
             birthCertificateImg: sectionData.birthCertificateImg || '',
             // Extensions for each file

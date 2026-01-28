@@ -1451,7 +1451,7 @@ exports.updateStudentParentsInfo = async (studentId, studentParentsData) => {
 // UPDATE STUDENT SKILLS SERVICE
 const cleanArray = (arr = []) =>
   Array.isArray(arr)
-    ? arr.filter((v) => typeof v === "string" && v.trim() !== "")
+    ? arr.filter(v => typeof v === "string").map(v => v.trim()).filter(v => v !== "")
     : [];
 
 exports.updateStudentSkills = async (studentId, data) => {
@@ -1463,26 +1463,30 @@ exports.updateStudentSkills = async (studentId, data) => {
       computerKnowledge: cleanArray(data.computerKnowledge),
       languageProficiency: Array.isArray(data.languageProficiency)
         ? data.languageProficiency
-        : [],
+        : []
     };
 
     const result = await StudentSkills.findOneAndUpdate(
       { studentId },
       { $set: updateData },
-      { upsert: true, new: true },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true
+      }
     );
 
     return {
       status: 200,
       message: "Student skills updated successfully",
-      data: result,
+      data: result
     };
   } catch (error) {
     console.error("updateStudentSkills error:", error);
     return {
       status: 500,
       message: "An error occurred during student skills update",
-      error: error.message,
+      error: error.message
     };
   }
 };
