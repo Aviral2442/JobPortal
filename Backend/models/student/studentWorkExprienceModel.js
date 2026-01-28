@@ -7,7 +7,7 @@ const ExperienceItemSchema = new mongoose.Schema({
   jobType: { type: String }, // String values: Full-time, Part-time, Contract, Internship, Freelance
 
   experienceDurationMonths: { type: Number, default: 0 },
-
+  currentlyWorking: { type: Boolean, default: false },
   startDate: { type: Number }, // timestamp
   endDate: { type: Number },   // timestamp
 
