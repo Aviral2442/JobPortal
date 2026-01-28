@@ -16,6 +16,7 @@ const StudentSchema = new mongoose.Schema({
     studentReferralByCode: { type: String, default: null },
     studentOtp: { type: String, default: null },
     studentOtpExpiry: { type: Number, default: null },
+    studentLastLoginType: { type: String, enum: ["manual", "google", "facebook", "linkedin"], default: "manual" },
 
     // 0 = not completed, 1 = completed
     profileCompletion: {

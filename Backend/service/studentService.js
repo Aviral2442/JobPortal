@@ -429,6 +429,47 @@ exports.studentLogin = async (studentLoginData) => {
   }
 };
 
+exports.studentLoginWithOtp = async (studentLoginCredentials) => {
+  try {
+
+    const studentLoginData =  await studentModel.findOne({
+      $or: [
+        { studentEmail: studentLoginCredentials.studentEmailOrMobile },
+        { studentMobileNo: studentLoginCredentials.studentEmailOrMobile },
+      ],
+    });
+
+    if (!studentLoginData) {
+      return {
+        status: 404,
+        message: "Student not found with the provided email or mobile number",
+        jsonData: {
+          IsRedirectToRegister: true,
+        },
+      };
+    }
+
+    const isEmail = studentLoginCredentials.studentEmailOrMobile.includes("@");
+    if (isEmail) {
+      const lowercaseEmail = studentLoginData.studentEmail.toLowerCase();
+    }
+    
+    const generateRandomOTP = () => {
+      return Math.floor(100000 + Math.random() * 900000).toString();
+    };
+
+    const otp = generateRandomOTP();
+    const expiry = Date.now() + 5 * 60 * 1000;
+
+    studentLoginData.studentOtp = otp;
+    studentLoginData.studentOtpExpiry = expiry;
+    await studentLoginData.save();
+
+  } catch (error) {
+    return { status: 500, message: "An error occurred during student login with OTP", error: error.message };
+  }
+};
+
 // STUDENT LOGOUT SERVICE
 exports.studentLogout = async (studentId) => {
   try {
