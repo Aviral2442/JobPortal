@@ -45,6 +45,7 @@ import {
   TbEye,
   TbFile,
   TbEdit,
+  TbTrash,
 } from "react-icons/tb";
 import { formatDate } from "@/components/DateFormat";
 /* ---------------------------------------------------
@@ -796,6 +797,8 @@ const WizardStudentDetail = () => {
   const [careerPreferences, setCareerPreferences] = useState([]);
   const [uploadedResumeFiles, setUploadedResumeFiles] = useState([]);
   const [languageProficiency, setLanguageProficiency] = useState([]);
+  const [otherDocuments, setOtherDocuments] = useState([]);
+  const [editingOtherDocIndex, setEditingOtherDocIndex] = useState(null);
 
 
   const handleViewImage = (imageSrc, title) => {
@@ -1103,6 +1106,28 @@ const WizardStudentDetail = () => {
 
       // 🔥 DOCUMENT UPLOAD FIX - Convert all images to base64 with extensions
       if (endpoint.includes('updateStudentDocumentUpload')) {
+        // Build other documents array from existing entries
+        const otherDocsArray = [...(otherDocuments || [])];
+
+        // If form fields have values, add/update entry
+        if (sectionData.documentName || sectionData.documentFile) {
+          const newDoc = {
+            documentName: sectionData.documentName || '',
+            documentFile: sectionData.documentFile || '',
+            extension: sectionData.documentFileExtension || ''
+          };
+
+          if (editingOtherDocIndex !== null) {
+            // Update existing document
+            otherDocsArray[editingOtherDocIndex] = newDoc;
+            setEditingOtherDocIndex(null);
+          } else {
+            // Add new document
+            otherDocsArray.push(newDoc);
+          }
+          setOtherDocuments(otherDocsArray);
+        }
+
         payload = {
           identityDocuments: {
             aadharNumber: sectionData.aadharNumber || '',
@@ -1129,18 +1154,21 @@ const WizardStudentDetail = () => {
             incomeCertificateImgExtension: sectionData.incomeCertificateImgExtension || '',
             birthCertificateImgExtension: sectionData.birthCertificateImgExtension || '',
           },
-          // otherDocuments: [
-          //   {
-          //     documentName: sectionData.documentName || '',
-          //     documentFile: sectionData.documentFile || '',
-          //     extension: sectionData.documentFileExtension || ''
-          //   }
-          // ]
+          otherDocuments: otherDocsArray
         };
 
         console.log('Document upload payload:', payload);
         await axios.put(endpoint, payload); // JSON ONLY with base64
         toast.success("Documents saved successfully");
+        
+        // Clear other document form fields after save
+        setSectionData(prev => ({
+          ...prev,
+          documentName: '',
+          documentFile: '',
+          extension: ''
+        }));
+        
         return;
       }
 
@@ -1384,6 +1412,75 @@ const WizardStudentDetail = () => {
     toast.success(`Editing additional education: ${edu.additionalEduName}`);
   };
 
+  // Add new other document - clear form
+  const addNewOtherDocument = () => {
+    setSectionData(prev => ({
+      ...prev,
+      documentName: '',
+      documentFile: '',
+      documentFileExtension: ''
+    }));
+    setEditingOtherDocIndex(null);
+    toast.success('Fill in new document details and click Save');
+  };
+
+  // Edit existing other document
+  const editOtherDocument = (index) => {
+    const doc = otherDocuments[index];
+    setSectionData(prev => ({
+      ...prev,
+      documentName: doc.documentName || '',
+      documentFile: doc.documentFile || '',
+      documentFileExtension: doc.extension || ''
+    }));
+    setEditingOtherDocIndex(index);
+    toast.success(`Editing document: ${doc.documentName}`);
+  };
+
+  // Delete other document
+  const deleteOtherDocument = async (index) => {
+    if (!window.confirm('Are you sure you want to delete this document?')) return;
+    
+    try {
+      const updatedDocs = otherDocuments.filter((_, i) => i !== index);
+      setOtherDocuments(updatedDocs);
+      
+      // Save updated list to backend
+      const payload = {
+        identityDocuments: {
+          aadharNumber: sectionData.aadharNumber || '',
+          panNumber: sectionData.panNumber || '',
+          voterId: sectionData.voterId || '',
+          passportNumber: sectionData.passportNumber || '',
+          drivingLicenseNo: sectionData.drivingLicenseNo || '',
+          aadharFrontImg: sectionData.aadharFrontImg || '',
+          aadharBackImg: sectionData.aadharBackImg || '',
+          panImg: sectionData.panImg || '',
+          categoryCertificateImg: sectionData.categoryCertificateImg,
+          drivingLicenseFrontImg: sectionData.drivingLicenseFrontImg,
+          domicileCertificateImg: sectionData.domicileCertificateImg,
+          incomeCertificateImg: sectionData.incomeCertificateImg || '',
+          birthCertificateImg: sectionData.birthCertificateImg || '',
+          aadharFrontImgExtension: sectionData.aadharFrontImgExtension || '',
+          aadharBackImgExtension: sectionData.aadharBackImgExtension || '',
+          panImgExtension: sectionData.panImgExtension || '',
+          categoryCertificateImgExtension: sectionData.categoryCertificateImgExtension || '',
+          drivingLicenseFrontImgExtension: sectionData.drivingLicenseFrontImgExtension || '',
+          domicileCertificateImgExtension: sectionData.domicileCertificateImgExtension || '',
+          incomeCertificateImgExtension: sectionData.incomeCertificateImgExtension || '',
+          birthCertificateImgExtension: sectionData.birthCertificateImgExtension || '',
+        },
+        otherDocuments: updatedDocs
+      };
+      
+      await axios.put(`/student/updateStudentDocumentUpload/${id}`, payload);
+      toast.success('Document deleted successfully');
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error('Failed to delete document');
+    }
+  };
+
   // Handle resume file upload
   const handleResumeUpload = async () => {
     if (!uploadedResumeFiles || uploadedResumeFiles.length === 0) {
@@ -1461,6 +1558,8 @@ const WizardStudentDetail = () => {
     setAdditionalEducation(validAdditionalEdu);
     const validLanguageProficiency = (skillsData?.languageProficiency || []).filter(lang => lang !== null);
     setLanguageProficiency(validLanguageProficiency);
+    const validOtherDocuments = (documentData?.otherDocuments || []).filter(doc => doc !== null);
+    setOtherDocuments(validOtherDocuments);
 
     const firstExperience = validExperiences[0] || {};
     const firstCertificate = validCertificates[0] || {};
@@ -2371,6 +2470,75 @@ const WizardStudentDetail = () => {
                 apiEndpoint={`/student/updateStudentDocumentUpload/${id}`}
                 saving={saving}
                 onViewImage={handleViewImage}
+                additionalButtons={[
+                  {
+                    label: "Add New Document",
+                    variant: "primary",
+                    onClick: addNewOtherDocument,
+                    icon: "plus"
+                  }
+                ]}
+                customContent={
+                  <>
+                    {otherDocuments.length > 0 && (
+                      <div className="mb-4">
+                        <h6 className="mb-3">Other Documents ({otherDocuments.length})</h6>
+                        <div className="table-responsive">
+                          <Table bordered hover>
+                            <thead className="table-light">
+                              <tr>
+                                <th style={{ width: '5%' }}>#</th>
+                                <th style={{ width: '50%' }}>Document Name</th>
+                                <th style={{ width: '15%' }}>File</th>
+                                <th style={{ width: '10%' }}>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {otherDocuments.map((doc, index) => (
+                                <tr key={index} className={editingOtherDocIndex === index ? 'table-active' : ''}>
+                                  <td>{index + 1}</td>
+                                  <td>{doc.documentName}</td>
+                                  <td>
+                                    {doc.documentFile && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline-info"
+                                        onClick={() => handleViewImage(doc.documentFile, doc.documentName)}
+                                      >
+                                        <i className="bi bi-eye"></i> View
+                                      </Button>
+                                    )}
+                                  </td>
+                                  <td>
+                                    <div className="d-flex gap-1">
+                                      <Button
+                                        size="sm"
+                                        variant="outline-primary"
+                                        onClick={() => editOtherDocument(index)}
+                                      >
+                                        <TbEdit/>
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline-danger"
+                                        onClick={() => deleteOtherDocument(index)}
+                                      >
+                                        <TbTrash/>  
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </Table>
+                        </div>
+                      </div>
+                    )}
+                    <h6 className="mb-3 mt-4 text-primary border-bottom pb-2">
+                      {editingOtherDocIndex !== null ? 'Edit' : 'Add'} Other Document
+                    </h6>
+                  </>
+                }
                 fields={[
                   { name: "aadharNumber", label: "Aadhar Number", type: "number", cols: 4 },
                   { name: "panNumber", label: "PAN Number", type: "text", cols: 4 },
@@ -2385,7 +2553,10 @@ const WizardStudentDetail = () => {
                   { name: "categoryCertificateImg", label: "Category Certificate Image", type: "file", cols: 4 },
                   { name: "domicileCertificateImg", label: "Domicile Certificate Image", type: "file", cols: 4 },
                   { name: "incomeCertificateImg", label: "Income Certificate Image", type: "file", cols: 4 },
-                  { name: "birthCertificateImg", label: "Birth Certificate Image", type: "file", cols: 4 }
+                  { name: "birthCertificateImg", label: "Birth Certificate Image", type: "file", cols: 4 },
+                  { label: "Other Documents", type: "divider", cols: 12 },
+                  { name: "documentName", label: "Document Name", type: "text", cols: 6 },
+                  { name: "documentFile", label: "Document File", type: "file", cols: 6 }
                 ]}
               />
 
