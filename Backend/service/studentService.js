@@ -307,15 +307,15 @@ exports.studentRegistration = async (studentData) => {
       studentData.studentReferralByCode = refStudent.studentReferralCode;
     }
 
-        let studentProfilePic = null;
-        if (studentData.studentProfilePic) {
-            studentProfilePic = saveBase64File(
-                studentData.studentProfilePic,
-                'StudentProfile',
-                'student',
-                studentData.extension
-            );
-        }
+    let studentProfilePic = null;
+    if (studentData.studentProfilePic) {
+      studentProfilePic = saveBase64File(
+        studentData.studentProfilePic,
+        "StudentProfile",
+        "student",
+        studentData.extension,
+      );
+    }
 
     const generateRandomReferralCode = async () => {
       const prefix = "CW";
@@ -431,8 +431,7 @@ exports.studentLogin = async (studentLoginData) => {
 
 exports.studentLoginWithOtp = async (studentLoginCredentials) => {
   try {
-
-    const studentLoginData =  await studentModel.findOne({
+    const studentLoginData = await studentModel.findOne({
       $or: [
         { studentEmail: studentLoginCredentials.studentEmailOrMobile },
         { studentMobileNo: studentLoginCredentials.studentEmailOrMobile },
@@ -453,7 +452,7 @@ exports.studentLoginWithOtp = async (studentLoginCredentials) => {
     if (isEmail) {
       const lowercaseEmail = studentLoginData.studentEmail.toLowerCase();
     }
-    
+
     const generateRandomOTP = () => {
       return Math.floor(100000 + Math.random() * 900000).toString();
     };
@@ -465,8 +464,42 @@ exports.studentLoginWithOtp = async (studentLoginCredentials) => {
     studentLoginData.studentOtpExpiry = expiry;
     await studentLoginData.save();
 
+    if (isEmail) {
+      const lowercaseEmail = studentLoginData.studentEmail.toLowerCase();
+      console.log(`Sending OTP to email: ${lowercaseEmail}`, otp); // For testing purposes
+
+      await sendEmailOtp(lowercaseEmail, otp);
+
+      return {
+        status: 200,
+        message: "OTP sent to registered email successfully",
+        jsonData: {
+          studentId: studentLoginData._id,
+          studentEmail: studentLoginData.studentEmail,
+        },
+      };
+    }
+
+    const lowerCaseMobileNO = studentLoginData.studentMobileNo;
+
+    sendMobileOtp(lowerCaseMobileNO, otp);
+
+    if (sendMobileOtp.success === false) {
+      return {
+        status: 500,
+        message: "Failed to send OTP to mobile number",
+        jsonData: {
+          studentId: studentLoginData._id,
+          studentMobileNo: studentLoginData.studentMobileNo,
+        },
+      };
+    }
   } catch (error) {
-    return { status: 500, message: "An error occurred during student login with OTP", error: error.message };
+    return {
+      status: 500,
+      message: "An error occurred during student login with OTP",
+      error: error.message,
+    };
   }
 };
 

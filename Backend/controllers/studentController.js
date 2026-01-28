@@ -62,6 +62,19 @@ exports.studentLogin = async (req, res) => {
   }
 };
 
+// Student Login USING OPT
+exports.studentLoginWithOtp = async (req, res) => {
+  try {
+    const result = await studentService.studentLoginWithOtp(req.body);
+    return res.status(result.status).json(result);
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ status: 500, message: "Internal server error", error: error.message });
+  }
+}
+
+
 // STUDENT LOGOUT CONTROLLER
 exports.studentLogout = async (req, res) => {
   try {

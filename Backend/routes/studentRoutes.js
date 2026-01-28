@@ -8,6 +8,7 @@ router.get('/studentLoginLogoutHistory', studentController.studentLoginLogoutHis
 router.put('/studentAccountProgressMeter/:studentId', studentController.studentProgressMeter);
 router.get('/studentAllDetails/:studentId', studentController.studentAllDetails);
 router.post('/student_registration', studentController.studentRegistration);
+router.post('/studentLoginWithOtp', studentController.studentLoginWithOtp);
 router.post('/student_login', studentController.studentLogin);
 router.post('/studentLogout/:studentId', studentController.studentLogout);
 router.post('/studentForgetPassword', studentController.studentForgetPassword);
