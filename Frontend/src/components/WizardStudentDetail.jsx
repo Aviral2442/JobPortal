@@ -271,7 +271,7 @@ const MultiSelectWithApiSearch = ({ value = [], onChange, placeholder = "Search 
         setLoading(true);
         const response = await fetch(`https://medcab.onrender.com/api/get_city_search?search=${searchTerm}`);
         const data = await response.json();
-
+        // console.log('Fetched cities data:', data.status);  
         if (data.status === 200 && data.jsonData?.city_list) {
           const formatted = data.jsonData.city_list.map(city => ({
             value: city.city_name,
@@ -484,14 +484,14 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
           const result = reader.result;
           // Extract pure base64 without data:mime;base64, prefix
           const pureBase64 = result.includes(',') ? result.split(',')[1] : result;
-          
+
           // Extract file extension
           const fileExtension = file.name.split('.').pop().toLowerCase();
-          
+
           // Store pure base64 and extension separately
           onChange(field.name, pureBase64);
           onChange(`${field.name}Extension`, fileExtension);
-          
+
           // Store full data URI for preview
           onChange(`${field.name}Preview`, result);
         };
@@ -514,23 +514,23 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
   const getPreviewSrc = (fieldName) => {
     const previewField = `${fieldName}Preview`;
     const baseValue = value;
-    
+
     // If we have a preview data URI stored, use it
     const previewValue = typeof sectionData !== 'undefined' ? sectionData[previewField] : null;
     if (previewValue && previewValue.startsWith("data:")) {
       return previewValue;
     }
-    
+
     // If base value is already a data URI
     if (baseValue && baseValue.startsWith("data:")) {
       return baseValue;
     }
-    
+
     // If base value is a file path from backend
     if (baseValue && (baseValue.startsWith("/") || baseValue.startsWith("uploads"))) {
-      return `https://jobportal-84q1.onrender.com${baseValue}`;
+      return `http://localhost:5000${baseValue}`;
     }
-    
+
     return "";
   };
 
@@ -592,10 +592,10 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
               <div className="border rounded p-3 mb-2 bg-light d-flex align-items-center justify-content-between">
                 <div className="d-flex align-items-center gap-3">
                   {/* Preview Thumbnail */}
-                  <div 
+                  <div
                     className="border rounded bg-white d-flex align-items-center justify-content-center"
-                    style={{ 
-                      width: '80px', 
+                    style={{
+                      width: '80px',
                       height: '80px',
                       overflow: 'hidden',
                       boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
@@ -603,20 +603,20 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
                   >
                     {(() => {
                       const previewSrc = getPreviewSrc(field.name);
-                      const isImage = field.accept?.includes('image') || 
-                                    previewSrc.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
-                                    previewSrc.startsWith('data:image');
-                      
+                      const isImage = field.accept?.includes('image') ||
+                        previewSrc.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
+                        previewSrc.startsWith('data:image');
+
                       if (isImage && previewSrc) {
                         return (
-                          <img 
-                            src={previewSrc} 
-                            alt="Preview" 
-                            style={{ 
-                              width: '100%', 
-                              height: '100%', 
-                              objectFit: 'cover' 
-                            }} 
+                          <img
+                            src={previewSrc}
+                            alt="Preview"
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover'
+                            }}
                           />
                         );
                       } else {
@@ -628,7 +628,7 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
                       }
                     })()}
                   </div>
-                  
+
                   {/* File Info */}
                   <div>
                     <div className="fw-semibold text-success mb-1">
@@ -640,7 +640,7 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
                     </small>
                   </div>
                 </div>
-                
+
                 {/* View Button */}
                 <Button
                   size="sm"
@@ -654,7 +654,7 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
                 </Button>
               </div>
             )}
-            
+
             <FormControl
               type="file"
               accept={field.accept}
@@ -663,7 +663,7 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
               disabled={field.disabled}
               className={value ? 'mt-2' : ''}
             />
-            
+
             {!value && (
               <small className="text-muted d-block mt-1">
                 <i className="bi bi-info-circle me-1"></i>
@@ -1104,29 +1104,31 @@ const WizardStudentDetail = () => {
       // 🔥 DOCUMENT UPLOAD FIX - Convert all images to base64 with extensions
       if (endpoint.includes('updateStudentDocumentUpload')) {
         payload = {
-          aadharNumber: sectionData.aadharNumber || '',
-          panNumber: sectionData.panNumber || '',
-          voterId: sectionData.voterId || '',
-          passportNumber: sectionData.passportNumber || '',
-          drivingLicenseNo: sectionData.drivingLicenseNo || '',
-          // Images as base64
-          aadharFrontImg: sectionData.aadharFrontImg || '',
-          aadharBackImg: sectionData.aadharBackImg || '',
-          panImg: sectionData.panImg || '',
-          categoryCertificateImg: sectionData.categoryCertificateImg || '',
-          drivingLicenseFrontImg: sectionData.drivingLicenseFrontImg || '',
-          domicileCertificateImg: sectionData.domicileCertificateImg || '',
-          incomeCertificateImg: sectionData.incomeCertificateImg || '',
-          birthCertificateImg: sectionData.birthCertificateImg || '',
-          // Extensions for each file
-          aadharFrontImgExtension: sectionData.aadharFrontImgExtension || '',
-          aadharBackImgExtension: sectionData.aadharBackImgExtension || '',
-          panImgExtension: sectionData.panImgExtension || '',
-          categoryCertificateImgExtension: sectionData.categoryCertificateImgExtension || '',
-          drivingLicenseFrontImgExtension: sectionData.drivingLicenseFrontImgExtension || '',
-          domicileCertificateImgExtension: sectionData.domicileCertificateImgExtension || '',
-          incomeCertificateImgExtension: sectionData.incomeCertificateImgExtension || '',
-          birthCertificateImgExtension: sectionData.birthCertificateImgExtension || '',
+          identityDocuments: {
+            aadharNumber: sectionData.aadharNumber || '',
+            panNumber: sectionData.panNumber || '',
+            voterId: sectionData.voterId || '',
+            passportNumber: sectionData.passportNumber || '',
+            drivingLicenseNo: sectionData.drivingLicenseNo || '',
+            // Images as base64
+            aadharFrontImg: sectionData.aadharFrontImg || '',
+            aadharBackImg: sectionData.aadharBackImg || '',
+            panImg: sectionData.panImg || '',
+            categoryCertificateImg: sectionData.categoryCertificateImg || '',
+            drivingLicenseFrontImg: sectionData.drivingLicenseFrontImg || '',
+            domicileCertificateImg: sectionData.domicileCertificateImg || '',
+            incomeCertificateImg: sectionData.incomeCertificateImg || '',
+            birthCertificateImg: sectionData.birthCertificateImg || '',
+            // Extensions for each file
+            aadharFrontImgExtension: sectionData.aadharFrontImgExtension || '',
+            aadharBackImgExtension: sectionData.aadharBackImgExtension || '',
+            panImgExtension: sectionData.panImgExtension || '',
+            categoryCertificateImgExtension: sectionData.categoryCertificateImgExtension || '',
+            drivingLicenseFrontImgExtension: sectionData.drivingLicenseFrontImgExtension || '',
+            domicileCertificateImgExtension: sectionData.domicileCertificateImgExtension || '',
+            incomeCertificateImgExtension: sectionData.incomeCertificateImgExtension || '',
+            birthCertificateImgExtension: sectionData.birthCertificateImgExtension || '',
+          }
         };
 
         console.log('Document upload payload:', payload);
@@ -1153,7 +1155,7 @@ const WizardStudentDetail = () => {
           ? Math.floor(new Date(payload.expirationDate).getTime() / 1000)
           : null;
 
-          console.log("certificate")
+        console.log("certificate")
 
         payload.issueDate = issueTimestamp;
         payload.expirationDate = expirationTimestamp;
@@ -1414,7 +1416,7 @@ const WizardStudentDetail = () => {
         if (res.data.jsonData) {
           setSectionData(prev => ({
             ...prev,
-              studentResumeFile: res.data?.jsonData?.studentPrimaryData?.studentResumeFile,
+            studentResumeFile: res.data?.jsonData?.studentPrimaryData?.studentResumeFile,
           }));
         }
       }
