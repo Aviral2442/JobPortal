@@ -272,7 +272,8 @@ exports.studentRegistration = async (studentData) => {
             studentProfilePic = saveBase64File(
                 studentData.studentProfilePic,
                 'StudentProfile',
-                'student'
+                'student',
+                studentData.extension
             );
         }
 
