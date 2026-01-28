@@ -1179,7 +1179,7 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
     // convent base64 files to urls and update
     identityFileFields.forEach((field) => {
       console.log(`Processing field: ${data.identityDocuments[field]}`);
-      if (data.identityDocuments[field] !== undefined && data.identityDocuments[field] !== null) {
+      if (data.identityDocuments[field] !== undefined && data.identityDocuments[field] !== null && data.identityDocuments[field] !== "") {
         console.log(`Saving file for field: ${field}`);
         existing.identityDocuments[field] = saveBase64File(
           data.identityDocuments[field],
