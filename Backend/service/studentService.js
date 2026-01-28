@@ -1112,6 +1112,12 @@ exports.updateStudentCertificates = async (studentId, certificates) => {
   }
 };
 
+// helper: allow only meaningful values
+const hasValue = (val) =>
+  val !== undefined &&
+  val !== null &&
+  (typeof val !== "string" || val.trim() !== "");
+
 // UPDATE STUDENT DOCUMENT UPLOAD SERVICE
 exports.updateStudentDocumentUpload = async (studentId, data) => {
   try {
@@ -1121,50 +1127,20 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
     }
 
     let existing = await StudentDocumentUpload.findOne({ studentId });
-
     if (!existing) {
       existing = new StudentDocumentUpload({ studentId });
     }
 
+    /* ------------------ IDENTITY DOCUMENTS ------------------ */
     if (data.identityDocuments) {
-      const identity = data.identityDocuments;
-
-      existing.identityDocuments = {
-        ...existing.identityDocuments,
-        ...identity,
-      };
-    }
-    
-    if (data.otherDocuments) {
-      const otherArray = data.otherDocuments;
-
-      otherArray.forEach((doc) => {
-
-        if (doc.documentFile) {
-        doc.documentFile = saveBase64File(
-        doc.documentFile,
-        "StudentDocuments",
-        "other-document",
-        doc.extension,
-        );
-      }
-
-      if (doc._id) {
-        const index = existing.otherDocuments.findIndex(
-        (e) => e._id.toString() === doc._id,
-        );
-        if (index !== -1) {
-        existing.otherDocuments[index] = {
-          ...existing.otherDocuments[index]._doc,
-          ...doc,
-        };
+      Object.entries(data.identityDocuments).forEach(([key, value]) => {
+        if (hasValue(value)) {
+          existing.identityDocuments[key] = value;
         }
-      } else {
-        existing.otherDocuments.push(doc);
-      }
       });
     }
 
+    /* ------------------ IDENTITY FILE FIELDS ------------------ */
     const identityFileFields = [
       "aadharFrontImg",
       "aadharBackImg",
@@ -1177,17 +1153,20 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
     ];
 
     identityFileFields.forEach((field) => {
-      console.log(`Processing field: ${data.identityDocuments[field]}`);
-      if (data.identityDocuments[field] !== undefined && data.identityDocuments[field] !== null && data.identityDocuments[field] !== "") {
+      const fileData = data.identityDocuments?.[field];
+      const extension = data.identityDocuments?.[`${field}Extension`];
+
+      if (hasValue(fileData) && hasValue(extension)) {
         existing.identityDocuments[field] = saveBase64File(
-          data.identityDocuments[field],
+          fileData,
           "StudentDocuments",
           field,
-          data.identityDocuments[`${field}Extension`],
+          extension
         );
       }
     });
 
+    /* ------------------ IDENTITY TEXT FIELDS ------------------ */
     const identityTextFields = [
       "aadharNumber",
       "panNumber",
@@ -1197,13 +1176,51 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
     ];
 
     identityTextFields.forEach((field) => {
-      if (data.identityDocuments[field] !== undefined && data.identityDocuments[field] !== null && data.identityDocuments[field] !== "") {
-        existing.identityDocuments[field] = data.identityDocuments[field];
+      const value = data.identityDocuments?.[field];
+      if (hasValue(value)) {
+        existing.identityDocuments[field] = value;
       }
     });
 
+    /* ------------------ OTHER DOCUMENTS ------------------ */
+    if (Array.isArray(data.otherDocuments)) {
+      data.otherDocuments.forEach((doc) => {
+        // save file only if present
+        if (hasValue(doc.documentFile) && hasValue(doc.extension)) {
+          doc.documentFile = saveBase64File(
+            doc.documentFile,
+            "StudentDocuments",
+            "other-document",
+            doc.extension
+          );
+        } else {
+          delete doc.documentFile;
+        }
+
+        if (doc._id) {
+          const index = existing.otherDocuments.findIndex(
+            (e) => e._id.toString() === doc._id
+          );
+
+          if (index !== -1) {
+            Object.entries(doc).forEach(([key, value]) => {
+              if (hasValue(value)) {
+                existing.otherDocuments[index][key] = value;
+              }
+            });
+          }
+        } else {
+          // push only if at least one valid value exists
+          if (Object.values(doc).some(hasValue)) {
+            existing.otherDocuments.push(doc);
+          }
+        }
+      });
+    }
+
+    /* ------------------ FINAL SAVE ------------------ */
     existing.markModified("identityDocuments");
-    
+    existing.markModified("otherDocuments");
     existing.updatedAt = currentUnixTimeStamp();
     await existing.save();
 
@@ -1223,6 +1240,7 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
     };
   }
 };
+
 
 // UPDATE STUDENT EDUCATION SERVICE
 exports.updateStudentEducation = async (studentId, studentEducationData) => {
