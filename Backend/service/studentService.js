@@ -1134,13 +1134,13 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
         ...identity,
       };
     }
-    console.log("Updating other documents:", data.otherDocuments);
+    
     if (data.otherDocuments) {
       const otherArray = data.otherDocuments;
 
       otherArray.forEach((doc) => {
-      // Handle base64 file upload for other documents
-      if (doc.documentFile) {
+
+        if (doc.documentFile) {
         doc.documentFile = saveBase64File(
         doc.documentFile,
         "StudentDocuments",
@@ -1175,12 +1175,10 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
       "incomeCertificateImg",
       "birthCertificateImg",
     ];
-    console.log("Processing identity file fields");
-    // convent base64 files to urls and update
+
     identityFileFields.forEach((field) => {
       console.log(`Processing field: ${data.identityDocuments[field]}`);
       if (data.identityDocuments[field] !== undefined && data.identityDocuments[field] !== null && data.identityDocuments[field] !== "") {
-        console.log(`Saving file for field: ${field}`);
         existing.identityDocuments[field] = saveBase64File(
           data.identityDocuments[field],
           "StudentDocuments",
@@ -1190,7 +1188,6 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
       }
     });
 
-    // Handle identity text fields (aadharNumber, panNumber, etc.)
     const identityTextFields = [
       "aadharNumber",
       "panNumber",
@@ -1200,14 +1197,13 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
     ];
 
     identityTextFields.forEach((field) => {
-      if (data.identityDocuments[field] !== undefined && data.identityDocuments[field] !== null) {
+      if (data.identityDocuments[field] !== undefined && data.identityDocuments[field] !== null && data.identityDocuments[field] !== "") {
         existing.identityDocuments[field] = data.identityDocuments[field];
       }
     });
 
-    // Mark identityDocuments as modified so Mongoose saves nested changes
     existing.markModified("identityDocuments");
-    console.log("Saving updated student document upload");
+    
     existing.updatedAt = currentUnixTimeStamp();
     await existing.save();
 
