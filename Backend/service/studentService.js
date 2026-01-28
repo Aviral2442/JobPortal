@@ -464,6 +464,13 @@ exports.studentLoginWithOtp = async (studentLoginCredentials) => {
     studentLoginData.studentOtpExpiry = expiry;
     await studentLoginData.save();
 
+    const updateLoginHistory = await loginHistory({
+      studentId: studentLoginData._id,
+      loginType: "otpLogin",
+      loginAt: currentUnixTimeStamp(),
+    });
+    await updateLoginHistory.save();
+
     if (isEmail) {
       const lowercaseEmail = studentLoginData.studentEmail.toLowerCase();
       console.log(`Sending OTP to email: ${lowercaseEmail}`, otp); // For testing purposes

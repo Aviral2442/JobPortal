@@ -4,9 +4,9 @@ const { currentUnixTimeStamp } = require('../utils/currentUnixTimeStamp');
 const LoginHistorySchema = new mongoose.Schema({
 
     studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'student', required: true },
+    loginType: { type: String, enum: ["password", "google", "otpLogin"], default: "password" },
     loginAt: { type: Number, default: null },
     logoutAt: { type: Number, default: null },
-
     createdAt: { type: Number, default: () => currentUnixTimeStamp() }
 });
 
