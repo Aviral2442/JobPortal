@@ -307,14 +307,15 @@ exports.studentRegistration = async (studentData) => {
       studentData.studentReferralByCode = refStudent.studentReferralCode;
     }
 
-    let studentProfilePic = null;
-    if (studentData.studentProfilePic) {
-      studentProfilePic = saveBase64File(
-        studentData.studentProfilePic,
-        "StudentProfile",
-        "student",
-      );
-    }
+        let studentProfilePic = null;
+        if (studentData.studentProfilePic) {
+            studentProfilePic = saveBase64File(
+                studentData.studentProfilePic,
+                'StudentProfile',
+                'student',
+                studentData.extension
+            );
+        }
 
     const generateRandomReferralCode = async () => {
       const prefix = "CW";
