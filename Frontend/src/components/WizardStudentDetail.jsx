@@ -528,7 +528,7 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
     
     // If base value is a file path from backend
     if (baseValue && (baseValue.startsWith("/") || baseValue.startsWith("uploads"))) {
-      return `https://jobportalbackend-3ew9.onrender.com${baseValue}`;
+      return `https://jobportal-84q1.onrender.com${baseValue}`;
     }
     
     return "";
@@ -1101,6 +1101,40 @@ const WizardStudentDetail = () => {
         console.log('Work experience payload:', payload);
       }
 
+      // 🔥 DOCUMENT UPLOAD FIX - Convert all images to base64 with extensions
+      if (endpoint.includes('updateStudentDocumentUpload')) {
+        payload = {
+          aadharNumber: sectionData.aadharNumber || '',
+          panNumber: sectionData.panNumber || '',
+          voterId: sectionData.voterId || '',
+          passportNumber: sectionData.passportNumber || '',
+          drivingLicenseNo: sectionData.drivingLicenseNo || '',
+          // Images as base64
+          aadharFrontImg: sectionData.aadharFrontImg || '',
+          aadharBackImg: sectionData.aadharBackImg || '',
+          panImg: sectionData.panImg || '',
+          categoryCertificateImg: sectionData.categoryCertificateImg || '',
+          drivingLicenseFrontImg: sectionData.drivingLicenseFrontImg || '',
+          domicileCertificateImg: sectionData.domicileCertificateImg || '',
+          incomeCertificateImg: sectionData.incomeCertificateImg || '',
+          birthCertificateImg: sectionData.birthCertificateImg || '',
+          // Extensions for each file
+          aadharFrontImgExtension: sectionData.aadharFrontImgExtension || '',
+          aadharBackImgExtension: sectionData.aadharBackImgExtension || '',
+          panImgExtension: sectionData.panImgExtension || '',
+          categoryCertificateImgExtension: sectionData.categoryCertificateImgExtension || '',
+          drivingLicenseFrontImgExtension: sectionData.drivingLicenseFrontImgExtension || '',
+          domicileCertificateImgExtension: sectionData.domicileCertificateImgExtension || '',
+          incomeCertificateImgExtension: sectionData.incomeCertificateImgExtension || '',
+          birthCertificateImgExtension: sectionData.birthCertificateImgExtension || '',
+        };
+
+        console.log('Document upload payload:', payload);
+        await axios.put(endpoint, payload); // JSON ONLY with base64
+        toast.success("Documents saved successfully");
+        return;
+      }
+
       console.log('Endpoint:', endpoint);
       console.log('Payload being sent:', payload);
 
@@ -1590,6 +1624,14 @@ const WizardStudentDetail = () => {
       voterId: documentData?.identityDocuments?.voterId,
       passportNumber: documentData?.identityDocuments?.passportNumber,
       drivingLicenseNo: documentData?.identityDocuments?.drivingLicenseNo,
+      aadharFrontImg: documentData?.identityDocuments?.aadharFrontImg,
+      aadharBackImg: documentData?.identityDocuments?.aadharBackImg,
+      panImg: documentData?.identityDocuments?.panImg,
+      categoryCertificateImg: documentData?.identityDocuments?.categoryCertificateImg,
+      drivingLicenseFrontImg: documentData?.identityDocuments?.drivingLicenseFrontImg,
+      domicileCertificateImg: documentData?.identityDocuments?.domicileCertificateImg,
+      incomeCertificateImg: documentData?.identityDocuments?.incomeCertificateImg,
+      birthCertificateImg: documentData?.identityDocuments?.birthCertificateImg,
     };
   };
 
@@ -2321,14 +2363,14 @@ const WizardStudentDetail = () => {
                 saving={saving}
                 onViewImage={handleViewImage}
                 fields={[
-                  { name: "aadharNumber", label: "Aadhar Number", type: "text", cols: 4 },
+                  { name: "aadharNumber", label: "Aadhar Number", type: "number", cols: 4 },
                   { name: "panNumber", label: "PAN Number", type: "text", cols: 4 },
                   { name: "voterId", label: "Voter ID", type: "text", cols: 4 },
                   { name: "passportNumber", label: "Passport Number", type: "text", cols: 4 },
                   { name: "drivingLicenseNo", label: "Driving License No", type: "text", cols: 4 },
+                  { label: "Documents files", type: "divider", cols: 12 },
                   { name: "aadharFrontImg", label: "Aadhar Front Image", type: "file", cols: 4 },
                   { name: "aadharBackImg", label: "Aadhar Back Image", type: "file", cols: 4 },
-                  { label: "Documents files", type: "divider", cols: 12 },
                   { name: "panImg", label: "PAN Card Image", type: "file", cols: 4 },
                   { name: "drivingLicenseFrontImg", label: "Driving License Front Image", type: "file", cols: 4 },
                   { name: "categoryCertificateImg", label: "Category Certificate Image", type: "file", cols: 4 },
