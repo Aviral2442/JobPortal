@@ -1127,7 +1127,7 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
     }
 
     if (data.identityDocuments) {
-      const identity = JSON.parse(data.identityDocuments);
+      const identity = data.identityDocuments;
 
       existing.identityDocuments = {
         ...existing.identityDocuments,
@@ -1136,7 +1136,7 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
     }
 
     if (data.otherDocuments) {
-      const otherArray = JSON.parse(data.otherDocuments);
+      const otherArray = data.otherDocuments;
 
       otherArray.forEach((doc) => {
         if (doc._id) {
