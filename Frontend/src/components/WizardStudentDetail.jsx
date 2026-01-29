@@ -535,13 +535,24 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
     return "";
   };
 
-  
+
 
   return (
     <Col xl={field.cols || 4}>
       <FormGroup className="mb-3">
-        <FormLabel>
-          {field.label}
+        <FormLabel className="d-flex justify-content-start align-items-center">
+          <span>{field.label}</span>
+          {field.type === "file" && value && typeof value === "string" && (
+            <Button
+              size="sm"
+              variant="link"
+              onClick={() => onViewImage && onViewImage(getPreviewSrc(field.name), field.label)}
+              title="View uploaded file"
+              className="p-0 text-info ms-2 px-1"
+            >
+              <TbEye size={20} />
+            </Button>
+          )}
         </FormLabel>
 
         {field.type === "select" ? (
@@ -590,80 +601,12 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
           />
         ) : field.type === "file" ? (
           <>
-            {value && typeof value === "string" && (
-              <div className="border rounded p-3 mb-2 bg-light d-flex align-items-center justify-content-between">
-                <div className="d-flex align-items-center gap-3">
-                  {/* Preview Thumbnail */}
-                  <div
-                    className="border rounded bg-white d-flex align-items-center justify-content-center"
-                    style={{
-                      width: '80px',
-                      height: '80px',
-                      overflow: 'hidden',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                    }}
-                  >
-                    {(() => {
-                      const previewSrc = getPreviewSrc(field.name);
-                      const isImage = field.accept?.includes('image') ||
-                        previewSrc.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
-                        previewSrc.startsWith('data:image');
-
-                      if (isImage && previewSrc) {
-                        return (
-                          <img
-                            src={previewSrc}
-                            alt="Preview"
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover'
-                            }}
-                          />
-                        );
-                      } else {
-                        return (
-                          <div className="text-center text-muted">
-                            <i className="bi bi-file-earmark-text" style={{ fontSize: '2rem' }}></i>
-                          </div>
-                        );
-                      }
-                    })()}
-                  </div>
-
-                  {/* File Info */}
-                  <div>
-                    <div className="fw-semibold text-success mb-1">
-                      <i className="bi bi-check-circle-fill me-2"></i>
-                      File Uploaded Successfully
-                    </div>
-                    <small className="text-muted d-block">
-                      Click the eye icon to view full file
-                    </small>
-                  </div>
-                </div>
-
-                {/* View Button */}
-                <Button
-                  size="sm"
-                  variant="outline-primary"
-                  onClick={() => onViewImage && onViewImage(getPreviewSrc(field.name), field.label)}
-                  title="View uploaded file"
-                  className="d-flex align-items-center gap-1"
-                >
-                  <TbEye size={18} />
-                  View
-                </Button>
-              </div>
-            )}
-
             <FormControl
               type="file"
               accept={field.accept}
               onChange={handleChange}
               key={value ? 'has-file' : 'no-file'}
               disabled={field.disabled}
-              className={value ? 'mt-2' : ''}
             />
 
             {!value && (
@@ -800,6 +743,7 @@ const WizardStudentDetail = () => {
   const [languageProficiency, setLanguageProficiency] = useState([]);
   const [otherDocuments, setOtherDocuments] = useState([]);
   const [editingOtherDocIndex, setEditingOtherDocIndex] = useState(null);
+  const [profileCompletion, setProfileCompletion] = useState(0);
 
 
   const handleViewImage = (imageSrc, title) => {
@@ -838,6 +782,13 @@ const WizardStudentDetail = () => {
         const res = await axios.get(`/student/studentAllDetails/${id}`);
         console.log("Fetched student details:", res.data);
         const flattened = flattenData(res.data.jsonData);
+        const progress = res.data.jsonData?.studentPrimaryData?.profileCompletion || {};
+        let completeProfile = 0;
+        Object.keys(progress).forEach(item => {
+          if (progress[item]) completeProfile += 1;
+        });
+        const data = ((completeProfile/14) * 100).toFixed(2);
+        setProfileCompletion(data);
         setSectionData(flattened);
       } catch (error) {
         console.error("Error fetching student details:", error);
@@ -1161,7 +1112,7 @@ const WizardStudentDetail = () => {
         console.log('Document upload payload:', payload);
         await axios.put(endpoint, payload); // JSON ONLY with base64
         toast.success("Documents saved successfully");
-        
+
         // Clear other document form fields after save
         setSectionData(prev => ({
           ...prev,
@@ -1169,7 +1120,7 @@ const WizardStudentDetail = () => {
           documentFile: '',
           extension: ''
         }));
-        
+
         return;
       }
 
@@ -1308,6 +1259,16 @@ const WizardStudentDetail = () => {
       const flattened = flattenData(res.data.jsonData);
       setSectionData(flattened);
 
+      // Refresh profile completion progress
+      try {
+        const progressRes = await axios.put(`/student/studentAccountProgressMeter/${id}`);
+        if (progressRes.data.status === 200) {
+          setProfileCompletion(progressRes.data.jsonData?.completionPercentage || 0);
+        }
+      } catch (progressError) {
+        console.error("Error fetching profile completion:", progressError);
+      }
+
     } catch (error) {
       console.error("Error saving data:", error);
       console.error("Error response:", error.response?.data);
@@ -1441,11 +1402,11 @@ const WizardStudentDetail = () => {
   // Delete other document
   const deleteOtherDocument = async (index) => {
     if (!window.confirm('Are you sure you want to delete this document?')) return;
-    
+
     try {
       const updatedDocs = otherDocuments.filter((_, i) => i !== index);
       setOtherDocuments(updatedDocs);
-      
+
       // Save updated list to backend
       const payload = {
         identityDocuments: {
@@ -1473,7 +1434,7 @@ const WizardStudentDetail = () => {
         },
         otherDocuments: updatedDocs
       };
-      
+
       await axios.put(`/student/updateStudentDocumentUpload/${id}`, payload);
       toast.success('Document deleted successfully');
     } catch (error) {
@@ -1751,10 +1712,35 @@ const WizardStudentDetail = () => {
   return (
     <Container fluid>
       {/* <PageTitle title="Student Wizard" subtitle="All student details" /> */}
+      <Row className="mt-4">
+        <Col cols={12}>
+          <ComponentCard title="Profile Completion Status" className="pb-3">
+            <div className="mb-2 d-flex justify-content-between align-items-center">
+              <span className="text-muted">Complete your profile to unlock all features</span>
+              <span className="fw-bold" style={{ fontSize: '1.1rem' }}>
+                {profileCompletion}% Complete
+              </span>
+            </div>
+            <ProgressBar 
+              now={profileCompletion} 
+              label={`${profileCompletion}%`}
+              variant={
+                profileCompletion === 100 ? 'success' :
+                profileCompletion >= 75 ? 'info' :
+                profileCompletion >= 50 ? 'warning' :
+                'danger'
+              }
+              style={{ height: '15px', fontSize: '1rem' }}
+              striped
+              animated={profileCompletion < 100}
+            />
+          </ComponentCard>
+        </Col>
+      </Row>
 
       <Row className="mt-4">
         <Col cols={12}>
-          <ComponentCard title="Student Details Wizard">
+          <ComponentCard title="Student Details">
             <Wizard header={<Header withProgress />}>
               {/* Step 1: Primary Information */}
               <StepSection
@@ -2517,14 +2503,14 @@ const WizardStudentDetail = () => {
                                         variant="outline-primary"
                                         onClick={() => editOtherDocument(index)}
                                       >
-                                        <TbEdit/>
+                                        <TbEdit />
                                       </Button>
                                       <Button
                                         size="sm"
                                         variant="outline-danger"
                                         onClick={() => deleteOtherDocument(index)}
                                       >
-                                        <TbTrash/>  
+                                        <TbTrash />
                                       </Button>
                                     </div>
                                   </td>
