@@ -285,6 +285,8 @@ const saveJobSection = async (req, res) => {
 const uploadJobFiles = async (req, res) => {
   try {
     const { jobId } = req.body;
+    console.log("Uploading files for Job ID:", jobId);
+    console.log("Files received:", req.files);
     if (!jobId) return res.status(400).json({ error: "jobId is required" });
 
     const filePaths = (req.files || []).map((f) => toPublicPath(f.path));

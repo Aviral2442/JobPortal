@@ -453,9 +453,6 @@ exports.studentLoginWithOtp = async (studentLoginCredentials) => {
     }
 
     const isEmail = studentLoginCredentials.studentEmailOrMobile.includes("@");
-    if (isEmail) {
-      const lowercaseEmail = studentLoginData.studentEmail.toLowerCase();
-    }
 
     const generateRandomOTP = () => {
       return Math.floor(100000 + Math.random() * 900000).toString();

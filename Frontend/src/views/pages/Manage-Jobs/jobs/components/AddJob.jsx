@@ -1402,7 +1402,7 @@ export default function AddJob() {
                             <Row key={idx} className="mb-2">
                               <Col md={3}>
                                 <Form.Control
-                                  name={`links.${idx}.type`}
+                                  name={``}
                                   value={l.type}
                                   onChange={handleChange}
                                   placeholder="Type"
