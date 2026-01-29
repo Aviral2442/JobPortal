@@ -209,6 +209,10 @@ exports.studentAllDetails = async (studentId) => {
     const studentBodyData = await StudentBodyDetails.findOne({ studentId });
     const studentPreferencesData = await StudentPreferences.findOne({
       studentId,
+    }).populate({
+      path: "preferredJobCategory",
+      model: "CareerPreferences",
+      select: "careerPreferenceName",
     });
     const studentCertificatesData = await StudentCertifications.findOne({
       studentId,
@@ -1161,7 +1165,7 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
           fileData,
           "StudentDocuments",
           field,
-          extension
+          extension,
         );
       }
     });
@@ -1191,7 +1195,7 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
             doc.documentFile,
             "StudentDocuments",
             "other-document",
-            doc.extension
+            doc.extension,
           );
         } else {
           delete doc.documentFile;
@@ -1199,7 +1203,7 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
 
         if (doc._id) {
           const index = existing.otherDocuments.findIndex(
-            (e) => e._id.toString() === doc._id
+            (e) => e._id.toString() === doc._id,
           );
 
           if (index !== -1) {
@@ -1240,7 +1244,6 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
     };
   }
 };
-
 
 // UPDATE STUDENT EDUCATION SERVICE
 exports.updateStudentEducation = async (studentId, studentEducationData) => {
@@ -1451,7 +1454,10 @@ exports.updateStudentParentsInfo = async (studentId, studentParentsData) => {
 // UPDATE STUDENT SKILLS SERVICE
 const cleanArray = (arr = []) =>
   Array.isArray(arr)
-    ? arr.filter(v => typeof v === "string").map(v => v.trim()).filter(v => v !== "")
+    ? arr
+        .filter((v) => typeof v === "string")
+        .map((v) => v.trim())
+        .filter((v) => v !== "")
     : [];
 
 exports.updateStudentSkills = async (studentId, data) => {
@@ -1463,7 +1469,7 @@ exports.updateStudentSkills = async (studentId, data) => {
       computerKnowledge: cleanArray(data.computerKnowledge),
       languageProficiency: Array.isArray(data.languageProficiency)
         ? data.languageProficiency
-        : []
+        : [],
     };
 
     const result = await StudentSkills.findOneAndUpdate(
@@ -1472,21 +1478,21 @@ exports.updateStudentSkills = async (studentId, data) => {
       {
         new: true,
         upsert: true,
-        runValidators: true
-      }
+        runValidators: true,
+      },
     );
 
     return {
       status: 200,
       message: "Student skills updated successfully",
-      data: result
+      data: result,
     };
   } catch (error) {
     console.error("updateStudentSkills error:", error);
     return {
       status: 500,
       message: "An error occurred during student skills update",
-      error: error.message
+      error: error.message,
     };
   }
 };
