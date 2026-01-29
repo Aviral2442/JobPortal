@@ -435,10 +435,13 @@ exports.studentLogin = async (studentLoginData) => {
 
 exports.studentLoginWithOtp = async (studentLoginCredentials) => {
   try {
+    const input = studentLoginCredentials.studentEmailOrMobile.trim();
+    const isEmail = input.includes("@");
+
     const studentLoginData = await studentModel.findOne({
       $or: [
-        { studentEmail: studentLoginCredentials.studentEmailOrMobile },
-        { studentMobileNo: studentLoginCredentials.studentEmailOrMobile },
+        { studentEmail: input.toLowerCase() },
+        { studentMobileNo: input },
       ],
     });
 
@@ -452,57 +455,66 @@ exports.studentLoginWithOtp = async (studentLoginCredentials) => {
       };
     }
 
-    const isEmail = studentLoginCredentials.studentEmailOrMobile.includes("@");
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = Date.now() + 5 * 60 * 1000; // 5 minutes
 
-    const generateRandomOTP = () => {
-      return Math.floor(100000 + Math.random() * 900000).toString();
-    };
-
-    const otp = generateRandomOTP();
-    const expiry = Date.now() + 5 * 60 * 1000;
-
+    // Save OTP
     studentLoginData.studentOtp = otp;
     studentLoginData.studentOtpExpiry = expiry;
-    await studentLoginData.save();
+    await studentLoginData.save({ validateBeforeSave: false });
 
-    const updateLoginHistory = await loginHistory({
+    // Login history
+    await loginHistory.create({
       studentId: studentLoginData._id,
       loginType: "otpLogin",
       loginAt: currentUnixTimeStamp(),
     });
-    await updateLoginHistory.save();
 
+    // ===== EMAIL OTP =====
     if (isEmail) {
-      const lowercaseEmail = studentLoginData.studentEmail.toLowerCase();
-      console.log(`Sending OTP to email: ${lowercaseEmail}`, otp); // For testing purposes
+      const email = studentLoginData.studentEmail.toLowerCase();
 
-      await sendEmailOtp(lowercaseEmail, otp);
+      console.log(`Sending OTP to email: ${email}`, otp); // remove in prod
+      await sendEmailOtp(email, otp);
 
       return {
         status: 200,
         message: "OTP sent to registered email successfully",
         jsonData: {
           studentId: studentLoginData._id,
-          studentEmail: studentLoginData.studentEmail,
+          studentEmail: email,
         },
       };
     }
 
-    const lowerCaseMobileNO = studentLoginData.studentMobileNo;
+    // ===== MOBILE OTP =====
+    const mobileNo = studentLoginData.studentMobileNo;
 
-    sendMobileOtp(lowerCaseMobileNO, otp);
+    const smsResult = await sendMobileOtp(mobileNo, otp);
 
-    if (sendMobileOtp.success === false) {
+    if (!smsResult || smsResult.success === false) {
       return {
         status: 500,
         message: "Failed to send OTP to mobile number",
         jsonData: {
           studentId: studentLoginData._id,
-          studentMobileNo: studentLoginData.studentMobileNo,
+          studentMobileNo: mobileNo,
         },
       };
     }
+
+    return {
+      status: 200,
+      message: "OTP sent to registered mobile number successfully",
+      jsonData: {
+        studentId: studentLoginData._id,
+        studentMobileNo: mobileNo,
+      },
+    };
+
   } catch (error) {
+    console.error("OTP Login Error:", error);
     return {
       status: 500,
       message: "An error occurred during student login with OTP",
@@ -510,6 +522,7 @@ exports.studentLoginWithOtp = async (studentLoginCredentials) => {
     };
   }
 };
+
 
 // STUDENT LOGOUT SERVICE
 exports.studentLogout = async (studentId) => {
