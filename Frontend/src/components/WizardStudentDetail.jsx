@@ -787,7 +787,7 @@ const WizardStudentDetail = () => {
         Object.keys(progress).forEach(item => {
           if (progress[item]) completeProfile += 1;
         });
-        const data = ((completeProfile/14) * 100).toFixed(2);
+        const data = ((completeProfile / 14) * 100).toFixed(2);
         setProfileCompletion(data);
         setSectionData(flattened);
       } catch (error) {
@@ -1715,22 +1715,16 @@ const WizardStudentDetail = () => {
       <Row className="mt-4">
         <Col cols={12}>
           <ComponentCard title="Profile Completion Status" className="pb-3">
-            <div className="mb-2 d-flex justify-content-between align-items-center">
-              <span className="text-muted">Complete your profile to unlock all features</span>
-              <span className="fw-bold" style={{ fontSize: '1.1rem' }}>
-                {profileCompletion}% Complete
-              </span>
-            </div>
-            <ProgressBar 
-              now={profileCompletion} 
+            <ProgressBar
+              now={profileCompletion}
               label={`${profileCompletion}%`}
               variant={
-                profileCompletion === 100 ? 'success' :
-                profileCompletion >= 75 ? 'info' :
-                profileCompletion >= 50 ? 'warning' :
-                'danger'
+                profileCompletion == 100 ? 'success' :
+                  profileCompletion >= 75 ? 'info' :
+                    profileCompletion >= 50 ? 'warning' :
+                      'danger'
               }
-              style={{ height: '15px', fontSize: '1rem' }}
+              style={{ height: '18px', fontSize: '0.75rem' }}
               striped
               animated={profileCompletion < 100}
             />
@@ -1738,7 +1732,7 @@ const WizardStudentDetail = () => {
         </Col>
       </Row>
 
-      <Row className="mt-4">
+      <Row className="mt-1">
         <Col cols={12}>
           <ComponentCard title="Student Details">
             <Wizard header={<Header withProgress />}>

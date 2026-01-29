@@ -1434,7 +1434,7 @@ exports.updateStudentParentsInfo = async (studentId, studentParentsData) => {
       },
     );
 
-    fetchStudent.profileCompletion.studentParentalData = 1;
+    fetchStudent.profileCompletion.studentParentData = 1;
     await fetchStudent.save();
 
     return {
@@ -1481,7 +1481,11 @@ exports.updateStudentSkills = async (studentId, data) => {
         runValidators: true,
       },
     );
-
+    const fetchStudent = await studentModel.findById(studentId);
+    if (fetchStudent) {
+      fetchStudent.profileCompletion.studentSkillsData = 1;
+      await fetchStudent.save();
+    }
     return {
       status: 200,
       message: "Student skills updated successfully",
