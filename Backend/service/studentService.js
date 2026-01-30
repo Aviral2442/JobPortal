@@ -372,67 +372,6 @@ exports.studentRegistration = async (studentData) => {
   }
 };
 
-// STUDENT LOGIN SERVICE
-// exports.studentLogin = async (studentLoginData) => {
-//   try {
-//     const student = await studentModel.findOne({
-//       $or: [
-//         { studentEmail: studentLoginData.studentEmailOrMobile },
-//         { studentMobileNo: studentLoginData.studentEmailOrMobile },
-//       ],
-//     });
-
-//     if (!student) {
-//       return {
-//         status: 404,
-//         message: "Student not found with the provided email or mobile number",
-//         jsonData: {
-//           IsRedirectToRegister: true,
-//         },
-//       };
-//     }
-
-//     if (student.studentPassword !== studentLoginData.studentPassword) {
-//       return {
-//         status: 401,
-//         message: "Incorrect password",
-//         jsonData: {},
-//       };
-//     }
-
-//     student.lastLoginAt = currentUnixTimeStamp();
-//     await student.save();
-
-//     const saveLoginHistory = await loginHistory({
-//       studentId: student._id,
-//       loginAt: currentUnixTimeStamp(),
-//     });
-
-//     await saveLoginHistory.save();
-
-//     return {
-//       status: 200,
-//       message: "Student logged in successfully",
-//       jsonData: {
-//         studentId: student._id,
-//         studentFirstName: student.studentFirstName,
-//         studentLastName: student.studentLastName,
-//         studentEmail: student.studentEmail,
-//         studentMobileNo: student.studentMobileNo,
-//         studentJobSector: student.studentJobSector,
-//         studentProfilePic: student.studentProfilePic,
-//       },
-//     };
-//   } catch (error) {
-//     console.error("Login Error:", error);
-//     return {
-//       status: 500,
-//       message: "An error occurred during student login",
-//       error: error.message,
-//     };
-//   }
-// };
-
 // STUDENT LOGIN V2 GOOGLE SERVICE
 exports.studentLogin = async (studentLoginData) => {
   try {
@@ -446,7 +385,6 @@ exports.studentLogin = async (studentLoginData) => {
       email = studentLoginData.studentEmailOrMobile.toLowerCase().trim();
     }
 
-    // 🔍 Find student by email or mobile
     let student = await studentModel.findOne({
       $or: [
         { studentEmail: email },
@@ -454,10 +392,8 @@ exports.studentLogin = async (studentLoginData) => {
       ],
     });
 
-    // ================= GOOGLE LOGIN =================
     if (provider === "google") {
       if (!student) {
-        // 🆕 Create new Google user
         student = await studentModel.create({
           studentFirstName: studentLoginData.studentFirstName,
           studentLastName: studentLoginData.studentLastName || "",
@@ -465,17 +401,13 @@ exports.studentLogin = async (studentLoginData) => {
           studentProfilePic: studentLoginData.studentProfilePic || "",
           studentLastLoginType: studentLoginData.provider,
           studentJobSector: "697c55559f27582a27b27c2a",
-          // studentPassword: "",
-          // studentMobileNo: "",
         });
       } else {
-        // ✅ Existing user
         student.studentLastLoginType = "google";
         await student.save();
       }
     }
 
-    // ================= PASSWORD LOGIN =================
     else if (provider === "password") {
       if (!student) {
         return {
@@ -484,7 +416,6 @@ exports.studentLogin = async (studentLoginData) => {
         };
       }
 
-      // 🔐 SIMPLE STRING PASSWORD CHECK
       if (student.studentPassword !== studentLoginData.studentPassword) {
         return {
           status: 401,
@@ -496,33 +427,6 @@ exports.studentLogin = async (studentLoginData) => {
       await student.save();
     }
 
-    // ================= OTP LOGIN =================
-    else if (provider === "otpLogin") {
-      if (!student) {
-        return {
-          status: 404,
-          message: "Student not found",
-        };
-      }
-
-      if (
-        student.studentOtp !== studentLoginData.otp ||
-        student.studentOtpExpiry < Date.now()
-      ) {
-        return {
-          status: 401,
-          message: "Invalid or expired OTP",
-        };
-      }
-
-      // Clear OTP after success
-      student.studentOtp = null;
-      student.studentOtpExpiry = null;
-      student.studentLastLoginType = "otpLogin";
-      await student.save();
-    }
-
-    // ================= INVALID PROVIDER =================
     else {
       return {
         status: 400,
@@ -530,7 +434,6 @@ exports.studentLogin = async (studentLoginData) => {
       };
     }
 
-    // ================= SUCCESS RESPONSE =================
     return {
       status: 200,
       message: "Login successful",
@@ -545,8 +448,8 @@ exports.studentLogin = async (studentLoginData) => {
         studentLastLoginType: student.studentLastLoginType,
       },
     };
+
   } catch (error) {
-    console.error("Login Error:", error);
     return {
       status: 500,
       message: "An error occurred during student login",
@@ -1582,9 +1485,9 @@ exports.updateStudentParentsInfo = async (studentId, studentParentsData) => {
 const cleanArray = (arr = []) =>
   Array.isArray(arr)
     ? arr
-        .filter((v) => typeof v === "string")
-        .map((v) => v.trim())
-        .filter((v) => v !== "")
+      .filter((v) => typeof v === "string")
+      .map((v) => v.trim())
+      .filter((v) => v !== "")
     : [];
 
 exports.updateStudentSkills = async (studentId, data) => {
