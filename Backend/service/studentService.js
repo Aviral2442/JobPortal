@@ -719,6 +719,36 @@ exports.verifyStudentOtp = async (studentOtpData) => {
     studentEmailOrMobile.studentOtpExpiry = null;
     await studentEmailOrMobile.save();
 
+    if (studentOtpData.loginProvider === "otpLogin") {
+
+      const saveLoginData = await studentModel.findById(studentEmailOrMobile._id);
+      saveLoginData.studentLastLoginType = "otpLogin";
+      saveLoginData.lastLoginAt = currentUnixTimeStamp();
+      await saveLoginData.save();
+
+      const saveLoginHistory = await loginHistory({
+        studentId: studentEmailOrMobile._id,
+        loginType: "otpLogin",
+        loginAt: currentUnixTimeStamp(),
+        createdAt: currentUnixTimeStamp(),
+      });
+      await saveLoginHistory.save()
+
+      return {
+        status: 200,
+        message: "OTP verified successfully",
+        jsonData: {
+          studentId: studentEmailOrMobile._id,
+          studentFirstName: studentEmailOrMobile.studentFirstName,
+          studentLastName: studentEmailOrMobile.studentLastName,
+          studentEmail: studentEmailOrMobile.studentEmail,
+          studentMobileNo: studentEmailOrMobile.studentMobileNo,
+          studentProfilePic: studentEmailOrMobile.studentProfilePic,
+          studentJobSector: studentEmailOrMobile.studentJobSector,
+        }
+      }
+    }
+
     return {
       status: 200,
       message: "OTP verified successfully",
