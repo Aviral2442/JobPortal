@@ -599,7 +599,7 @@ exports.recommendJobsForStudent = async (studentId) => {
       job_sector: studentSector,
       jobRecommendation: true,
     })
-      .select("job_title job_short_desc job_posted_date job_category job_sector job_type job_vacancy_total")
+      .select("job_title job_short_desc job_posted_date job_category job_sector job_type")
       .populate({
         path: "job_category",
         model: "JobCategory",
@@ -662,7 +662,7 @@ exports.featuredJobsForStudent = async (studentId) => {
       jobFeatured: true,
     })
       .select(
-        "job_title job_short_desc job_posted_date job_category job_sector job_type job_vacancy_total"
+        "job_title job_short_desc job_posted_date job_category job_sector job_type"
       )
       .populate({
         path: "job_category",
@@ -707,26 +707,7 @@ exports.jobListSectorWise = async (studentId) => {
 
     const studentSector = student.studentJobSector;
 
-    const fetchJobSectorWise = await Job.find({ job_sector: studentSector })
-      .select(
-        "job_title job_short_desc job_posted_date job_category job_sector job_type job_vacancy_total"
-      )
-      .populate({
-        path: "job_category",
-        model: "JobCategory",
-        select: "category_name",
-      })
-      .populate({
-        path: "job_sector",
-        model: "JobSector",
-        select: "job_sector_name",
-      })
-      .populate({
-        path: "job_type",
-        model: "JobType",
-        select: "job_type_name",
-      })
-      .sort({ job_posted_date: -1 });
+    const fetchJobSectorWise = await Job.find({ job_sector: studentSector });
 
     return {
       status: 200,
