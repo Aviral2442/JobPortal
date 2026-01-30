@@ -4,7 +4,6 @@ import { createRoot } from "react-dom/client";
 import { useNavigate } from "react-router-dom";
 import ReactDOMServer from "react-dom/server";
 import {
-  TbDotsVertical,
   TbChevronLeft,
   TbChevronRight,
   TbChevronsLeft,
