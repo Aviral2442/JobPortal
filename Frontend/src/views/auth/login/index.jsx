@@ -67,7 +67,7 @@ const Page = () => {
 
                                 <div className="">
                                     <Form onSubmit={handleSubmit}>
-                                    <FormGroup className="mb-3">
+                                        <FormGroup className="mb-3">
                                             <div style={{ marginBottom: "12px" }}>
                                                 <label htmlFor="role">Role</label>
                                                 <select

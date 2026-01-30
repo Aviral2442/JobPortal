@@ -95,7 +95,7 @@ const JobSchema = new mongoose.Schema({
   job_salary_bond_condition: { type: String, required: false },
 
   // SELECTION PROCESS
-  selection: [{ type: String }],
+  selection: [{ type: String }], 
 
   // IMPORTANT LINKS
   job_important_links: [{

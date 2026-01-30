@@ -373,65 +373,65 @@ exports.studentRegistration = async (studentData) => {
 };
 
 // STUDENT LOGIN SERVICE
-exports.studentLogin = async (studentLoginData) => {
-  try {
-    const student = await studentModel.findOne({
-      $or: [
-        { studentEmail: studentLoginData.studentEmailOrMobile },
-        { studentMobileNo: studentLoginData.studentEmailOrMobile },
-      ],
-    });
+// exports.studentLogin = async (studentLoginData) => {
+//   try {
+//     const student = await studentModel.findOne({
+//       $or: [
+//         { studentEmail: studentLoginData.studentEmailOrMobile },
+//         { studentMobileNo: studentLoginData.studentEmailOrMobile },
+//       ],
+//     });
 
-    if (!student) {
-      return {
-        status: 404,
-        message: "Student not found with the provided email or mobile number",
-        jsonData: {
-          IsRedirectToRegister: true,
-        },
-      };
-    }
+//     if (!student) {
+//       return {
+//         status: 404,
+//         message: "Student not found with the provided email or mobile number",
+//         jsonData: {
+//           IsRedirectToRegister: true,
+//         },
+//       };
+//     }
 
-    if (student.studentPassword !== studentLoginData.studentPassword) {
-      return {
-        status: 401,
-        message: "Incorrect password",
-        jsonData: {},
-      };
-    }
+//     if (student.studentPassword !== studentLoginData.studentPassword) {
+//       return {
+//         status: 401,
+//         message: "Incorrect password",
+//         jsonData: {},
+//       };
+//     }
 
-    student.lastLoginAt = currentUnixTimeStamp();
-    await student.save();
+//     student.lastLoginAt = currentUnixTimeStamp();
+//     await student.save();
 
-    const saveLoginHistory = await loginHistory({
-      studentId: student._id,
-      loginAt: currentUnixTimeStamp(),
-    });
+//     const saveLoginHistory = await loginHistory({
+//       studentId: student._id,
+//       loginAt: currentUnixTimeStamp(),
+//     });
 
-    await saveLoginHistory.save();
+//     await saveLoginHistory.save();
 
-    return {
-      status: 200,
-      message: "Student logged in successfully",
-      jsonData: {
-        studentId: student._id,
-        studentFirstName: student.studentFirstName,
-        studentLastName: student.studentLastName,
-        studentEmail: student.studentEmail,
-        studentMobileNo: student.studentMobileNo,
-        studentJobSector: student.studentJobSector,
-        studentProfilePic: student.studentProfilePic,
-      },
-    };
-  } catch (error) {
-    console.error("Login Error:", error);
-    return {
-      status: 500,
-      message: "An error occurred during student login",
-      error: error.message,
-    };
-  }
-};
+//     return {
+//       status: 200,
+//       message: "Student logged in successfully",
+//       jsonData: {
+//         studentId: student._id,
+//         studentFirstName: student.studentFirstName,
+//         studentLastName: student.studentLastName,
+//         studentEmail: student.studentEmail,
+//         studentMobileNo: student.studentMobileNo,
+//         studentJobSector: student.studentJobSector,
+//         studentProfilePic: student.studentProfilePic,
+//       },
+//     };
+//   } catch (error) {
+//     console.error("Login Error:", error);
+//     return {
+//       status: 500,
+//       message: "An error occurred during student login",
+//       error: error.message,
+//     };
+//   }
+// };
 
 // STUDENT LOGIN V2 GOOGLE SERVICE
 exports.studentLogin = async (studentLoginData) => {
@@ -463,7 +463,10 @@ exports.studentLogin = async (studentLoginData) => {
           studentLastName: studentLoginData.studentLastName || "",
           studentEmail: email,
           studentProfilePic: studentLoginData.studentProfilePic || "",
-          studentLastLoginType: "google",
+          studentLastLoginType: studentLoginData.provider,
+          studentJobSector: "697c55559f27582a27b27c2a",
+          // studentPassword: "",
+          // studentMobileNo: "",
         });
       } else {
         // ✅ Existing user
