@@ -1,9 +1,7 @@
 const { buildDateFilter } = require("../utils/dateFilters");
 const { buildPagination } = require("../utils/paginationFilters");
 const { currentUnixTimeStamp } = require("../utils/currentUnixTimeStamp");
-const {
-  convertIntoUnixTimeStamp,
-} = require("../utils/convertIntoUnixTimeStamp");
+const { convertIntoUnixTimeStamp } = require("../utils/convertIntoUnixTimeStamp");
 const { saveBase64File } = require("../middleware/base64FileUpload");
 const studentModel = require("../models/studentModel");
 const studentAddressModel = require("../models/student/studentAddressModel");

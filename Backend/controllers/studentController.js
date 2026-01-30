@@ -74,7 +74,6 @@ exports.studentLoginWithOtp = async (req, res) => {
   }
 }
 
-
 // STUDENT LOGOUT CONTROLLER
 exports.studentLogout = async (req, res) => {
   try {

@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const upload = require('../middleware/JobCategoryUploadMidd');
 const studentController = require('../controllers/studentController');
 
 router.get('/students_list', studentController.studentListService);
