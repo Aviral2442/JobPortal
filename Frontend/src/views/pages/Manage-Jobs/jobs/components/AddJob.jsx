@@ -308,11 +308,11 @@ export default function AddJob() {
   };
 
   const transformLinksFromBackend = (jobData) => {
-    if (jobData.job_important_links && typeof jobData.job_important_links === 'object') {
-      return Object.entries(jobData.job_important_links).map(([label, url]) => ({
-        type: "Apply Online",
-        label,
-        url,
+    if (jobData.job_important_links && Array.isArray(jobData.job_important_links) && jobData.job_important_links.length > 0) {
+      return jobData.job_important_links.map(link => ({
+        type: link.type || "Other",
+        label: link.label || "",
+        url: link.url || "",
       }));
     }
     return [{ type: "Apply Online", label: "Apply Online", url: "" }];
@@ -630,13 +630,14 @@ export default function AddJob() {
         return;
       }
 
-      // Convert to object/map format instead of array
-      const linksMap = {};
-      validLinks.forEach((l) => {
-        linksMap[l.label.trim()] = l.url.trim();
-      });
+      // Send as array of objects with type, label, and url
+      const linksArray = validLinks.map((l) => ({
+        type: l.type.trim(),
+        label: l.label.trim(),
+        url: l.url.trim(),
+      }));
 
-      sectionData = { job_important_links: linksMap };
+      sectionData = { job_important_links: linksArray };
 
     } else if (section === "howToApply") {
       if (!values.howToApply || values.howToApply.trim() === "") {

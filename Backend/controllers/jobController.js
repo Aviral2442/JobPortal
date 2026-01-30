@@ -33,13 +33,13 @@ const createJob = async (req, res) => {
     jobData.job_last_updated_date = Math.floor(Date.now() / 1000);
 
     const job = await Job.create(jobData);
-
+    console.log("Created Job:", job);
     const createNofitication = await NotificationModel.create({
       notifyJobId: job._id,
       notifyTitle: `New Job Posted: ${job.job_title}`,
       notifyDesc: `A new job titled "${job.job_title}" has been posted. Check it out!`,
     });
-
+    
     return res.status(201).json({
       message: "Job created successfully",
       _id: job._id,
@@ -210,29 +210,21 @@ const saveJobSection = async (req, res) => {
         break;
 
       case "links":
-        // Convert array of link objects or formatted strings to a proper Map
-        let linksMap = {};
+        // Store links as array of objects with type, label, and url
+        let linksArray = [];
 
         if (Array.isArray(data.job_important_links)) {
-          data.job_important_links.forEach((link, index) => {
-            if (typeof link === 'string') {
-              // If it's a formatted string like "Label: URL"
-              const [label, url] = link.split(': ');
-              if (label && url) {
-                linksMap[label.trim()] = url.trim();
-              }
-            } else if (link && link.label && link.url) {
-              // If it's an object with label and url
-              linksMap[link.label.trim()] = link.url.trim();
-            }
-          });
-        } else if (typeof data.job_important_links === 'object') {
-          // If it's already an object/map
-          linksMap = data.job_important_links;
+          linksArray = data.job_important_links
+            .filter(link => link && link.label && link.url)
+            .map(link => ({
+              type: link.type?.trim() || "Other",
+              label: link.label.trim(),
+              url: link.url.trim(),
+            }));
         }
 
         updateDoc.$set = {
-          job_important_links: linksMap,
+          job_important_links: linksArray,
           job_last_updated_date: Math.floor(Date.now() / 1000),
         };
         break;
