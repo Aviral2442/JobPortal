@@ -22,6 +22,7 @@ const JobType = require("../models/JobTypeModel");
 const sendEmailOtp = require("../utils/emailOtp");
 const sendMobileOtp = require("../utils/mobileNoOtp");
 const NotificationModel = require("../models/NotificationModel");
+const JobAppliedMapperModel = require("../models/JobAppliedMapperModel");
 
 // STUDENT LIST SERVICE
 exports.studentListService = async (query) => {
@@ -1792,6 +1793,44 @@ exports.notificationListForStudent = async (studentId) => {
     return {
       status: 500,
       message: "An error occurred while fetching notifications for student",
+      error: error.message,
+    };
+  }
+};
+
+// STUDENT DASHBOARD DATA SERVICE
+exports.studentDashboardData = async (studentId) => {
+  try {
+
+    const student = await studentModel.findById(studentId);
+    if (!student) {
+      return {
+        status: 404,
+        message: "Student not found with the provided ID",
+        jsonData: {},
+      };
+    }
+
+    const appliedJobsCount = await JobAppliedMapperModel.countDocuments({ studentId });
+
+    const eligibleJobsCount = await JobAppliedMapperModel.countDocuments({ studentId });
+
+    const allJobsCount = await JobAppliedMapperModel.countDocuments({ studentId });
+
+    return {
+      status: 200,
+      message: "Student dashboard data fetched successfully",
+      jsonData: {
+        appliedJobsCount: appliedJobsCount,
+        eligibleJobsCount: eligibleJobsCount,
+        allJobsCount: allJobsCount,
+      }
+    };
+
+  } catch (error) {
+    return {
+      status: 500,
+      message: "An error occurred while fetching student dashboard data",
       error: error.message,
     };
   }

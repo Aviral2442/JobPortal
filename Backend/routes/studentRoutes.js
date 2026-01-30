@@ -30,4 +30,6 @@ router.put('/uploadStudentResume/:studentId', studentController.uploadStudentRes
 router.put('/removeNotification', studentController.studentRemoveNotification);
 router.get('/studentNotifications/:studentId', studentController.notificationListForStudent);
 
+router.get('/student_dashboard_data/:studentId', studentController.studentDashboardData);
+
 module.exports = router;

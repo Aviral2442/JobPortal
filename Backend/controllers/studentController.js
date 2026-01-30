@@ -550,3 +550,18 @@ exports.notificationListForStudent = async (req, res) => {
       });
   }
 };
+
+// STUDENT DASHBOARD DATA CONTROLLER
+exports.studentDashboardData = async (req, res) => {
+  try {
+    const studentId = req.params.studentId;
+    const result = await studentService.studentDashboardData(studentId);
+    return res.status(result.status).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
