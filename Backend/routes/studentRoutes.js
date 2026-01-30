@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const upload = require('../middleware/JobCategoryUploadMidd');
 const studentController = require('../controllers/studentController');
 
 router.get('/students_list', studentController.studentListService);
@@ -30,5 +29,7 @@ router.put('/updateStudentWorkExperience/:studentId', studentController.updateSt
 router.put('/uploadStudentResume/:studentId', studentController.uploadStudentResume);
 router.put('/removeNotification', studentController.studentRemoveNotification);
 router.get('/studentNotifications/:studentId', studentController.notificationListForStudent);
+
+router.get('/student_dashboard_data/:studentId', studentController.studentDashboardData);
 
 module.exports = router;

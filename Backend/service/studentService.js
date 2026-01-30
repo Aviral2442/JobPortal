@@ -1,9 +1,7 @@
 const { buildDateFilter } = require("../utils/dateFilters");
 const { buildPagination } = require("../utils/paginationFilters");
 const { currentUnixTimeStamp } = require("../utils/currentUnixTimeStamp");
-const {
-  convertIntoUnixTimeStamp,
-} = require("../utils/convertIntoUnixTimeStamp");
+const { convertIntoUnixTimeStamp } = require("../utils/convertIntoUnixTimeStamp");
 const { saveBase64File } = require("../middleware/base64FileUpload");
 const studentModel = require("../models/studentModel");
 const studentAddressModel = require("../models/student/studentAddressModel");
@@ -24,6 +22,8 @@ const JobType = require("../models/JobTypeModel");
 const sendEmailOtp = require("../utils/emailOtp");
 const sendMobileOtp = require("../utils/mobileNoOtp");
 const NotificationModel = require("../models/NotificationModel");
+const JobAppliedMapperModel = require("../models/JobAppliedMapperModel");
+const JobModel = require("../models/JobModel");
 
 // STUDENT LIST SERVICE
 exports.studentListService = async (query) => {
@@ -718,6 +718,36 @@ exports.verifyStudentOtp = async (studentOtpData) => {
     studentEmailOrMobile.studentOtp = null;
     studentEmailOrMobile.studentOtpExpiry = null;
     await studentEmailOrMobile.save();
+
+    if (studentOtpData.loginProvider === "otpLogin") {
+
+      const saveLoginData = await studentModel.findById(studentEmailOrMobile._id);
+      saveLoginData.studentLastLoginType = "otpLogin";
+      saveLoginData.lastLoginAt = currentUnixTimeStamp();
+      await saveLoginData.save();
+
+      const saveLoginHistory = await loginHistory({
+        studentId: studentEmailOrMobile._id,
+        loginType: "otpLogin",
+        loginAt: currentUnixTimeStamp(),
+        createdAt: currentUnixTimeStamp(),
+      });
+      await saveLoginHistory.save()
+
+      return {
+        status: 200,
+        message: "OTP verified successfully",
+        jsonData: {
+          studentId: studentEmailOrMobile._id,
+          studentFirstName: studentEmailOrMobile.studentFirstName,
+          studentLastName: studentEmailOrMobile.studentLastName,
+          studentEmail: studentEmailOrMobile.studentEmail,
+          studentMobileNo: studentEmailOrMobile.studentMobileNo,
+          studentProfilePic: studentEmailOrMobile.studentProfilePic,
+          studentJobSector: studentEmailOrMobile.studentJobSector,
+        }
+      }
+    }
 
     return {
       status: 200,
@@ -1794,6 +1824,44 @@ exports.notificationListForStudent = async (studentId) => {
     return {
       status: 500,
       message: "An error occurred while fetching notifications for student",
+      error: error.message,
+    };
+  }
+};
+
+// STUDENT DASHBOARD DATA SERVICE
+exports.studentDashboardData = async (studentId) => {
+  try {
+
+    const student = await studentModel.findById(studentId);
+    if (!student) {
+      return {
+        status: 404,
+        message: "Student not found with the provided ID",
+        jsonData: {},
+      };
+    }
+
+    const appliedJobsCount = await JobAppliedMapperModel.countDocuments({ studentId });
+
+    const eligibleJobsCount = await JobAppliedMapperModel.countDocuments({ studentId });
+
+    const allJobsCount = await JobModel.countDocuments({ job_sector: student.studentJobSector });
+
+    return {
+      status: 200,
+      message: "Student dashboard data fetched successfully",
+      jsonData: {
+        appliedJobsCount: appliedJobsCount,
+        eligibleJobsCount: eligibleJobsCount,
+        allJobsCount: allJobsCount,
+      }
+    };
+
+  } catch (error) {
+    return {
+      status: 500,
+      message: "An error occurred while fetching student dashboard data",
       error: error.message,
     };
   }
