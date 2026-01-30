@@ -598,7 +598,23 @@ exports.recommendJobsForStudent = async (studentId) => {
     const recommendedJobs = await Job.find({
       job_sector: studentSector,
       jobRecommendation: true,
-    });
+    })
+      .select("job_title job_short_desc job_posted_date job_category job_sector job_type")
+      .populate({
+        path: "job_category",
+        model: "JobCategory",
+        select: "category_name",
+      })
+      .populate({
+        path: "job_sector",
+        model: "JobSector",
+        select: "job_sector_name",
+      })
+      .populate({
+        path: "job_type",
+        model: "JobType",
+        select: "job_type_name",
+      });
 
     return {
       status: 200,
@@ -620,24 +636,56 @@ exports.recommendJobsForStudent = async (studentId) => {
 // FEATURED JOBS FOR STUDENT SERVICE
 exports.featuredJobsForStudent = async (studentId) => {
   try {
-    const student = await Student.findById(studentId);
+    const student = await Student.findById(studentId).select("studentJobSector");
+
     if (!student) {
       return { status: 404, message: "Student not found" };
     }
 
     const studentSector = student.studentJobSector;
 
+    if (!studentSector || studentSector.length === 0) {
+      return {
+        status: 200,
+        message: "No job sector assigned to student",
+        jsonData: {
+          featuredJobsCount: 0,
+          featuredJobs: [],
+        },
+      };
+    }
+
     const featuredJobs = await Job.find({
-      job_sector: studentSector,
+      job_sector: Array.isArray(studentSector)
+        ? { $in: studentSector }
+        : studentSector,
       jobFeatured: true,
-    });
+    })
+      .select(
+        "job_title job_short_desc job_posted_date job_category job_sector job_type"
+      )
+      .populate({
+        path: "job_category",
+        model: "JobCategory",
+        select: "category_name",
+      })
+      .populate({
+        path: "job_sector",
+        model: "JobSector",
+        select: "job_sector_name",
+      })
+      .populate({
+        path: "job_type",
+        model: "JobType",
+        select: "job_type_name",
+      });
 
     return {
       status: 200,
       message: "Featured jobs fetched successfully",
       jsonData: {
         featuredJobsCount: featuredJobs.length,
-        featuredJobs: featuredJobs,
+        featuredJobs,
       },
     };
   } catch (error) {
