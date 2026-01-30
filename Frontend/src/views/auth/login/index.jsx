@@ -115,7 +115,7 @@ const Page = () => {
                             </CardBody>
                         </Card>
                         <p className="text-center text-muted mt-4 mb-0">
-                            © {currentYear} {appName} — by <span className="fw-semibold">{author}</span>
+                            © {currentYear} {appName}
                         </p>
                     </Col>
                 </Row>

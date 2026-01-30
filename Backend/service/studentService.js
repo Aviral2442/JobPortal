@@ -433,16 +433,132 @@ exports.studentLogin = async (studentLoginData) => {
   }
 };
 
+// STUDENT LOGIN V2 GOOGLE SERVICE
+exports.studentLogin = async (studentLoginData) => {
+  try {
+    const { provider } = studentLoginData;
+
+    let email = null;
+    if (
+      studentLoginData.studentEmailOrMobile &&
+      studentLoginData.studentEmailOrMobile.includes("@")
+    ) {
+      email = studentLoginData.studentEmailOrMobile.toLowerCase().trim();
+    }
+
+    // 🔍 Find student by email or mobile
+    let student = await studentModel.findOne({
+      $or: [
+        { studentEmail: email },
+        { studentMobileNo: studentLoginData.studentEmailOrMobile },
+      ],
+    });
+
+    // ================= GOOGLE LOGIN =================
+    if (provider === "google") {
+      if (!student) {
+        // 🆕 Create new Google user
+        student = await studentModel.create({
+          studentFirstName: studentLoginData.studentFirstName,
+          studentLastName: studentLoginData.studentLastName || "",
+          studentEmail: email,
+          studentProfilePic: studentLoginData.studentProfilePic || "",
+          studentLastLoginType: "google",
+        });
+      } else {
+        // ✅ Existing user
+        student.studentLastLoginType = "google";
+        await student.save();
+      }
+    }
+
+    // ================= PASSWORD LOGIN =================
+    else if (provider === "password") {
+      if (!student) {
+        return {
+          status: 404,
+          message: "Student not found",
+        };
+      }
+
+      // 🔐 SIMPLE STRING PASSWORD CHECK
+      if (student.studentPassword !== studentLoginData.studentPassword) {
+        return {
+          status: 401,
+          message: "Invalid password",
+        };
+      }
+
+      student.studentLastLoginType = "password";
+      await student.save();
+    }
+
+    // ================= OTP LOGIN =================
+    else if (provider === "otpLogin") {
+      if (!student) {
+        return {
+          status: 404,
+          message: "Student not found",
+        };
+      }
+
+      if (
+        student.studentOtp !== studentLoginData.otp ||
+        student.studentOtpExpiry < Date.now()
+      ) {
+        return {
+          status: 401,
+          message: "Invalid or expired OTP",
+        };
+      }
+
+      // Clear OTP after success
+      student.studentOtp = null;
+      student.studentOtpExpiry = null;
+      student.studentLastLoginType = "otpLogin";
+      await student.save();
+    }
+
+    // ================= INVALID PROVIDER =================
+    else {
+      return {
+        status: 400,
+        message: "Invalid login provider",
+      };
+    }
+
+    // ================= SUCCESS RESPONSE =================
+    return {
+      status: 200,
+      message: "Login successful",
+      jsonData: {
+        studentId: student._id,
+        studentFirstName: student.studentFirstName,
+        studentLastName: student.studentLastName,
+        studentEmail: student.studentEmail,
+        studentMobileNo: student.studentMobileNo,
+        studentProfilePic: student.studentProfilePic,
+        studentJobSector: student.studentJobSector,
+        studentLastLoginType: student.studentLastLoginType,
+      },
+    };
+  } catch (error) {
+    console.error("Login Error:", error);
+    return {
+      status: 500,
+      message: "An error occurred during student login",
+      error: error.message,
+    };
+  }
+};
+
 exports.studentLoginWithOtp = async (studentLoginCredentials) => {
   try {
     const input = studentLoginCredentials.studentEmailOrMobile.trim();
     const isEmail = input.includes("@");
 
     const studentLoginData = await studentModel.findOne({
-      $or: [
-        { studentEmail: input.toLowerCase() },
-        { studentMobileNo: input },
-      ],
+      $or: [{ studentEmail: input.toLowerCase() }, { studentMobileNo: input }],
     });
 
     if (!studentLoginData) {
@@ -512,7 +628,6 @@ exports.studentLoginWithOtp = async (studentLoginCredentials) => {
         studentMobileNo: mobileNo,
       },
     };
-
   } catch (error) {
     console.error("OTP Login Error:", error);
     return {
@@ -522,7 +637,6 @@ exports.studentLoginWithOtp = async (studentLoginCredentials) => {
     };
   }
 };
-
 
 // STUDENT LOGOUT SERVICE
 exports.studentLogout = async (studentId) => {
