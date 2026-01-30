@@ -530,7 +530,24 @@ exports.upcommingJobForStudents = async (studentId) => {
     const upcommingJobSectorWise = await Job.find({
       job_sector: studentSector,
       job_start_date: { $gte: sevenDaysFromNow },
-    });
+    }).select(
+        "job_title job_short_desc job_posted_date job_category job_sector job_type job_vacancy_total"
+      )
+      .populate({
+        path: "job_category",
+        model: "JobCategory",
+        select: "category_name",
+      })
+      .populate({
+        path: "job_sector",
+        model: "JobSector",
+        select: "job_sector_name",
+      })
+      .populate({
+        path: "job_type",
+        model: "JobType",
+        select: "job_type_name",
+      });
 
     const upcommingJobSectorWiseCount = upcommingJobSectorWise.length;
 
