@@ -23,6 +23,7 @@ const sendEmailOtp = require("../utils/emailOtp");
 const sendMobileOtp = require("../utils/mobileNoOtp");
 const NotificationModel = require("../models/NotificationModel");
 const JobAppliedMapperModel = require("../models/JobAppliedMapperModel");
+const JobModel = require("../models/JobModel");
 
 // STUDENT LIST SERVICE
 exports.studentListService = async (query) => {
@@ -1815,7 +1816,7 @@ exports.studentDashboardData = async (studentId) => {
 
     const eligibleJobsCount = await JobAppliedMapperModel.countDocuments({ studentId });
 
-    const allJobsCount = await JobAppliedMapperModel.countDocuments({ studentId });
+    const allJobsCount = await JobModel.countDocuments({ job_sector: student.studentJobSector });
 
     return {
       status: 200,
