@@ -48,6 +48,8 @@ router.get('/job_full_details/:jobId', JobCategoryController.jobFullDetailsById)
 
 // GOVERNMENT ADMIT CARD ROUTES
 router.get('/government_admit_card_list', JobCategoryController.govAdminCardList);
+router.post('/add_admit_card', upload('admitCard_FilePath').single('admitCard_FilePath'), JobCategoryController.addAdmitCard);
+router.put('/update_admit_card/:admitCardId', upload('admitCard_FilePath').single('admitCard_FilePath'), JobCategoryController.updateAdmitCard);
 router.get('/psu_admit_card_list', JobCategoryController.psuAdminCardList);
 
 module.exports = router;

@@ -30,7 +30,7 @@ const AdmitCardGovernmentList = ({ isActive }) => {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/jobs`);
+      const res = await axios.get(`${BASE_URL}/api/job-categories/government_sector_job_list`);
       console.log("Fetched jobs:", res.data);
       // Filter for government sector jobs
       const governmentJobs = res.data?.filter(job => job.job_sector?.job_sector_name === "Government") || [];

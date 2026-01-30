@@ -429,6 +429,36 @@ exports.govAdminCardList = async (req, res) => {
     }
 };
 
+// ADD ADMIT CARD CONTROLLER
+exports.addAdmitCard = async (req, res) => {
+    try {
+        const result = await JobCategoryService.addAdmitCard(req.body);
+        return res.status(result.status).json(result);
+    } catch (error) {
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};
+
+// UPDATE ADMIT CARD CONTROLLER
+exports.updateAdmitCard = async (req, res) => {
+    try {
+        const admitCardId = req.params.admitCardId;
+        const updateData = req.body;
+        const result = await JobCategoryService.updateAdmitCard(admitCardId, updateData);
+        return res.status(result.status).json(result);
+    } catch (error) {
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};
+
 // PSU ADMIN CARD LIST CONTROLLER
 exports.psuAdminCardList = async (req, res) => {
     try {

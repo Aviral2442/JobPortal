@@ -8,6 +8,7 @@ const AdmitCardModel = require("../models/AdmitCardModel");
 const AnswerKeyModel = require("../models/AnswerKeyModel");
 const ResultModel = require("../models/ResultModel");
 const moment = require("moment");
+const { saveBase64File } = require("../middleware/base64FileUpload");
 
 // Job Category List Service with Filters and Pagination
 exports.getJobCategoryList = async (query) => {
@@ -530,8 +531,9 @@ exports.upcommingJobForStudents = async (studentId) => {
     const upcommingJobSectorWise = await Job.find({
       job_sector: studentSector,
       job_start_date: { $gte: sevenDaysFromNow },
-    }).select(
-        "job_title job_short_desc job_posted_date job_category job_sector job_type job_vacancy_total"
+    })
+      .select(
+        "job_title job_short_desc job_category job_sector job_type job_vacancy_total job_start_date",
       )
       .populate({
         path: "job_category",
@@ -616,7 +618,9 @@ exports.recommendJobsForStudent = async (studentId) => {
       job_sector: studentSector,
       jobRecommendation: true,
     })
-      .select("job_title job_short_desc job_posted_date job_category job_sector job_type")
+      .select(
+        "job_title job_short_desc job_posted_date job_category job_sector job_type",
+      )
       .populate({
         path: "job_category",
         model: "JobCategory",
@@ -653,7 +657,8 @@ exports.recommendJobsForStudent = async (studentId) => {
 // FEATURED JOBS FOR STUDENT SERVICE
 exports.featuredJobsForStudent = async (studentId) => {
   try {
-    const student = await Student.findById(studentId).select("studentJobSector");
+    const student =
+      await Student.findById(studentId).select("studentJobSector");
 
     if (!student) {
       return { status: 404, message: "Student not found" };
@@ -679,7 +684,7 @@ exports.featuredJobsForStudent = async (studentId) => {
       jobFeatured: true,
     })
       .select(
-        "job_title job_short_desc job_posted_date job_category job_sector job_type"
+        "job_title job_short_desc job_posted_date job_category job_sector job_type",
       )
       .populate({
         path: "job_category",
@@ -1073,8 +1078,8 @@ exports.govAdminCardList = async (query) => {
   const filter = {};
 
   if (searchFilter) {
-    filter.admitCard_Title = { $regex: searchFilter, $options: "i" },
-      filter.job_title = { $regex: searchFilter, $options: "i" };
+    ((filter.admitCard_Title = { $regex: searchFilter, $options: "i" }),
+      (filter.job_title = { $regex: searchFilter, $options: "i" }));
   }
 
   if (dateFilter) {
@@ -1116,19 +1121,24 @@ exports.govAdminCardList = async (query) => {
     }
   }
 
-  const total = await AdmitCardModel.countDocuments(filter);
+  const governmentAdmitCard = await JobSector.findOne({
+    job_sector_name: { $regex: /^government/i }, // matches "Government Sector"
+  }).select("_id");
 
   const data = await AdmitCardModel.find(filter)
+    .select(
+      "admitCard_JobId admitCard_Title admitCard_Desc admitCard_URL admitCard_FilePath admitCard_ReleaseDate admitCard_CreatedAt",
+    )
     .populate({
       path: "admitCard_JobId",
       model: "Jobs",
       select: "job_title",
-      match: { job_sector: "government" }
     })
     .skip(skip)
     .limit(limit)
     .sort({ admitCard_CreatedAt: -1 });
 
+  const total = await AdmitCardModel.countDocuments(filter);
   return {
     total,
     page: parseInt(page),
@@ -1136,6 +1146,96 @@ exports.govAdminCardList = async (query) => {
     totalPages: Math.ceil(total / limit),
     data,
   };
+};
+
+// ADD ADMIT CARD SERVICE
+exports.addAdmitCard = async (data) => {
+  try {
+    const newAdmitCard = new AdmitCardModel({
+      admitCard_JobId: data.admitCard_JobId,
+      admitCard_Title: data.admitCard_Title,
+      admitCard_Desc: data.admitCard_Desc,
+      admitCard_URL: data.admitCard_URL,
+      admitCard_FilePath: "",
+      admitCard_ReleaseDate: data.admitCard_ReleaseDate,
+    });
+
+    let admitCard_FilePath = null;
+    if (data.admitCard_FilePath) {
+      admitCard_FilePath = saveBase64File(
+        data.admitCard_FilePath,
+        "admitCard",
+        "job",
+        data.extension,
+      );
+    }
+
+    newAdmitCard.admitCard_FilePath = admitCard_FilePath;
+
+    await newAdmitCard.save();
+
+    return {
+      status: 200,
+      message: "Admit card added successfully",
+      jsonData: newAdmitCard,
+    };
+  } catch (error) {
+    console.error("Error in addAdmitCard Service:", error);
+    throw error;
+  }
+};
+
+// UPDATE ADMIT CARD SERVICE
+exports.updateAdmitCard = async (admitCardId, data) => {
+  try {
+    const fetchAdmitCard = await AdmitCardModel.findById(admitCardId);
+    if (!fetchAdmitCard) {
+      return {
+        status: 404,
+        message: "Admit card not found",
+        jsonData: {},
+      };
+    }
+
+    console.log(data);
+    let admitCard_FilePath = fetchAdmitCard.admitCard_FilePath;
+    if (
+      data.admitCard_FilePath &&
+      data.admitCard_FilePath !== admitCard_FilePath
+    ) {
+      admitCard_FilePath = saveBase64File(
+        data.admitCard_FilePath,
+        "admitCard",
+        "job",
+        data.extension,
+      );
+    }
+
+    const updateData = {
+      admitCard_JobId: data.admitCard_JobId || fetchAdmitCard.admitCard_JobId,
+      admitCard_Title: data.admitCard_Title || fetchAdmitCard.admitCard_Title,
+      admitCard_Desc: data.admitCard_Desc || fetchAdmitCard.admitCard_Desc,
+      admitCard_URL: data.admitCard_URL || fetchAdmitCard.admitCard_URL,
+      admitCard_FilePath: admitCard_FilePath,
+      admitCard_ReleaseDate:
+        data.admitCard_ReleaseDate || fetchAdmitCard.admitCard_ReleaseDate,
+    };
+
+    const updatedAdmitCard = await AdmitCardModel.findByIdAndUpdate(
+      admitCardId,
+      updateData,
+      { new: true },
+    );
+
+    return {
+      status: 200,
+      message: "Admit card updated successfully",
+      jsonData: updatedAdmitCard,
+    };
+  } catch (error) {
+    console.error("Error in updateAdmitCard Service:", error);
+    throw error;
+  }
 };
 
 // PSU ADMIN JOB CATEGORY CARD LIST SERVICE WITH FILTERS AND PAGINATION
@@ -1153,8 +1253,8 @@ exports.psuAdminCardList = async (query) => {
   const filter = {};
 
   if (searchFilter) {
-    filter.admitCard_Title = { $regex: searchFilter, $options: "i" },
-      filter.job_title = { $regex: searchFilter, $options: "i" };
+    ((filter.admitCard_Title = { $regex: searchFilter, $options: "i" }),
+      (filter.job_title = { $regex: searchFilter, $options: "i" }));
   }
 
   if (dateFilter) {
@@ -1207,8 +1307,8 @@ exports.psuAdminCardList = async (query) => {
         path: "job_sector",
         model: "JobSector",
         select: "job_sector_name",
-        match: { job_sector_name: "psu" }
-      }
+        match: { job_sector_name: "psu" },
+      },
     })
     .skip(skip)
     .limit(limit)
@@ -1222,4 +1322,3 @@ exports.psuAdminCardList = async (query) => {
     data,
   };
 };
-
