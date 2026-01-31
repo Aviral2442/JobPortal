@@ -1036,6 +1036,50 @@ exports.psuSectorJobList = async (query) => {
   };
 };
 
+// GOVERNMENT AND PSU SECTOR JOB LIST
+exports.governmentAndPsuSectorJobList = async (query) => {
+  try {
+    const governmentSector = await JobSector.findOne({
+      job_sector_name: { $regex: /^government/i },
+    }).select("_id");
+
+    const psuSector = await JobSector.findOne({
+      job_sector_name: { $regex: /^psu/i },
+    }).select("_id");
+
+    if (!governmentSector || !psuSector) {
+      return {
+        total: 0,
+        page: Number(query.page) || 1,
+        limit: Number(query.limit) || 10,
+        totalPages: 0,
+        data: [],
+      };
+    }
+
+    const allowedSectors = [governmentSector._id, psuSector._id];
+
+    const data = await Job.find({
+      job_sector: { $in: allowedSectors },
+    }).select("job_title job_short_desc job_posted_date");
+
+    return {
+      status: 200,
+      message: "Jobs fetched successfully",
+      jsonData: {
+        govAndPsuJobList: data,
+      },
+    };
+  } catch (error) {
+    console.error("Error in governmentAndPsuSectorJobList Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+      jsonData: [],
+    };
+  }
+};
+
 // JOB FULL DETAILS BY ID SERVICE
 exports.jobFullDetailsById = async (jobId) => {
   try {
@@ -1077,11 +1121,12 @@ exports.govAdminCardList = async (query) => {
   const skip = (page - 1) * limit;
   const filter = {};
 
+  // 🔍 Search
   if (searchFilter) {
-    ((filter.admitCard_Title = { $regex: searchFilter, $options: "i" }),
-      (filter.job_title = { $regex: searchFilter, $options: "i" }));
+    filter.admitCard_Title = { $regex: searchFilter, $options: "i" };
   }
 
+  // 📅 Date filter
   if (dateFilter) {
     const today = moment().startOf("day");
     const now = moment().endOf("day");
@@ -1094,8 +1139,8 @@ exports.govAdminCardList = async (query) => {
         break;
 
       case "yesterday":
-        startDate = today.subtract(1, "days").unix();
-        endDate = now.subtract(1, "days").unix();
+        startDate = today.clone().subtract(1, "days").unix();
+        endDate = now.clone().subtract(1, "days").unix();
         break;
 
       case "this_week":
@@ -1110,8 +1155,8 @@ exports.govAdminCardList = async (query) => {
 
       case "custom":
         if (fromDate && toDate) {
-          startDate = moment(fromDate, "YYYY-MM-DD").startOf("day").unix();
-          endDate = moment(toDate, "YYYY-MM-DD").endOf("day").unix();
+          startDate = moment(fromDate).startOf("day").unix();
+          endDate = moment(toDate).endOf("day").unix();
         }
         break;
     }
@@ -1121,30 +1166,54 @@ exports.govAdminCardList = async (query) => {
     }
   }
 
-  const governmentAdmitCard = await JobSector.findOne({
-    job_sector_name: { $regex: /^government/i }, // matches "Government Sector"
+  // ✅ Get Government sector ID
+  const governmentSector = await JobSector.findOne({
+    job_sector_name: { $regex: /^government/i },
   }).select("_id");
 
-  const data = await AdmitCardModel.find(filter)
+  if (!governmentSector) {
+    return {
+      total: 0,
+      page,
+      limit,
+      totalPages: 0,
+      admitCardData: [],
+    };
+  }
+
+  // ✅ Main query
+  const admitCardData = await AdmitCardModel.find(filter)
     .select(
       "admitCard_JobId admitCard_Title admitCard_Desc admitCard_URL admitCard_FilePath admitCard_ReleaseDate admitCard_CreatedAt",
     )
     .populate({
       path: "admitCard_JobId",
       model: "Jobs",
-      select: "job_title",
+      match: { job_sector: governmentSector._id }, // ⭐ IMPORTANT
+      select: "job_title job_category job_type job_sector",
+      populate: [
+        { path: "job_category", select: "category_name" },
+        { path: "job_type", select: "job_type_name" },
+        { path: "job_sector", select: "job_sector_name" },
+      ],
     })
+    .sort({ admitCard_CreatedAt: -1 })
     .skip(skip)
-    .limit(limit)
-    .sort({ admitCard_CreatedAt: -1 });
+    .limit(limit);
 
-  const total = await AdmitCardModel.countDocuments(filter);
+  // 🚿 Remove non-government jobs
+  const filteredData = admitCardData.filter(
+    (item) => item.admitCard_JobId !== null,
+  );
+
+  const total = filteredData.length;
+
   return {
     total,
     page: parseInt(page),
     limit: parseInt(limit),
     totalPages: Math.ceil(total / limit),
-    data,
+    admitCardData: filteredData,
   };
 };
 
@@ -1252,11 +1321,12 @@ exports.psuAdminCardList = async (query) => {
   const skip = (page - 1) * limit;
   const filter = {};
 
+  // 🔍 Search filter
   if (searchFilter) {
-    ((filter.admitCard_Title = { $regex: searchFilter, $options: "i" }),
-      (filter.job_title = { $regex: searchFilter, $options: "i" }));
+    filter.$or = [{ admitCard_Title: { $regex: searchFilter, $options: "i" } }];
   }
 
+  // 📅 Date filter
   if (dateFilter) {
     const today = moment().startOf("day");
     const now = moment().endOf("day");
@@ -1269,8 +1339,8 @@ exports.psuAdminCardList = async (query) => {
         break;
 
       case "yesterday":
-        startDate = today.subtract(1, "days").unix();
-        endDate = now.subtract(1, "days").unix();
+        startDate = today.clone().subtract(1, "days").unix();
+        endDate = now.clone().subtract(1, "days").unix();
         break;
 
       case "this_week":
@@ -1285,8 +1355,8 @@ exports.psuAdminCardList = async (query) => {
 
       case "custom":
         if (fromDate && toDate) {
-          startDate = moment(fromDate, "YYYY-MM-DD").startOf("day").unix();
-          endDate = moment(toDate, "YYYY-MM-DD").endOf("day").unix();
+          startDate = moment(fromDate).startOf("day").unix();
+          endDate = moment(toDate).endOf("day").unix();
         }
         break;
     }
@@ -1296,29 +1366,53 @@ exports.psuAdminCardList = async (query) => {
     }
   }
 
-  const total = await AdmitCardModel.countDocuments(filter);
+  // ✅ Get PSU sector ID
+  const psuSector = await JobSector.findOne({
+    job_sector_name: { $regex: /^psu/i },
+  }).select("_id");
 
-  const data = await AdmitCardModel.find(filter)
+  if (!psuSector) {
+    return {
+      total: 0,
+      page,
+      limit,
+      totalPages: 0,
+      psuAdmitCardData: [],
+    };
+  }
+
+  // ✅ Main Query
+  const admitCardData = await AdmitCardModel.find(filter)
+    .select(
+      "admitCard_JobId admitCard_Title admitCard_Desc admitCard_URL admitCard_FilePath admitCard_ReleaseDate admitCard_CreatedAt",
+    )
     .populate({
       path: "admitCard_JobId",
       model: "Jobs",
-      select: "job_title job_sector",
-      populate: {
-        path: "job_sector",
-        model: "JobSector",
-        select: "job_sector_name",
-        match: { job_sector_name: "psu" },
-      },
+      match: { job_sector: psuSector._id }, // ⭐ KEY FIX
+      select: "job_title job_category job_type job_sector",
+      populate: [
+        { path: "job_category", select: "category_name" },
+        { path: "job_type", select: "job_type_name" },
+        { path: "job_sector", select: "job_sector_name" },
+      ],
     })
     .skip(skip)
     .limit(limit)
     .sort({ admitCard_CreatedAt: -1 });
+
+  // ⚠️ Remove null populated jobs
+  const filteredData = admitCardData.filter(
+    (item) => item.admitCard_JobId !== null,
+  );
+
+  const total = filteredData.length;
 
   return {
     total,
     page: parseInt(page),
     limit: parseInt(limit),
     totalPages: Math.ceil(total / limit),
-    data,
+    psuAdmitCardData: filteredData,
   };
 };

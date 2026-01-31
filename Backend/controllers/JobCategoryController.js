@@ -391,6 +391,21 @@ exports.psuSectorJobList = async (req, res) => {
     }
 };
 
+// ALL SECTOR JOB LIST CONTROLLER
+exports.governmentAndPsuSectorJobList = async (req, res) => {
+    try {
+        const result = await JobCategoryService.governmentAndPsuSectorJobList(req.query);
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error in allSectorJobList Controller:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};
+
 // JOB FULL DETAILS BY ID CONTROLLER
 exports.jobFullDetailsById = async (req, res) => {
     try {
