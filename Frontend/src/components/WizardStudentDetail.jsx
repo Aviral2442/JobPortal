@@ -865,6 +865,8 @@ const WizardStudentDetail = () => {
         };
       }
 
+      if (endpoint.includes('updateStudentPrimaryDetails'))
+
       // 🔥 BANK DETAILS FIX
       if (endpoint.includes('updateStudentBankDetails')) {
         payload = {
@@ -1530,6 +1532,7 @@ const WizardStudentDetail = () => {
       // Primary Data
       studentFirstName: data.studentPrimaryData?.studentFirstName,
       studentLastName: data.studentPrimaryData?.studentLastName,
+      studentProfilePic: data.studentPrimaryData?.studentProfilePic,
       studentEmail: data.studentPrimaryData?.studentEmail,
       studentMobileNo: data.studentPrimaryData?.studentMobileNo,
       studentJobSector: data.studentPrimaryData?.studentJobSector?.job_sector_name,
@@ -1743,17 +1746,18 @@ const WizardStudentDetail = () => {
                 next
                 onChange={handleFieldChange}
                 onSave={handleSave}
-                apiEndpoint={`/student/updateStudentBasicDetails/${id}`}
+                apiEndpoint={`/student/updateStudentPrimaryDetails/${id}`}
                 saving={saving}
                 onViewImage={handleViewImage}
                 fields={[
-                  { name: "studentFirstName", label: "First Name", type: "text", cols: 4, disabled: true },
-                  { name: "studentLastName", label: "Last Name", type: "text", cols: 4, disabled: true },
+                  { name: "studentFirstName", label: "First Name", type: "text", cols: 4 },
+                  { name: "studentLastName", label: "Last Name", type: "text", cols: 4 },
+                  { name: "studentProfilePic", label: "Profile Picture", type: "file", cols: 4},
                   { name: "studentEmail", label: "Email", type: "email", cols: 4, disabled: true },
                   { name: "studentMobileNo", label: "Mobile Number", type: "tel", cols: 4, disabled: true },
-                  { name: "studentJobSector", label: "Job Sector", type: "text", cols: 4, disabled: true },
+                  { name: "studentJobSector", label: "Job Sector", type: "text", cols: 4 },
                   {
-                    name: "accountStatus", label: "Account Status", type: "select", cols: 4, disabled: true,
+                    name: "accountStatus", label: "Account Status", type: "select", cols: 4,
                     options: [
                       { value: "active", label: "Active" },
                       { value: "inactive", label: "Inactive" },

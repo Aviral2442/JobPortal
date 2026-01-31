@@ -619,7 +619,7 @@ exports.recommendJobsForStudent = async (studentId) => {
       jobRecommendation: true,
     })
       .select(
-        "job_title job_short_desc job_posted_date job_category job_sector job_type",
+        "job_title job_short_desc job_posted_date job_category job_sector job_type job_vacancy_total",
       )
       .populate({
         path: "job_category",
