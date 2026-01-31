@@ -744,6 +744,7 @@ const WizardStudentDetail = () => {
   const [otherDocuments, setOtherDocuments] = useState([]);
   const [editingOtherDocIndex, setEditingOtherDocIndex] = useState(null);
   const [profileCompletion, setProfileCompletion] = useState(0);
+  const [jobSectorList, setJobSectorList] = useState([]);
 
 
   const handleViewImage = (imageSrc, title) => {
@@ -800,6 +801,26 @@ const WizardStudentDetail = () => {
 
     fetchData();
   }, [id]);
+
+  useEffect(() => {
+    // Fetch job sectors for dropdown
+    const fetchJobSectors = async () => {
+      try {
+        const response = await axios.get('/job-categories/get_job_sector_list');
+        if (response.data.status === 200) {
+          console.log('Fetched job sectors:', response.data.jsonData?.data);
+          const formatted = (response.data?.jsonData?.data || []).map(item => ({
+            value: item._id || item.value,
+            label: item.job_sector_name
+          }));
+          setJobSectorList(formatted);
+        }
+      } catch (error) {
+        console.error('Error fetching job sectors:', error);
+      }
+    };
+    fetchJobSectors();
+  }, []);
 
   const handleFieldChange = (fieldName, value) => {
     setSectionData((prev) => {
@@ -865,7 +886,15 @@ const WizardStudentDetail = () => {
         };
       }
 
-      if (endpoint.includes('updateStudentPrimaryDetails'))
+      if (endpoint.includes('updateStudentPrimaryDetails')) {
+        payload = {
+          studentFirstName: sectionData.studentFirstName || '',
+          studentLastName: sectionData.studentLastName || '',
+          studentJobSector: sectionData.studentJobSector || '',
+          studentProfilePic: sectionData.studentProfilePic || '',
+          extension: sectionData.studentProfilePicExtension || ''
+        }
+      }
 
       // 🔥 BANK DETAILS FIX
       if (endpoint.includes('updateStudentBankDetails')) {
@@ -1535,7 +1564,7 @@ const WizardStudentDetail = () => {
       studentProfilePic: data.studentPrimaryData?.studentProfilePic,
       studentEmail: data.studentPrimaryData?.studentEmail,
       studentMobileNo: data.studentPrimaryData?.studentMobileNo,
-      studentJobSector: data.studentPrimaryData?.studentJobSector?.job_sector_name,
+      studentJobSector: data.studentPrimaryData?.studentJobSector?._id,
       accountStatus: data.studentPrimaryData?.accountStatus,
       studentReferralCode: data.studentPrimaryData?.studentReferralCode,
       studentReferralByCode: data.studentPrimaryData?.studentReferralByCode,
@@ -1752,10 +1781,13 @@ const WizardStudentDetail = () => {
                 fields={[
                   { name: "studentFirstName", label: "First Name", type: "text", cols: 4 },
                   { name: "studentLastName", label: "Last Name", type: "text", cols: 4 },
-                  { name: "studentProfilePic", label: "Profile Picture", type: "file", cols: 4},
+                  { name: "studentProfilePic", label: "Profile Picture", type: "file", cols: 4 },
                   { name: "studentEmail", label: "Email", type: "email", cols: 4, disabled: true },
                   { name: "studentMobileNo", label: "Mobile Number", type: "tel", cols: 4, disabled: true },
-                  { name: "studentJobSector", label: "Job Sector", type: "text", cols: 4 },
+                  {
+                    name: "studentJobSector", label: "Job Sector", type: "select", cols: 4,
+                    options: jobSectorList
+                  },
                   {
                     name: "accountStatus", label: "Account Status", type: "select", cols: 4,
                     options: [
@@ -1849,7 +1881,7 @@ const WizardStudentDetail = () => {
                 saving={saving}
                 onViewImage={handleViewImage}
                 fields={[
-                  { label: "Bank Details", type: "divider", cols: 12 },
+                  // { label: "Bank Details", type: "divider", cols: 12 },
                   { name: "bankHolderName", label: "Account Holder Name", type: "text", cols: 4 },
                   { name: "bankName", label: "Bank Name", type: "text", cols: 4 },
                   { name: "accountNumber", label: "Account Number", type: "text", cols: 4 },
@@ -1870,7 +1902,7 @@ const WizardStudentDetail = () => {
                 saving={saving}
                 onViewImage={handleViewImage}
                 fields={[
-                  { label: "Body Details", type: "divider", cols: 12 },
+                  // { label: "Body Details", type: "divider", cols: 12 },
                   { name: "heightCm", label: "Height (cm)", type: "number", cols: 2 },
                   { name: "weightKg", label: "Weight (kg)", type: "number", cols: 2 },
                   {
