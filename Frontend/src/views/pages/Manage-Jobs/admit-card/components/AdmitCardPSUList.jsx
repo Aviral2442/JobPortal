@@ -30,11 +30,10 @@ const AdmitCardPSUList = ({ isActive }) => {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/jobs`);
+      const res = await axios.get(`${BASE_URL}/api/job-categories/psu_admit_card_list`);
       console.log("Fetched jobs:", res.data);
       // Filter for PSU sector jobs
-      const psuJobs = res.data?.filter(job => job.job_sector?.job_sector_name === "PSU") || [];
-      setJobs(psuJobs);
+      setJobs(res.data?.jsonData?.psuAdmitCardData || []);
     } catch (err) {
       console.error(err);
       setJobs([]);

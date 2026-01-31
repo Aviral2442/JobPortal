@@ -5,6 +5,7 @@ import { Form, Button, Row, Col, Card, Alert, FormSelect } from "react-bootstrap
 import { useNavigate } from "react-router-dom";
 import ComponentCard from "@/components/ComponentCard";
 import axios from "@/api/axios";
+import React from "react";
 
 const admitCardValidationSchema = Yup.object({
   _id: Yup.string(),
@@ -54,6 +55,7 @@ const AddAdmitCard = () => {
   const navigate = useNavigate();
   const [admitCardFile, setAdmitCardFile] = useState(null);
   const [message, setMessage] = useState({ text: "", variant: "" });
+  const [jobsList, setJobsList] = useState([]);
 
   const requiredSections = ["basicDetails"];
   const [sectionsTracking, setSectionsTracking] = useState(
@@ -130,6 +132,21 @@ const AddAdmitCard = () => {
       setTimeout(() => navigate("/admin/admit-cards"), 500);
     }
   };
+
+  const fetchJobsList = async () =>{
+    try {
+      const res = await axios.get(`/job-categories/government_and_psu_sector_job_list`);
+      console.log("Fetched jobs for admit card:", res.data);
+      setJobsList(res.data?.jsonData?.govAndPsuJobList || []);
+    } catch (err) {
+      console.error("Error fetching jobs for admit card:", err);
+      return [];
+    }
+  };
+
+  React.useEffect(() => {
+    fetchJobsList();
+  }, []);
 
   const saveSection = async (section, values, setFieldValue) => {
     const id = await ensureAdmitCardId(values, setFieldValue);
@@ -254,11 +271,13 @@ const AddAdmitCard = () => {
                           onChange={handleChange}
                           onBlur={handleBlur}
                           isInvalid={touched.admitCard_post_name && errors.admitCard_post_name}
-                        >
+                        > 
                           <option value="">Select Post Name</option>
-                          <option value="Post A">Post A</option>
-                          <option value="Post B">Post B</option>
-                          <option value="Post C">Post C</option>
+                          {jobsList.map((job) => (
+                            <option key={job._id} value={job.job_title}>
+                              {job.job_title}
+                            </option>
+                          ))}
                         </Form.Select>
                         <Form.Control.Feedback type="invalid">{errors.admitCard_post_name}</Form.Control.Feedback>
                       </Form.Group>
