@@ -729,7 +729,25 @@ exports.jobListSectorWise = async (studentId) => {
 
     const studentSector = student.studentJobSector;
 
-    const fetchJobSectorWise = await Job.find({ job_sector: studentSector });
+    const fetchJobSectorWise = await Job.find({ job_sector: studentSector })
+      .select(
+        "job_title job_short_desc job_category job_sector job_type job_vacancy_total job_start_date",
+      )
+      .populate({
+        path: "job_category",
+        model: "JobCategory",
+        select: "category_name",
+      })
+      .populate({
+        path: "job_sector",
+        model: "JobSector",
+        select: "job_sector_name",
+      })
+      .populate({
+        path: "job_type",
+        model: "JobType",
+        select: "job_type_name",
+      });
 
     return {
       status: 200,
