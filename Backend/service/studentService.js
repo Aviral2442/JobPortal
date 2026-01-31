@@ -361,6 +361,7 @@ exports.studentRegistration = async (studentData) => {
         studentJobSector: newStudent.studentJobSector,
         studentReferralCode: newStudent.studentReferralCode,
         studentProfilePic: newStudent.studentProfilePic,
+        loginStatus: true,
       },
     };
   } catch (error) {
