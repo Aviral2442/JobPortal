@@ -361,6 +361,7 @@ exports.studentRegistration = async (studentData) => {
         studentJobSector: newStudent.studentJobSector,
         studentReferralCode: newStudent.studentReferralCode,
         studentProfilePic: newStudent.studentProfilePic,
+        loginStatus: true,
       },
     };
   } catch (error) {
@@ -795,6 +796,59 @@ exports.resetStudentPassword = async (studentPasswordData) => {
     return {
       status: 500,
       message: "An error occurred during password update",
+      error: error.message,
+    };
+  }
+};
+
+// UPDATE STUDENT PRIMARY DETAILS SERVICE
+exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
+  try {
+    const student = await studentModel.findById(studentId);
+    if (!student) {
+      return { status: 404, message: "Student not found", jsonData: {} };
+    }
+
+    let profilePicUrl = null;
+    if (studentPrimaryData.studentProfilePic) {
+      profilePicUrl = saveBase64File(
+        studentPrimaryData.studentProfilePic,
+        "StudentProfile",
+        "student",
+        studentPrimaryData.extension,
+      );
+    }
+
+    if (studentPrimaryData.studentFirstName) {
+      student.studentFirstName = studentPrimaryData.studentFirstName;
+    }
+    if (studentPrimaryData.studentLastName) {
+      student.studentLastName = studentPrimaryData.studentLastName;
+    }
+    if (studentPrimaryData.studentJobSector) {
+      student.studentJobSector = studentPrimaryData.studentJobSector;
+    }
+    if (studentPrimaryData.studentProfilePic) {
+      student.studentProfilePic = profilePicUrl;
+    }
+    await student.save();
+
+    return {
+      status: 200,
+      message: "Student primary details updated successfully",
+      jsonData: {
+        studentId: student._id,
+        studentFirstName: student.studentFirstName,
+        studentLastName: student.studentLastName,
+        studentJobSector: student.studentJobSector,
+        studentProfilePic: student.studentProfilePic,
+      },
+    };
+
+  } catch (error) {
+    return {
+      status: 500,
+      message: "An error occurred during updating student primary details",
       error: error.message,
     };
   }
