@@ -392,7 +392,12 @@ exports.studentAppliedJobsOn = async (studentId) => {
       .populate({
         path: "jobId",
         model: "Jobs",
-        select: "job_title job_category job_sector job_type",
+        select: "job_title job_short_desc job_posted_date job_category job_sector job_type job_vacancy_total",
+        populate: {
+          path: ["job_category", "job_sector", "job_type"],
+          model: ["JobCategory", "JobSector", "JobType"],
+          select: ["category_name", "job_sector_name", "job_type_name"],
+        }
       })
       .exec();
 
