@@ -12,6 +12,7 @@ const {
   uploadJobFiles,
   deleteJobArrayItem
 } = require("../controllers/jobController");
+const JobsController = require("../controllers/JobsController");
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -51,5 +52,11 @@ router.delete("/:id", deleteJob);
 router.post("/save-section", saveJobSection);
 router.post("/files", upload.array("files", 10), uploadJobFiles);
 router.delete("/:id/section/:section/:index", deleteJobArrayItem);
+
+
+// new Job routes
+router.post("/add", JobsController.addJobsController);
+router.get("/get_job/:jobId", JobsController.getJobByIdController);
+router.put("/update_job/:id", JobsController.updateJobByIdController);
 
 module.exports = router;
