@@ -24,7 +24,6 @@ const sendMobileOtp = require("../utils/mobileNoOtp");
 const NotificationModel = require("../models/NotificationModel");
 const JobAppliedMapperModel = require("../models/JobAppliedMapperModel");
 const JobModel = require("../models/JobModel");
-const JobSectorModel = require("../models/JobSectorModel");
 
 // STUDENT LIST SERVICE
 exports.studentListService = async (query) => {
@@ -396,22 +395,11 @@ exports.studentLogin = async (studentLoginData) => {
 
     if (provider === "google") {
       if (!student) {
-
-        studentProfilePic = null;
-        if (studentLoginData.studentProfilePic) {
-          studentProfilePic = saveBase64File(
-            studentLoginData.studentProfilePic,
-            "StudentProfile",
-            "student",
-            studentLoginData.extension,
-          );
-        }
-
         student = await studentModel.create({
           studentFirstName: studentLoginData.studentFirstName,
           studentLastName: studentLoginData.studentLastName || "",
           studentEmail: email,
-          studentProfilePic: studentProfilePic || "",
+          studentProfilePic: studentLoginData.studentProfilePic || "",
           studentLastLoginType: studentLoginData.provider,
           studentJobSector: "697c55559f27582a27b27c2a",
         });
@@ -1914,14 +1902,6 @@ exports.studentDashboardData = async (studentId) => {
 
     const allJobsCount = await JobModel.countDocuments({ job_sector: student.studentJobSector });
 
-    const studentSector = student.studentJobSector;
-    const sectorDetails = await JobSectorModel.findById(studentSector);
-
-    let jobSectorUpdateStatus = false;
-    if (sectorDetails && sectorDetails.job_sector_name === "Not Specified") {
-      jobSectorUpdateStatus = true;
-    }
-
     return {
       status: 200,
       message: "Student dashboard data fetched successfully",
@@ -1929,7 +1909,6 @@ exports.studentDashboardData = async (studentId) => {
         appliedJobsCount: appliedJobsCount,
         eligibleJobsCount: eligibleJobsCount,
         allJobsCount: allJobsCount,
-        neededJobSectorChange: jobSectorUpdateStatus,
       }
     };
 
