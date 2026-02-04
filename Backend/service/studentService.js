@@ -395,11 +395,22 @@ exports.studentLogin = async (studentLoginData) => {
 
     if (provider === "google") {
       if (!student) {
+
+        studentProfilePic = null;
+        if (studentLoginData.studentProfilePic) {
+          studentProfilePic = saveBase64File(
+            studentLoginData.studentProfilePic,
+            "StudentProfile",
+            "student",
+            studentLoginData.extension,
+          );
+        }
+
         student = await studentModel.create({
           studentFirstName: studentLoginData.studentFirstName,
           studentLastName: studentLoginData.studentLastName || "",
           studentEmail: email,
-          studentProfilePic: studentLoginData.studentProfilePic || "",
+          studentProfilePic: studentProfilePic || "",
           studentLastLoginType: studentLoginData.provider,
           studentJobSector: "697c55559f27582a27b27c2a",
         });
