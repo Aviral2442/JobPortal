@@ -6,6 +6,8 @@ const JobCategoryModel = require("../models/JobCategoryModel");
 const JobSubCategoryModel = require("../models/JobSubCategoryModel");
 const AdmitCardModel = require("../models/AdmitCardModel");
 const AnswerKeyModel = require("../models/AnswerKeyModel");
+// const studentModel = require("../models/studentModel");
+// const AnswerKeyModel = require("../models/AnswerKeyModel");
 const ResultModel = require("../models/ResultModel");
 const moment = require("moment");
 const { saveBase64File } = require("../middleware/base64FileUpload");
@@ -392,12 +394,13 @@ exports.studentAppliedJobsOn = async (studentId) => {
       .populate({
         path: "jobId",
         model: "Jobs",
-        select: "job_title job_short_desc job_posted_date job_category job_sector job_type job_vacancy_total",
+        select:
+          "job_title job_short_desc job_posted_date job_category job_sector job_type job_vacancy_total",
         populate: {
           path: ["job_category", "job_sector", "job_type"],
           model: ["JobCategory", "JobSector", "JobType"],
           select: ["category_name", "job_sector_name", "job_type_name"],
-        }
+        },
       })
       .exec();
 
@@ -1130,6 +1133,69 @@ exports.jobFullDetailsById = async (jobId) => {
   }
 };
 
+// GET ADMIT CARD LIST BY STUDENT ID SERVICE
+exports.getAdmitCardListByStudentId = async (studentId) => {
+  try {
+    const student = await Student.findById(studentId).select("studentJobSector");
+
+    if (!student) {
+      return { status: 404, message: "Student not found", jsonData: {} };
+    }
+
+    const studentSector = student.studentJobSector;
+
+    if (!studentSector) {
+      return {
+        status: 200,
+        message: "No job sector assigned to student",
+        jsonData: {
+          admitCardCount: 0,
+          admitCards: [],
+        },
+      };
+    }
+
+    // Fetch admit cards related to the student's job sector
+    const admitCards = await AdmitCardModel.find()
+      .select(
+        "admitCard_JobId admitCard_Title admitCard_Desc admitCard_URL admitCard_FilePath admitCard_ReleaseDate admitCard_CreatedAt",
+      )
+      .populate({
+        path: "admitCard_JobId",
+        model: "Jobs",
+        match: { job_sector: studentSector },
+        select: "job_title job_category job_type job_sector",
+        populate: [
+          { path: "job_category", select: "category_name" },
+          { path: "job_type", select: "job_type_name" },
+          { path: "job_sector", select: "job_sector_name" },
+        ],
+      })
+      .sort({ admitCard_CreatedAt: -1 });
+
+    // Filter out admit cards where job sector doesn't match
+    const filteredAdmitCards = admitCards.filter(
+      (card) => card.admitCard_JobId !== null,
+    );
+
+    return {
+      status: 200,
+      message: "Admit card list fetched successfully",
+      jsonData: {
+        admitCardCount: filteredAdmitCards.length,
+        admitCards: filteredAdmitCards,
+      },
+    };
+  } catch (error) {
+    console.error("Error in getAdmitCardListByStudentId Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+      jsonData: {},
+    };
+  }
+};
+
 // GOV ADMIN JOB CATEGORY CARD LIST SERVICE WITH FILTERS AND PAGINATION
 exports.govAdminCardList = async (query) => {
   const {
@@ -1437,5 +1503,115 @@ exports.psuAdminCardList = async (query) => {
     limit: parseInt(limit),
     totalPages: Math.ceil(total / limit),
     psuAdmitCardData: filteredData,
+  };
+};
+
+// GET GOV ANSWER KEY LIST SERVICE WITH FILTERS AND PAGINATION
+exports.govAnswerKeyList = async (query) => {
+  const {
+    dateFilter,
+    fromDate,
+    toDate,
+    searchFilter,
+    page = 1,
+    limit = 10,
+  } = query;
+
+  const skip = (page - 1) * limit;
+  const filter = {};
+
+  // 🔍 Search
+  if (searchFilter) {
+    filter.answerKey_Title = { $regex: searchFilter, $options: "i" };
+  }
+
+  // 📅 Date filter
+  if (dateFilter) {
+    const today = moment().startOf("day");
+    const now = moment().endOf("day");
+    let startDate, endDate;
+
+    switch (dateFilter) {
+      case "today":
+        startDate = today.unix();
+        endDate = now.unix();
+        break;
+
+      case "yesterday":
+        startDate = today.clone().subtract(1, "days").unix();
+        endDate = now.clone().subtract(1, "days").unix();
+        break;
+
+      case "this_week":
+        startDate = moment().startOf("week").unix();
+        endDate = moment().endOf("week").unix();
+        break;
+
+      case "this_month":
+        startDate = moment().startOf("month").unix();
+        endDate = moment().endOf("month").unix();
+        break;
+
+      case "custom":
+        if (fromDate && toDate) {
+          startDate = moment(fromDate).startOf("day").unix();
+          endDate = moment(toDate).endOf("day").unix();
+        }
+        break;
+    }
+
+    if (startDate && endDate) {
+      filter.admitCard_CreatedAt = { $gte: startDate, $lte: endDate };
+    }
+  }
+
+  // ✅ Get Government sector ID
+  const governmentSector = await JobSector.findOne({
+    job_sector_name: { $regex: /^government/i },
+  }).select("_id");
+
+  if (!governmentSector) {
+    return {
+      total: 0,
+      page,
+      limit,
+      totalPages: 0,
+      admitCardData: [],
+    };
+  }
+
+  // ✅ Main query
+  const answerKeyData = await AnswerKeyModel.find(filter)
+    .select(
+      "answerKey_JobId answerKey_Title answerKey_Desc answerKey_URL answerKey_FilePath answerKey_ReleaseDate answerKey_CreatedAt",
+    )
+    .populate({
+      path: "answerKey_JobId",
+      model: "Jobs",
+      match: { job_sector: governmentSector._id }, // ⭐ IMPORTANT
+      select: "job_title job_category job_type job_sector",
+      populate: [
+        { path: "job_category", select: "category_name" },
+        { path: "job_type", select: "job_type_name" },
+        { path: "job_sector", select: "job_sector_name" },
+      ],
+    })
+    .sort({ answerKey_CreatedAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  // 🚿 Remove non-government jobs
+  const filteredData = answerKeyData.filter(
+    (item) => item.answerKey_JobId !== null,
+  );
+
+  const total = filteredData.length;
+
+  return {
+    total,
+    page: parseInt(page),
+    limit: parseInt(limit),
+    totalPages: Math.ceil(total / limit),
+    answerKeyData: filteredData,
   };
 };

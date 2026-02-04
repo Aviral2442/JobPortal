@@ -46,12 +46,16 @@ router.get('/government_sector_job_list', JobCategoryController.governmentSector
 router.get('/psu_sector_job_list', JobCategoryController.psuSectorJobList);
 router.get('/government_and_psu_sector_job_list', JobCategoryController.governmentAndPsuSectorJobList);
 router.get('/job_full_details/:jobId', JobCategoryController.jobFullDetailsById);
+router.get('/get_admit_card_list/:studentId', JobCategoryController.getAdmitCardListByStudentId);
 
 // GOVERNMENT AND PSU ADMIT CARD ROUTES
 router.get('/government_admit_card_list', JobCategoryController.govAdminCardList);
 router.get('/psu_admit_card_list', JobCategoryController.psuAdminCardList);
 router.post('/add_admit_card', JobCategoryController.addAdmitCard);
 router.put('/update_admit_card/:admitCardId', JobCategoryController.updateAdmitCard);
+
+// GOVERNMENT AND PSU ANSWER KEY ROUTES
+
 
 
 

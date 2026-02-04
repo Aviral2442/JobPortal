@@ -425,6 +425,25 @@ exports.jobFullDetailsById = async (req, res) => {
     }
 };
 
+// GET ADMIT CARD LIST BY STUDENT ID CONTROLLER
+exports.getAdmitCardListByStudentId = async (req, res) => {
+    try {
+        const studentId = req.params.studentId;
+        const response = await JobCategoryService.getAdmitCardListByStudentId(studentId);
+        return res.status(response.status).json({
+            status: response.status,
+            message: response.message,
+            jsonData: response.jsonData || null,
+        });
+    } catch (error) {
+        console.error("Job admit card By Id Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
+};
+
 // GOVERNMENT ADMIN CARD LIST CONTROLLER
 exports.govAdminCardList = async (req, res) => {
     try {
