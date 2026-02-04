@@ -512,3 +512,72 @@ exports.psuAdminCardList = async (req, res) => {
         });
     }
 };
+
+// GOVERNMENT ANSWER KEY LIST CONTROLLER
+exports.govAnswerKeyList = async (req, res) => {
+    try {
+        const result = await JobCategoryService.govAnswerKeyList(req.query);
+        res.status(200).json({
+            status: 200,
+            message: 'Government answer key list fetched successfully',
+            jsonData: result,
+        });
+    } catch (error) {
+        console.error('Error in govAnswerKeyList Controller:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};
+
+// PSU ANSWER KEY LIST CONTROLLER
+exports.psuAnswerKeyList = async (req, res) => {
+    try {
+        const result = await JobCategoryService.psuAnswerKeyList(req.query);
+        res.status(200).json({
+            status: 200,
+            message: 'PSU answer key list fetched successfully',
+            jsonData: result,
+        });
+    } catch (error) {
+        console.error('Error in psuAnswerKeyList Controller:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};
+
+// ADD ANSWER KEY CONTROLLER
+exports.addAnswerKey = async (req, res) => {
+    try {
+        const result = await JobCategoryService.addAnswerKey(req.body);
+        console.log("Add Answer Key Result:", result);
+        return res.status(result.status).json(result);
+    } catch (error) {
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};
+
+// UPDATE ANSWER KEY CONTROLLER
+exports.updateAnswerKey = async (req, res) => {
+    try {
+        const answerKeyId = req.params.answerKeyId;
+        const updateData = req.body;
+        const result = await JobCategoryService.updateAnswerKey(answerKeyId, updateData);
+        return res.status(result.status).json(result);
+} catch (error) {
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};

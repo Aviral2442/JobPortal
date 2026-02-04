@@ -1136,7 +1136,8 @@ exports.jobFullDetailsById = async (jobId) => {
 // GET ADMIT CARD LIST BY STUDENT ID SERVICE
 exports.getAdmitCardListByStudentId = async (studentId) => {
   try {
-    const student = await Student.findById(studentId).select("studentJobSector");
+    const student =
+      await Student.findById(studentId).select("studentJobSector");
 
     if (!student) {
       return { status: 404, message: "Student not found", jsonData: {} };
@@ -1195,6 +1196,71 @@ exports.getAdmitCardListByStudentId = async (studentId) => {
     };
   }
 };
+
+// GET ANSWER KEY LIST BY STUDENT ID SERVICE
+exports.getAnswerKeyListByStudentId = async (studentId) => {
+  try {
+    const student =
+      await Student.findById(studentId).select("studentJobSector");
+
+    if (!student) {
+      return { status: 404, message: "Student not found", jsonData: {} };
+    }
+
+    const studentSector = student.studentJobSector;
+
+    if (!studentSector) {
+      return {
+        status: 200,
+        message: "No job sector assigned to student",
+        jsonData: {
+          admitCardCount: 0,
+          admitCards: [],
+        },
+      };
+    }
+
+    // Fetch admit cards related to the student's job sector
+    const admitCards = await AnswerKeyModel.find()
+      .select(
+        "admitCard_JobId admitCard_Title admitCard_Desc admitCard_URL admitCard_FilePath admitCard_ReleaseDate admitCard_CreatedAt",
+      )
+      .populate({
+        path: "admitCard_JobId",
+        model: "Jobs",
+        match: { job_sector: studentSector },
+        select: "job_title job_category job_type job_sector",
+        populate: [
+          { path: "job_category", select: "category_name" },
+          { path: "job_type", select: "job_type_name" },
+          { path: "job_sector", select: "job_sector_name" },
+        ],
+      })
+      .sort({ admitCard_CreatedAt: -1 });
+
+    // Filter out admit cards where job sector doesn't match
+    const filteredAdmitCards = admitCards.filter(
+      (card) => card.admitCard_JobId !== null,
+    );
+
+    return {
+      status: 200,
+      message: "Admit card list fetched successfully",
+      jsonData: {
+        admitCardCount: filteredAdmitCards.length,
+        admitCards: filteredAdmitCards,
+      },
+    };
+  } catch (error) {
+    console.error("Error in getAdmitCardListByStudentId Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+      jsonData: {},
+    };
+  }
+};
+
 
 // GOV ADMIN JOB CATEGORY CARD LIST SERVICE WITH FILTERS AND PAGINATION
 exports.govAdminCardList = async (query) => {
@@ -1561,7 +1627,7 @@ exports.govAnswerKeyList = async (query) => {
     }
 
     if (startDate && endDate) {
-      filter.admitCard_CreatedAt = { $gte: startDate, $lte: endDate };
+      filter.answerKey_CreatedAt = { $gte: startDate, $lte: endDate };
     }
   }
 
@@ -1576,7 +1642,7 @@ exports.govAnswerKeyList = async (query) => {
       page,
       limit,
       totalPages: 0,
-      admitCardData: [],
+      answerKeyData: [],
     };
   }
 
@@ -1614,4 +1680,210 @@ exports.govAnswerKeyList = async (query) => {
     totalPages: Math.ceil(total / limit),
     answerKeyData: filteredData,
   };
+};
+
+// GET PSU ANSWER KEY LIST SERVICE WITH FILTERS AND PAGINATION
+exports.psuAnswerKeyList = async (query) => {
+  const {
+    dateFilter,
+    fromDate,
+    toDate,
+    searchFilter,
+    page = 1,
+    limit = 10,
+  } = query;
+
+  const skip = (page - 1) * limit;
+  const filter = {};
+
+  // 🔍 Search
+  if (searchFilter) {
+    filter.answerKey_Title = { $regex: searchFilter, $options: "i" };
+  }
+
+  // 📅 Date filter
+  if (dateFilter) {
+    const today = moment().startOf("day");
+    const now = moment().endOf("day");
+    let startDate, endDate;
+
+    switch (dateFilter) {
+      case "today":
+        startDate = today.unix();
+        endDate = now.unix();
+        break;
+
+      case "yesterday":
+        startDate = today.clone().subtract(1, "days").unix();
+        endDate = now.clone().subtract(1, "days").unix();
+        break;
+
+      case "this_week":
+        startDate = moment().startOf("week").unix();
+        endDate = moment().endOf("week").unix();
+        break;
+
+      case "this_month":
+        startDate = moment().startOf("month").unix();
+        endDate = moment().endOf("month").unix();
+        break;
+
+      case "custom":
+        if (fromDate && toDate) {
+          startDate = moment(fromDate).startOf("day").unix();
+          endDate = moment(toDate).endOf("day").unix();
+        }
+        break;
+    }
+
+    if (startDate && endDate) {
+      filter.answerKey_CreatedAt = { $gte: startDate, $lte: endDate };
+    }
+  }
+
+  // ✅ Get PSU sector ID
+  const psuSector = await JobSector.findOne({
+    job_sector_name: { $regex: /^psu/i },
+  }).select("_id");
+
+  if (!psuSector) {
+    return {
+      total: 0,
+      page,
+      limit,
+      totalPages: 0,
+      answerKeyData: [],
+    };
+  }
+
+  // ✅ Main query
+  const answerKeyData = await AnswerKeyModel.find(filter)
+    .select(
+      "answerKey_JobId answerKey_Title answerKey_Desc answerKey_URL answerKey_FilePath answerKey_ReleaseDate answerKey_CreatedAt",
+    )
+    .populate({
+      path: "answerKey_JobId",
+      model: "Jobs",
+      match: { job_sector: psuSector._id }, // ⭐ IMPORTANT
+      select: "job_title job_category job_type job_sector",
+      populate: [
+        { path: "job_category", select: "category_name" },
+        { path: "job_type", select: "job_type_name" },
+        { path: "job_sector", select: "job_sector_name" },
+      ],
+    })
+    .sort({ answerKey_CreatedAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  // 🚿 Remove non-psu jobs
+  const filteredData = answerKeyData.filter(
+    (item) => item.answerKey_JobId !== null,
+  );
+
+  const total = filteredData.length;
+
+  return {
+    total,
+    page: parseInt(page),
+    limit: parseInt(limit),
+    totalPages: Math.ceil(total / limit),
+    answerKeyData: filteredData,
+  };
+};
+
+// ADD ANSWER KEY SERVICE
+exports.addAnswerKey = async (data) => {
+  try {
+    const newAnswerKey = new AnswerKeyModel({
+      answerKey_JobId: data.answerKey_JobId,
+      answerKey_Title: data.answerKey_Title,
+      answerKey_Desc: data.answerKey_Desc,
+      answerKey_URL: data.answerKey_URL,
+      answerKey_FilePath: "",
+      answerKey_ReleaseDate: data.answerKey_ReleaseDate,
+    });
+
+    let answerKey_FilePath = null;
+    if (data.answerKey_FilePath) {
+      answerKey_FilePath = saveBase64File(
+        data.answerKey_FilePath,
+        "answerKey",
+        "job",
+        data.extension,
+      );
+    }
+
+    newAnswerKey.answerKey_FilePath = answerKey_FilePath;
+
+    await newAnswerKey.save();
+
+    return {
+      status: 200,
+      message: "Answer key added successfully",
+      jsonData: newAnswerKey,
+    };
+  } catch (error) {
+    console.error("Error in addAnswerKey Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+    };
+  }
+};
+
+// UPDATE ANSWER KEY SERVICE
+exports.updateAnswerKey = async (answerKeyId, data) => {
+  try {
+    const fetchAnswerKey = await AnswerKeyModel.findById(answerKeyId);
+    if (!fetchAnswerKey) {
+      return {
+        status: 404,
+        message: "Answer key not found",
+        jsonData: {},
+      };
+    }
+
+    console.log(data);
+    let answerKey_FilePath = fetchAnswerKey.answerKey_FilePath;
+    if (
+      data.answerKey_FilePath &&
+      data.answerKey_FilePath !== answerKey_FilePath
+    ) {
+      answerKey_FilePath = saveBase64File(
+        data.answerKey_FilePath,
+        "answerKey",
+        "job",
+        data.extension,
+      );
+    }
+
+    const updateData = {
+      answerKey_JobId: data.answerKey_JobId || fetchAnswerKey.answerKey_JobId,
+      answerKey_Title: data.answerKey_Title || fetchAnswerKey.answerKey_Title,
+      answerKey_Desc: data.answerKey_Desc || fetchAnswerKey.answerKey_Desc,
+      answerKey_URL: data.answerKey_URL || fetchAnswerKey.answerKey_URL,
+      answerKey_FilePath: answerKey_FilePath,
+      answerKey_ReleaseDate:
+        data.answerKey_ReleaseDate || fetchAnswerKey.answerKey_ReleaseDate,
+    };
+
+    const updatedAnswerKey = await AnswerKeyModel.findByIdAndUpdate(
+      answerKeyId,
+      updateData,
+      { new: true },
+    );
+
+    return {
+      status: 200,
+      message: "Answer key updated successfully",
+      jsonData: updatedAnswerKey,
+    };
+  } catch (error) {
+    console.error("Error in updateAnswerKey Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+    };
+  }
 };
