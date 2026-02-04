@@ -448,6 +448,7 @@ exports.govAdminCardList = async (req, res) => {
 exports.addAdmitCard = async (req, res) => {
     try {
         const result = await JobCategoryService.addAdmitCard(req.body);
+        console.log("Add Admit Card Result:", result);
         return res.status(result.status).json(result);
     } catch (error) {
         res.status(500).json({

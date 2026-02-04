@@ -9,10 +9,11 @@ import React from "react";
 
 const admitCardValidationSchema = Yup.object({
   _id: Yup.string(),
-  admitCard_post_name: Yup.string().required("Post Name is required"),
-  admitCard_short_desc: Yup.string().required("Short Description is required"),
-  admitCard_file: Yup.mixed().required("Admit Card file is required"),
-  admitCard_Url: Yup.string().url("Invalid URL format").required("Admit Card URL is required"),
+  admitCard_JobId: Yup.string().required("Job is required"),
+  admitCard_Title: Yup.string().required("Title is required"),
+  admitCard_Desc: Yup.string().required("Description is required"),
+  admitCard_URL: Yup.string().url("Invalid URL format").required("Admit Card URL is required"),
+  admitCard_ReleaseDate: Yup.date().required("Release Date is required"),
 });
 
 const FormInput = ({
@@ -56,91 +57,54 @@ const AddAdmitCard = () => {
   const [admitCardFile, setAdmitCardFile] = useState(null);
   const [message, setMessage] = useState({ text: "", variant: "" });
   const [jobsList, setJobsList] = useState([]);
-
-  const requiredSections = ["basicDetails"];
-  const [sectionsTracking, setSectionsTracking] = useState(
-    Object.fromEntries(requiredSections.map((s) => [s, false]))
-  );
+  const [admitCardId, setAdmitCardId] = useState(null);
+  const [fileBase64, setFileBase64] = useState("");
 
   const initialValues = useMemo(() => ({
     _id: "",
-    admitCard_post_name: "",
-    admitCard_short_desc: "",
-    admitCard_file: null,
-    admitCard_Url: "",
+    admitCard_JobId: "",
+    admitCard_Title: "",
+    admitCard_Desc: "",
+    admitCard_URL: "",
+    admitCard_ReleaseDate: "",
+    admitCard_FilePath: "",
   }), []);
 
-  const ensureAdmitCardId = async (values, setFieldValue) => {
-    if (values._id) return values._id;
+  // Convert file to base64
+  const convertFileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(file);
+    });
+  };
 
-    if (!values.admitCard_post_name || !values.admitCard_short_desc) {
-      setMessage({ text: "Please fill required fields: Post Name and Short Description", variant: "danger" });
-      return null;
-    }
-
-    const minimal = {
-      admitCard_post_name: values.admitCard_post_name.trim(),
-      admitCard_short_desc: values.admitCard_short_desc.trim(),
-      admitCard_status: 0, // Active by default
-    };
-
-    const fd = new FormData();
-    fd.append("admitCardData", JSON.stringify(minimal));
-
-    try {
-      const res = await axios.post(`/admit-cards`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      const id = res?.data?.admitCardId || res?.data?._id;
-      console.log("Created admit card with ID:", res.data);
-      if (id) {
-        setFieldValue("_id", id);
-        setMessage({ text: "Admit card created successfully.", variant: "success" });
+  // Handle file change
+  const handleFileChange = async (e, setFieldValue) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAdmitCardFile(file);
+      try {
+        const base64 = await convertFileToBase64(file);
+        setFileBase64(base64);
+        setFieldValue("admitCard_FilePath", file.name);
+      } catch (error) {
+        console.error("Error converting file:", error);
+        setMessage({ text: "Error processing file", variant: "danger" });
       }
-      return id;
-    } catch (error) {
-      console.error("Error creating admit card:", error);
-      setMessage({ text: error.response?.data?.error || "Error creating admit card", variant: "danger" });
-      return null;
     }
   };
 
-  const uploadFile = async (values, setFieldValue) => {
-    const id = await ensureAdmitCardId(values, setFieldValue);
-    if (!id || !admitCardFile) {
-      setMessage({ text: "Select a file to upload.", variant: "warning" });
-      return;
-    }
-
-    const fd = new FormData();
-    fd.append("admitCardId", id);
-    fd.append("files", admitCardFile);
-
-    try {
-      await axios.post(`/admit-cards/files`, fd, { headers: { "Content-Type": "multipart/form-data" } });
-      setFieldValue("admitCard_file", admitCardFile.name || "");
-      setAdmitCardFile(null);
-      setMessage({ text: "File uploaded successfully.", variant: "success" });
-    } catch (e) {
-      console.error("Error uploading file:", e);
-      setMessage({ text: "Error uploading file", variant: "danger" });
-    }
-  };
-
-  const maybeRedirect = (state) => {
-    if (requiredSections.every((s) => state[s])) {
-      setTimeout(() => navigate("/admin/admit-cards"), 500);
-    }
-  };
-
-  const fetchJobsList = async () =>{
+  // Fetch jobs list
+  const fetchJobsList = async () => {
     try {
       const res = await axios.get(`/job-categories/government_and_psu_sector_job_list`);
       console.log("Fetched jobs for admit card:", res.data);
       setJobsList(res.data?.jsonData?.govAndPsuJobList || []);
     } catch (err) {
       console.error("Error fetching jobs for admit card:", err);
-      return [];
+      setMessage({ text: "Error fetching jobs list", variant: "danger" });
     }
   };
 
@@ -148,59 +112,84 @@ const AddAdmitCard = () => {
     fetchJobsList();
   }, []);
 
-  const saveSection = async (section, values, setFieldValue) => {
-    const id = await ensureAdmitCardId(values, setFieldValue);
-    if (!id) return;
-
-    let sectionData = null;
-
-    if (section === "basicDetails") {
-      if (!values.admitCard_post_name || !values.admitCard_short_desc || !values.admitCard_Url) {
-        setMessage({ text: "Please fill all required fields", variant: "danger" });
-        return;
-      }
-
-      if (!admitCardFile && !values.admitCard_file) {
-        setMessage({ text: "Please upload admit card file", variant: "warning" });
-        return;
-      }
-
-      sectionData = {
-        admitCard_post_name: values.admitCard_post_name.trim(),
-        admitCard_short_desc: values.admitCard_short_desc.trim(),
-        admitCard_Url: values.admitCard_Url.trim(),
-      };
-    }
-
-    if (!sectionData || Object.keys(sectionData).length === 0) {
-      console.warn("No valid data to save for section:", section);
-      setMessage({ text: "No data to save. Please fill required fields.", variant: "warning" });
-      return;
-    }
-    console.log(`Saving section ${section} with data:`, sectionData);
-
+  // Create admit card using POST API
+  const createAdmitCard = async (values) => {
     try {
-      const res = await axios.post(`/admit-cards/save-section`, {
-        admitCardId: id,
-        section,
-        data: sectionData
-      });
-      console.log(`Saved section ${section}:`, res.data);
-      setMessage({ text: `${section} saved successfully!`, variant: "success" });
+      const payload = {
+        admitCard_JobId: values.admitCard_JobId,
+        admitCard_Title: values.admitCard_Title,
+        admitCard_Desc: values.admitCard_Desc,
+        admitCard_URL: values.admitCard_URL,
+        admitCard_ReleaseDate: Number(new Date(values.admitCard_ReleaseDate).getTime()),
+        admitCard_FilePath: fileBase64,
+      };
 
-      if (requiredSections.includes(section)) {
-        setSectionsTracking((prev) => {
-          const updated = { ...prev, [section]: true };
-          maybeRedirect(updated);
-          return updated;
-        });
+      const res = await axios.post(`/job-categories/add_admit_card`, payload);
+      
+      if (res.data.status === 200 || res.data.status === 201) {
+        const newAdmitCardId = res.data.admitCardId || res.data.jsonData?._id;
+        setAdmitCardId(newAdmitCardId);
+        setMessage({ text: "Admit card created successfully!", variant: "success" });
+        
+        setTimeout(() => {
+          navigate("/admin/admit-card");
+        }, 1500);
+        
+        return newAdmitCardId;
       }
     } catch (error) {
-      console.error("Error saving section:", error);
+      console.error("Error creating admit card:", error);
       setMessage({
-        text: error.response?.data?.error || `Error saving ${section}`,
+        text: error.response?.data?.message || "Error creating admit card",
         variant: "danger"
       });
+      return null;
+    }
+  };
+
+  // Update admit card using PUT API
+  const updateAdmitCard = async (values) => {
+    if (!admitCardId) {
+      setMessage({ text: "No admit card to update", variant: "warning" });
+      return;
+    }
+
+    try {
+      const payload = {
+        admitCard_Title: values.admitCard_Title,
+        admitCard_Desc: values.admitCard_Desc,
+        admitCard_URL: values.admitCard_URL,
+        admitCard_ReleaseDate: Number(new Date(values.admitCard_ReleaseDate).getTime()),
+      };
+
+      if (fileBase64) {
+        payload.admitCard_FilePath = fileBase64;
+      }
+
+      const res = await axios.put(`/job-categories/update_admit_card/${admitCardId}`, payload);
+      
+      if (res.data.status === 200) {
+        setMessage({ text: "Admit card updated successfully!", variant: "success" });
+        
+        setTimeout(() => {
+          navigate("/admin/admit-cards");
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Error updating admit card:", error);
+      setMessage({
+        text: error.response?.data?.message || "Error updating admit card",
+        variant: "danger"
+      });
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = async (values) => {
+    if (admitCardId) {
+      await updateAdmitCard(values);
+    } else {
+      await createAdmitCard(values);
     }
   };
 
@@ -216,10 +205,10 @@ const AddAdmitCard = () => {
         <Formik
           initialValues={initialValues}
           validationSchema={admitCardValidationSchema}
-          onSubmit={(values) => console.log("Form submitted:", values)}
+          onSubmit={handleSubmit}
         >
-          {({ values, errors, touched, handleChange, handleBlur, setFieldValue }) => (
-            <Form onSubmit={(e) => e.preventDefault()}>
+          {({ values, errors, touched, handleChange, handleBlur, setFieldValue, isSubmitting }) => (
+            <Form onSubmit={(e) => { e.preventDefault(); handleSubmit(values); }}>
               {/* Basic Admit Card Details */}
               <ComponentCard className="mb-3" title="Admit Card Details">
                 <Card.Body>
@@ -229,31 +218,14 @@ const AddAdmitCard = () => {
                         <Form.Label className="mb-1">
                           Admit Card File <span className="text-danger ms-1">*</span>
                         </Form.Label>
-                        <div className="d-flex align-items-center gap-3">
-                          <Form.Control
-                            type="file"
-                            accept=".pdf,.doc,.docx"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              setAdmitCardFile(file || null);
-                            }}
-                            isInvalid={touched.admitCard_file && errors.admitCard_file}
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline-primary"
-                            onClick={() => uploadFile(values, setFieldValue)}
-                            disabled={!admitCardFile}
-                          >
-                            Upload
-                          </Button>
-                        </div>
-                        {touched.admitCard_file && errors.admitCard_file && (
-                          <div className="text-danger small mt-1">{errors.admitCard_file}</div>
-                        )}
-                        {values.admitCard_file && (
+                        <Form.Control
+                          type="file"
+                          accept=".pdf,.doc,.docx"
+                          onChange={(e) => handleFileChange(e, setFieldValue)}
+                        />
+                        {values.admitCard_FilePath && (
                           <div className="text-success small mt-1">
-                            File uploaded: {values.admitCard_file}
+                            File selected: {values.admitCard_FilePath}
                           </div>
                         )}
                       </Form.Group>
@@ -262,72 +234,91 @@ const AddAdmitCard = () => {
                       <Form.Group className="mb-2">
                         <div className="d-flex justify-content-between align-items-end">
                           <Form.Label className="mb-0 mt-1">
-                            Post Name <span className="text-danger ms-1">*</span>
+                            Select Job <span className="text-danger ms-1">*</span>
                           </Form.Label>
                         </div>
                         <Form.Select
-                          name="admitCard_post_name"
-                          value={values.admitCard_post_name}
+                          name="admitCard_JobId"
+                          value={values.admitCard_JobId}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          isInvalid={touched.admitCard_post_name && errors.admitCard_post_name}
+                          isInvalid={touched.admitCard_JobId && errors.admitCard_JobId}
                         > 
-                          <option value="">Select Post Name</option>
+                          <option value="">Select Job</option>
                           {jobsList.map((job) => (
-                            <option key={job._id} value={job.job_title}>
+                            <option key={job._id} value={job._id}>
                               {job.job_title}
                             </option>
                           ))}
                         </Form.Select>
-                        <Form.Control.Feedback type="invalid">{errors.admitCard_post_name}</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">{errors.admitCard_JobId}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                     <Col md={4}>
                       <FormInput
-                        name="admitCard_Url"
-                        label="Admit Card URL"
-                        type="url"
-                        value={values.admitCard_Url}
+                        name="admitCard_Title"
+                        label="Admit Card Title"
+                        type="text"
+                        value={values.admitCard_Title}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        touched={touched.admitCard_Url}
-                        errors={errors.admitCard_Url}
+                        touched={touched.admitCard_Title}
+                        errors={errors.admitCard_Title}
+                        placeholder="Enter admit card title"
+                        required
+                      />
+                    </Col>
+                    <Col md={4}>
+                      <FormInput
+                        name="admitCard_URL"
+                        label="Admit Card URL"
+                        type="url"
+                        value={values.admitCard_URL}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        touched={touched.admitCard_URL}
+                        errors={errors.admitCard_URL}
                         placeholder="https://example.com/admit-card"
                         required
                       />
                     </Col>
                     <Col md={4}>
                       <FormInput
-                        name="answer_key_date"
-                        label="Answer Key Date"
+                        name="admitCard_ReleaseDate"
+                        label="Release Date"
                         type="date"
-                        value={values.answer_key_date}
+                        value={values.admitCard_ReleaseDate}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        touched={touched.answer_key_date}
-                        errors={errors.answer_key_date}
+                        touched={touched.admitCard_ReleaseDate}
+                        errors={errors.admitCard_ReleaseDate}
                         required
                       />
                     </Col>
                     <Col md={12}>
                       <FormInput
-                        name="admitCard_short_desc"
-                        label="Short Description"
+                        name="admitCard_Desc"
+                        label="Description"
                         as="textarea"
-                        value={values.admitCard_short_desc}
+                        value={values.admitCard_Desc}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        touched={touched.admitCard_short_desc}
-                        errors={errors.admitCard_short_desc}
+                        touched={touched.admitCard_Desc}
+                        errors={errors.admitCard_Desc}
                         rows={3}
+                        placeholder="Enter admit card description"
                         required
                       />
                     </Col>
                   </Row>
 
                   <div className="text-end my-2">
-                    <Button size="sm" onClick={() => saveSection("basicDetails", values, setFieldValue)}>
-                      Save Basic Details
+                    <Button 
+                      size="md" 
+                      type="submit"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Saving..." : admitCardId ? "Update Admit Card" : "Create Admit Card"}
                     </Button>
                   </div>
                 </Card.Body>
