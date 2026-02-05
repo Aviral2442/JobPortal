@@ -84,6 +84,32 @@ exports.updateJobCategory = async (req, res) => {
     }
 };
 
+// GET JOB CATEGORY LIST USING SECTOR ID CONTROLLER
+exports.getJobCategoryListUsingSectorId = async (req, res) => {
+    try {
+        const sectorId = req.params.sectorId;
+        if (!sectorId) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Sector ID is required',
+            });
+        }
+        const result = await JobCategoryService.getJobCategoryListUsingSectorId(sectorId);
+        res.status(200).json({
+            status: 200,
+            message: 'Job category list fetched successfully',
+            jsonData: result,
+        });
+    } catch (error) {
+        console.error('Error in getJobCategoryListUsingSectorId Controller:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};
+
 // Get Job Subcategory List Controller
 exports.getJobSubCategoryList = async (req, res) => {
     try {

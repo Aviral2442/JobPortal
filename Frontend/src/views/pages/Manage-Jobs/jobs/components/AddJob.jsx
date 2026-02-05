@@ -8,7 +8,7 @@ import ComponentCard from "@/components/ComponentCard";
 import FileUploader from "@/components/FileUploader";
 import { FaRegTrashAlt } from "react-icons/fa";
 import axios from "@/api/axios";
-
+import { fileToBase64, filesToBase64, validateFileType, validateFileSize } from "@/utils/fileToBase64";
 
 const jobValidationSchema = Yup.object({
   _id: Yup.string(),
@@ -142,9 +142,9 @@ export default function AddJob() {
   const fetchCategories = async () => {
     try {
       const [category, subcategory, sector, jobType] = await Promise.all([
+        axios.get('/job-categories/get_job_sector_list'),
         axios.get('/job-categories/get_job_category_list'),
         axios.get('/job-categories/get_job_subcategory_list'),
-        axios.get('/job-categories/get_job_sector_list'),
         axios.get('/job-categories/get_job_type_list')
       ]);
       
@@ -268,11 +268,8 @@ export default function AddJob() {
       "Fee Payment Last Date Extended": "job_fees_pmt_last_date_extended",
       "Exam Date": "job_exam_date",
       "Exam Date Extended": "job_exam_date_extended",
-      "Admit Card Release Date": "job_admit_card_release_date",
-      "Result Declaration Date": "job_result_declaration_date",
       "Joining Date": "job_joining_date",
       "Re-Exam Date": "job_re_exam_date",
-      "Answer Key Release Date": "job_answer_key_release_date",
     };
 
     return Object.entries(dateMapping).map(([label, field]) => ({
@@ -342,11 +339,8 @@ export default function AddJob() {
       { label: "Fee Payment Last Date Extended", date: "" },
       { label: "Exam Date", date: "" },
       { label: "Exam Date Extended", date: "" },
-      { label: "Admit Card Release Date", date: "" },
-      { label: "Result Declaration Date", date: "" },
       { label: "Joining Date", date: "" },
       { label: "Re-Exam Date", date: "" },
-      { label: "Answer Key Release Date", date: "" },
     ],
     fees: [
       { category: "General", fee: "" },
@@ -409,14 +403,11 @@ export default function AddJob() {
       job_vacancy_total: 0, // Initialize with 0
     };
 
-    const fd = new FormData();
-    fd.append("jobData", JSON.stringify(minimal));
-
     try {
-      const res = await axios.post(`/jobs`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const res = await axios.post(`/jobs/add`, minimal, {
+        headers: { "Content-Type": "application/json" },
       });
-      const id = res?.data?.jobId || res?.data?._id;
+      const id = res?.data?.data?._id;
       console.log("Created job with ID:", res.data);
       if (id) {
         setFieldValue("_id", id);
@@ -425,7 +416,7 @@ export default function AddJob() {
       return id;
     } catch (error) {
       console.error("Error creating job:", error);
-      setMessage({ text: error.response?.data?.error || "Error creating job", variant: "danger" });
+      setMessage({ text: error.response?.data?.message || "Error creating job", variant: "danger" });
       return null;
     }
   };
@@ -437,19 +428,35 @@ export default function AddJob() {
       return;
     }
 
-    const fd = new FormData();
-    fd.append("jobId", id);
-    fd.append("files", logoFile);
-    // also set model field if needed
+    // Validate file
+    if (!validateFileType(logoFile, ['jpg', 'jpeg', 'png', 'gif'])) {
+      setMessage({ text: "Invalid file type. Only images (jpg, jpeg, png, gif) are allowed for logo.", variant: "danger" });
+      return;
+    }
+
+    if (!validateFileSize(logoFile, 5)) {
+      setMessage({ text: "File size exceeds 5MB limit.", variant: "danger" });
+      return;
+    }
+
     try {
-      await axios.post(`/jobs/files`, fd, { headers: { "Content-Type": "multipart/form-data" } });
-      // update form field for model-compatible name
-      setFieldValue("job_logo", logoFile.name || "");
+      const { base64, extension } = await fileToBase64(logoFile);
+      
+      // Update job with logo
+      await axios.put(`/jobs/update_job/${id}`, {
+        job_logo: base64,
+        extension: extension
+      }, {
+        headers: { "Content-Type": "application/json" }
+      });
+      
+      setFieldValue("job_logo", base64);
       setLogoFile(null);
       setLogoPreview("");
-      setMessage({ text: "Logo uploaded.", variant: "success" });
+      setMessage({ text: "Logo uploaded successfully.", variant: "success" });
     } catch (e) {
-      setMessage({ text: "Error uploading logo", variant: "danger" });
+      console.error("Error uploading logo:", e);
+      setMessage({ text: e.response?.data?.message || "Error uploading logo", variant: "danger" });
     }
   };
 
@@ -505,11 +512,8 @@ export default function AddJob() {
         "Fee Payment Last Date Extended": "job_fees_pmt_last_date_extended",
         "Exam Date": "job_exam_date",
         "Exam Date Extended": "job_exam_date_extended",
-        "Admit Card Release Date": "job_admit_card_release_date",
-        "Result Declaration Date": "job_result_declaration_date",
         "Joining Date": "job_joining_date",
         "Re-Exam Date": "job_re_exam_date",
-        "Answer Key Release Date": "job_answer_key_release_date",
       };
 
       sectionData = {};
@@ -660,24 +664,36 @@ export default function AddJob() {
         job_meta_schemas: values.metaDetails.job_meta_schemas?.trim() || "",
       };
     } else if (section === "files") {
-      // FIX: Handle file uploads
+      // Handle file uploads with base64 conversion
       if (!uploadedFiles || uploadedFiles.length === 0) {
         setMessage({ text: "Please select files to upload", variant: "warning" });
         return;
       }
 
-      const fd = new FormData();
-      fd.append("jobId", id);
-
-      // Append all files
-      uploadedFiles.forEach((file) => {
-        fd.append("files", file);
-      });
+      // Validate all files
+      for (const file of uploadedFiles) {
+        if (!validateFileType(file)) {
+          setMessage({ text: `Invalid file type: ${file.name}. Only images and documents are allowed.`, variant: "danger" });
+          return;
+        }
+        if (!validateFileSize(file)) {
+          setMessage({ text: `File size exceeds 5MB limit: ${file.name}`, variant: "danger" });
+          return;
+        }
+      }
 
       try {
-        const res = await axios.post(`/jobs/files`, fd, {
-          headers: { "Content-Type": "multipart/form-data" },
+        // Convert files to base64
+        const { base64Files, extensions } = await filesToBase64(uploadedFiles);
+        
+        // Update job with files
+        const res = await axios.put(`/jobs/update_job/${id}`, {
+          files: base64Files,
+          extensions: extensions
+        }, {
+          headers: { "Content-Type": "application/json" }
         });
+        
         console.log("Files uploaded:", res.data);
         setMessage({ text: "Files uploaded successfully!", variant: "success" });
         setUploadedFiles([]); // Clear uploaded files
@@ -693,7 +709,7 @@ export default function AddJob() {
       } catch (error) {
         console.error("Error uploading files:", error);
         setMessage({
-          text: error.response?.data?.error || "Error uploading files",
+          text: error.response?.data?.message || "Error uploading files",
           variant: "danger",
         });
         return;

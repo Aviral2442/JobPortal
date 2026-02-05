@@ -9,6 +9,7 @@ const JobTypeController = require('../controllers/JobTypeController');
 router.get('/get_job_category_list', JobCategoryController.getJobCategoryList);
 router.post('/create_job_category', upload('Category').single('category_image'), JobCategoryController.createJobCategory);
 router.put('/update_job_category/:id', upload('Category').single('category_image'), JobCategoryController.updateJobCategory);
+router.get('/get_job_category_list_using_sector/:sectorId', JobCategoryController.getJobCategoryListUsingSectorId);
 
 // Job SubCategory Routes
 router.get('/get_job_subcategory_list', JobCategoryController.getJobSubCategoryList);

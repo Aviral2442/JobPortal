@@ -14,7 +14,7 @@ exports.addJobsController = async (req, res) => {
 // Get job by ID
 exports.getJobByIdController = async (req, res) => {
     try {
-        const jobId = req.params.id;
+        const jobId = req.params.jobId;
         const result = await jobsService.getJobByIdService(jobId);
         res.status(result.status).json(result);
     } catch (error) {

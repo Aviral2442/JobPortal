@@ -5,8 +5,8 @@ const NotificationModel = require("../models/NotificationModel");
 // add a new job
 exports.addJobsService = async (jobData) => {
   try {
-    if (jobData.job_logo && Array.isArray(jobData.files)) {
-      // Save logo
+    // Save logo if provided
+    if (jobData.job_logo) {
       const logoPath = await saveBase64File(
         jobData.job_logo,
         "jobs",
@@ -14,8 +14,10 @@ exports.addJobsService = async (jobData) => {
         jobData.extension,
       );
       jobData.job_logo = logoPath;
+    }
 
-      // Save files
+    // Save files if provided
+    if (jobData.files && Array.isArray(jobData.files) && jobData.files.length > 0) {
       const filePaths = [];
       for (let i = 0; i < jobData.files.length; i++) {
         const filePath = await saveBase64File(
@@ -28,6 +30,10 @@ exports.addJobsService = async (jobData) => {
       }
       jobData.files = filePaths;
     }
+
+    // Remove extension fields before saving to database
+    delete jobData.extension;
+    delete jobData.extensions;
 
     const job = new JobModel(jobData);
     await job.save();

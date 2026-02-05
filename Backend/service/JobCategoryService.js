@@ -127,6 +127,26 @@ exports.createJobCategory = async (data) => {
   }
 };
 
+// GET JOB CATEGORY DATA USING SECTOR ID SERVICE
+exports.getJobCategoryListUsingSectorId = async (sectorId) => {
+  try {
+    const categories = await JobCategoryModel.find({
+      category_job_sector: sectorId,
+    }).select("category_name");
+    return {
+      status: 200,
+      message: "Job categories fetched successfully",
+      jsonData: categories,
+    };
+  } catch (error) {
+    console.error("Error in getJobCategoryListUsingSectorId Service:", error);
+    return {
+      status: 500,
+      message: "Internal server error",
+    };
+  }
+};
+
 // Update Job Category Service
 exports.updateJobCategory = async (categoryId, data) => {
   try {
