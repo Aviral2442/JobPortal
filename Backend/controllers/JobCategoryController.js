@@ -98,8 +98,7 @@ exports.getJobCategoryListUsingSectorId = async (req, res) => {
         res.status(200).json({
             status: 200,
             message: 'Job category list fetched successfully',
-            jsonData: result,
-        });
+            jsonData: result.jsonData,});
     } catch (error) {
         console.error('Error in getJobCategoryListUsingSectorId Controller:', error);
         res.status(500).json({
@@ -213,7 +212,7 @@ exports.getSubCategoryListUsingCategoryId = async (req, res) => {
         res.status(200).json({
             status: 200,
             message: 'Job subcategory list fetched successfully',
-            jsonData: result,
+            jsonData: result.jsonData,
         });
     } catch (error) {
         console.error('Error in getSubCategoryListUsingCategoryId Controller:', error);

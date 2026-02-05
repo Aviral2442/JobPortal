@@ -4,6 +4,7 @@ const jobsService = require("../service/JobsService");
 exports.addJobsController = async (req, res) => {
     try {
         const jobData = req.body;
+        console.log("Received job data:", jobData);
         const result = await jobsService.addJobsService(jobData);
         res.status(result.status).json(result);
     } catch (error) {

@@ -133,10 +133,13 @@ exports.getJobCategoryListUsingSectorId = async (sectorId) => {
     const categories = await JobCategoryModel.find({
       category_job_sector: sectorId,
     }).select("category_name");
+
     return {
       status: 200,
       message: "Job categories fetched successfully",
-      jsonData: categories,
+      jsonData: {
+        categories,
+      },
     };
   } catch (error) {
     console.error("Error in getJobCategoryListUsingSectorId Service:", error);
@@ -357,7 +360,9 @@ exports.getSubCategoryListUsingCategoryId = async (categoryId) => {
     return {
       status: 200,
       message: "Job subcategories fetched successfully",
-      jsonData: subcategories,
+      jsonData: {
+        subcategories,
+      },
     };
   } catch (error) {
     console.error("Error in getSubCategoryListUsingCategoryId Service:", error);

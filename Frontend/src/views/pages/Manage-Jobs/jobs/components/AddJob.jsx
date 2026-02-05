@@ -9,6 +9,7 @@ import FileUploader from "@/components/FileUploader";
 import { FaRegTrashAlt } from "react-icons/fa";
 import axios from "@/api/axios";
 import { fileToBase64, filesToBase64, validateFileType, validateFileSize } from "@/utils/fileToBase64";
+import ImageModal from "@/components/ImageModel";
 
 const jobValidationSchema = Yup.object({
   _id: Yup.string(),
@@ -127,6 +128,9 @@ export default function AddJob() {
   const [sectorList, setSectorList] = useState([]);
   const [jobTypeList, setJobTypeList] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState("");
+  const [selectedImageTitle, setSelectedImageTitle] = useState("");
 
   const requiredSections = [
     "basicDetails", "dates", "fees", "vacancies",
@@ -138,42 +142,67 @@ export default function AddJob() {
   );
 
 
-  //fetch category, subcategory, sector, and type values 
-  const fetchCategories = async () => {
+  //fetch sector and job type values initially
+  const fetchSectorsAndTypes = async () => {
     try {
-      const [category, subcategory, sector, jobType] = await Promise.all([
+      const [sector, jobType] = await Promise.all([
         axios.get('/job-categories/get_job_sector_list'),
-        axios.get('/job-categories/get_job_category_list'),
-        axios.get('/job-categories/get_job_subcategory_list'),
         axios.get('/job-categories/get_job_type_list')
       ]);
       
-      // Handle different response structures and ensure arrays
-      const categoryData = category.data?.jsonData?.data || category.data?.jsonData || category.data || [];
-      const subcategoryData = subcategory.data?.jsonData?.data || subcategory.data?.jsonData || subcategory.data || [];
       const sectorData = sector.data?.jsonData?.data || sector.data?.jsonData || sector.data || [];
       const jobTypeData = jobType.data?.jsonData?.jobTypes || jobType.data?.jsonData || jobType.data || [];
       
-      setCategoryList(Array.isArray(categoryData) ? categoryData : []);
-      setSubcategoryList(Array.isArray(subcategoryData) ? subcategoryData : []);
       setSectorList(Array.isArray(sectorData) ? sectorData : []);
       setJobTypeList(Array.isArray(jobTypeData) ? jobTypeData : []);
       
-      console.log('Categories fetched:', categoryData);
-      console.log('Subcategories fetched:', subcategoryData);
       console.log('Sectors fetched:', sectorData);
       console.log('Job Types fetched:', jobTypeData);
     } catch (error) {
-      console.error('Error fetching data:', error);
-      setCategoryList([]);
-      setSubcategoryList([]);
+      console.error('Error fetching sectors and types:', error);
       setSectorList([]);
       setJobTypeList([]);
     }
   }
 
+  // Fetch categories when sector is selected
+  const fetchCategoriesBySector = async (sectorId) => {
+    if (!sectorId) {
+      setCategoryList([]);
+      return;
+    }
+    
+    try {
+      const response = await axios.get(`/job-categories/get_job_category_list_using_sector/${sectorId}`);
+      const categoryData = response.data?.jsonData?.categories || [];
+      console.log('Categories fetched for sector:', categoryData);
+      setCategoryList(Array.isArray(categoryData) ? categoryData : []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      setCategoryList([]);
+    }
+  };
+
+  // Fetch subcategories when category is selected
+  const fetchSubcategoriesByCategory = async (categoryId) => {
+    if (!categoryId) {
+      setSubcategoryList([]);
+      return;
+    }
+    
+    try {
+      const response = await axios.get(`/job-categories/get_job_subcategory_list_using_category/${categoryId}`);
+      const subcategoryData = response.data?.jsonData?.subcategories || [];
+      setSubcategoryList(Array.isArray(subcategoryData) ? subcategoryData : []);
+      console.log('Subcategories fetched for category:', subcategoryData);
+    } catch (error) {
+      console.error('Error fetching subcategories:', error);
+      setSubcategoryList([]);
+    }
+  };
+
   useEffect(() => {
-    fetchCategories();
+    fetchSectorsAndTypes();
   }, []);
 
   // Fetch job data if in edit mode
@@ -251,6 +280,7 @@ export default function AddJob() {
       links: transformLinksFromBackend(jobData),
       howToApply: jobData.howToApply || "",
       job_logo: jobData.job_logo || "",
+      files: jobData.files || [],
     };
   };
 
@@ -380,6 +410,7 @@ export default function AddJob() {
     links: [{ type: "Apply Online", label: "Apply Online", url: "" }],
     howToApply: "",
     job_logo: "",
+    files: [],
   }), []);
 
   const ensureJobId = async (values, setFieldValue) => {
@@ -686,13 +717,20 @@ export default function AddJob() {
         // Convert files to base64
         const { base64Files, extensions } = await filesToBase64(uploadedFiles);
         
-        // Update job with files
+        // Append new files to existing files array
+        const existingFiles = values.files || [];
+        
+        // Update job with files (append mode)
         const res = await axios.put(`/jobs/update_job/${id}`, {
           files: base64Files,
           extensions: extensions
         }, {
           headers: { "Content-Type": "application/json" }
         });
+        
+        // Get updated files from response
+        const updatedFiles = res.data?.data?.files || [...existingFiles, ...base64Files];
+        setFieldValue('files', updatedFiles);
         
         console.log("Files uploaded:", res.data);
         setMessage({ text: "Files uploaded successfully!", variant: "success" });
@@ -791,10 +829,46 @@ export default function AddJob() {
                     if (data.job_logo) {
                       setLogoPreview(data.job_logo);
                     }
+                    // Fetch categories and subcategories for edit mode
+                    if (data.job_sector) {
+                      fetchCategoriesBySector(data.job_sector);
+                    }
+                    if (data.job_category) {
+                      fetchSubcategoriesByCategory(data.job_category);
+                    }
                   }
                 });
               }
             }, [isEditMode, id]);
+
+            // Fetch categories when sector changes
+            useEffect(() => {
+              if (values.job_sector) {
+                fetchCategoriesBySector(values.job_sector);
+                // Clear category and subcategory when sector changes
+                if (!isEditMode || values._id) {
+                  setFieldValue('job_category', '');
+                  setFieldValue('job_sub_category', '');
+                  setSubcategoryList([]);
+                }
+              } else {
+                setCategoryList([]);
+                setSubcategoryList([]);
+              }
+            }, [values.job_sector]);
+
+            // Fetch subcategories when category changes
+            useEffect(() => {
+              if (values.job_category) {
+                fetchSubcategoriesByCategory(values.job_category);
+                // Clear subcategory when category changes
+                if (!isEditMode || values._id) {
+                  setFieldValue('job_sub_category', '');
+                }
+              } else {
+                setSubcategoryList([]);
+              }
+            }, [values.job_category]);
 
             return (
               <Form onSubmit={(e) => e.preventDefault()}>
@@ -920,8 +994,9 @@ export default function AddJob() {
                             onChange={handleChange}
                             onBlur={handleBlur}
                             isInvalid={touched.job_category && errors.job_category}
+                            disabled={!values.job_sector}
                           >
-                            <option value="">Select Category</option>
+                            <option value="">{!values.job_sector ? "Select Sector First" : "Select Category"}</option>
                             {categoryList.map((cat) => (
                               <option key={cat._id} value={cat._id}>
                                 {cat.category_name}
@@ -930,6 +1005,9 @@ export default function AddJob() {
                           </Form.Select>
                           {touched.job_category && errors.job_category && (
                             <div className="text-danger small mt-1">{errors.job_category}</div>
+                          )}
+                          {!values.job_sector && (
+                            <Form.Text className="text-muted">Please select a sector first</Form.Text>
                           )}
                         </Form.Group>
                       </Col>
@@ -945,8 +1023,9 @@ export default function AddJob() {
                             onChange={handleChange}
                             onBlur={handleBlur}
                             isInvalid={touched.job_sub_category && errors.job_sub_category}
+                            disabled={!values.job_category}
                           >
-                            <option value="">Select SubCategory</option>
+                            <option value="">{!values.job_category ? "Select Category First" : "Select SubCategory"}</option>
                             {subcategoryList.map((subCat) => (
                               <option key={subCat._id} value={subCat._id}>
                                 {subCat.subcategory_name}
@@ -955,6 +1034,9 @@ export default function AddJob() {
                           </Form.Select>
                           {touched.job_sub_category && errors.job_sub_category && (
                             <div className="text-danger small mt-1">{errors.job_sub_category}</div>
+                          )}
+                          {!values.job_category && (
+                            <Form.Text className="text-muted">Please select a category first</Form.Text>
                           )}
                         </Form.Group>
                       </Col>
@@ -1482,11 +1564,101 @@ export default function AddJob() {
                 {/* Files */}
                 <ComponentCard className="mb-3" title="Files" isCollapsible>
                   <Card.Body>
-                    <FileUploader files={uploadedFiles} setFiles={setUploadedFiles} multiple maxFileCount={12} />
-                    <div className="text-end mt-2">
-                      <Button size="sm" onClick={() => saveSection("files", values, setFieldValue)}>
-                        Upload Files
-                      </Button>
+                    {/* Display existing files */}
+                    {values.files && values.files.length > 0 && (
+                      <div className="mb-3">
+                        <h6>Existing Files</h6>
+                        <Table bordered size="sm">
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>File Path</th>
+                              <th>Preview</th>
+                              <th className="text-center" style={{ width: '100px' }}>Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {values.files.map((file, idx) => {
+                              const fileName = file.split('/').pop();
+                              const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file);
+                              const isPdf = /\.pdf$/i.test(file);
+                              const fileUrl = `http://localhost:5000${file}`;
+                              
+                              return (
+                                <tr key={idx}>
+                                  <td>{idx + 1}</td>
+                                  <td>
+                                    <small className="text-break">{fileName}</small>
+                                  </td>
+                                  <td>
+                                    {isImage ? (
+                                      <Image 
+                                        src={fileUrl} 
+                                        alt={fileName}
+                                        thumbnail
+                                        style={{ width: '50px', height: '50px', objectFit: 'cover', cursor: 'pointer' }}
+                                        onClick={() => {
+                                          setSelectedImage(fileUrl);
+                                          setSelectedImageTitle(fileName);
+                                          setShowImageModal(true);
+                                        }}
+                                      />
+                                    ) : (
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline-primary"
+                                        onClick={() => {
+                                          if (isPdf) {
+                                            setSelectedImage(fileUrl);
+                                            setSelectedImageTitle(fileName);
+                                            setShowImageModal(true);
+                                          } else {
+                                            window.open(fileUrl, '_blank');
+                                          }
+                                        }}
+                                      >
+                                        View
+                                      </Button>
+                                    )}
+                                  </td>
+                                  <td className="text-center">
+                                    <Button
+                                      size="sm"
+                                      variant="outline-danger"
+                                      onClick={async () => {
+                                        try {
+                                          const updatedFiles = values.files.filter((_, i) => i !== idx);
+                                          await axios.put(`/jobs/update_job/${values._id}`, {
+                                            files: updatedFiles
+                                          });
+                                          setFieldValue('files', updatedFiles);
+                                          setMessage({ text: "File deleted successfully!", variant: "success" });
+                                        } catch (error) {
+                                          setMessage({ text: "Error deleting file", variant: "danger" });
+                                        }
+                                      }}
+                                      disabled={!values._id}
+                                    >
+                                      <FaRegTrashAlt />
+                                    </Button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </Table>
+                      </div>
+                    )}
+
+                    {/* Upload new files */}
+                    <div>
+                      <h6>Upload New Files</h6>
+                      <FileUploader files={uploadedFiles} setFiles={setUploadedFiles} multiple maxFileCount={12} />
+                      <div className="text-end mt-2">
+                        <Button size="sm" onClick={() => saveSection("files", values, setFieldValue)} disabled={uploadedFiles.length === 0}>
+                          Upload Files
+                        </Button>
+                      </div>
                     </div>
                   </Card.Body>
                 </ComponentCard>
@@ -1548,6 +1720,14 @@ export default function AddJob() {
             );
           }}
         </Formik>
+
+        {/* Image Modal */}
+        <ImageModal
+          show={showImageModal}
+          onHide={() => setShowImageModal(false)}
+          imageSrc={selectedImage}
+          title={selectedImageTitle}
+        />
       </Card.Body>
     </div>
   );
