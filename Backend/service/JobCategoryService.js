@@ -347,6 +347,27 @@ exports.updateJobSubCategory = async (subcategoryId, data) => {
   }
 };
 
+// GET JOB SUBCATEGORY DATA USING CATEGORY ID SERVICE
+exports.getSubCategoryListUsingCategoryId = async (categoryId) => {
+  try {
+    const subcategories = await JobSubCategoryModel.find({
+      subcategory_category_id: categoryId,
+    }).select("subcategory_name");
+
+    return {
+      status: 200,
+      message: "Job subcategories fetched successfully",
+      jsonData: subcategories,
+    };
+  } catch (error) {
+    console.error("Error in getSubCategoryListUsingCategoryId Service:", error);
+    return {
+      status: 500,
+      message: "Internal server error",
+    };
+  }
+};
+
 // APPLY ON JOB SERVICE
 exports.applyOnJob = async (data) => {
   try {
@@ -1136,9 +1157,13 @@ exports.jobFullDetailsById = async (jobId) => {
       return { status: 404, message: "Job not found", jsonData: {} };
     }
 
-    const admitCardData = await AdmitCardModel.findOne({ admitCard_JobId: jobId });
+    const admitCardData = await AdmitCardModel.findOne({
+      admitCard_JobId: jobId,
+    });
 
-    const answerKeyData = await AnswerKeyModel.findOne({ answerKey_JobId: jobId });
+    const answerKeyData = await AnswerKeyModel.findOne({
+      answerKey_JobId: jobId,
+    });
 
     const resultData = await ResultModel.findOne({ result_JobId: jobId });
 
@@ -1916,6 +1941,4 @@ exports.updateAnswerKey = async (answerKeyId, data) => {
   }
 };
 
-
 // ...................................  JOB RESULT SERVICES START  ....................................................
-

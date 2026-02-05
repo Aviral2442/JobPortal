@@ -15,6 +15,7 @@ router.get('/get_job_category_list_using_sector/:sectorId', JobCategoryControlle
 router.get('/get_job_subcategory_list', JobCategoryController.getJobSubCategoryList);
 router.post('/create_job_subcategory', upload('SubCategory').single('subcategory_image'), JobCategoryController.createJobSubCategory);
 router.put('/update_job_subcategory/:id', upload('SubCategory').single('subcategory_image'), JobCategoryController.updateJobSubCategory);
+router.get('/get_job_subcategory_list_using_category/:categoryId', JobCategoryController.getSubCategoryListUsingCategoryId);
 
 // Job Sector Routes
 router.get('/get_job_sector_list', JobSectorController.getJobSectorList);
