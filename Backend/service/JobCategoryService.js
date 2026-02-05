@@ -1895,3 +1895,7 @@ exports.updateAnswerKey = async (answerKeyId, data) => {
     };
   }
 };
+
+
+// ...................................  JOB RESULT SERVICES START  ....................................................
+
