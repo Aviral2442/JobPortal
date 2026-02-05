@@ -32,26 +32,23 @@ const JobSchema = new mongoose.Schema({
     type: Number,
     default: () => Math.floor(Date.now() / 1000),
   },
-  job_last_updated_date: { type: Number },
+  job_last_updated_date: { type: Number, required: false, default: 0 },
 
   // IMPORTANT DATES (all in Unix timestamp seconds)
-  job_start_date: { type: Number, required: false },
-  job_end_date: { type: Number, required: false },
-  job_notification_release_date: { type: Number, required: false },
-  job_fees_pmt_last_date: { type: Number, required: false },
-  job_correction_start_date: { type: Number, required: false },
-  job_correction_end_date: { type: Number, required: false },
-  job_reopen_start_date: { type: Number, required: false },
-  job_reopen_end_date: { type: Number, required: false },
-  job_last_date_extended: { type: Number, required: false },
-  job_fees_pmt_last_date_extended: { type: Number, required: false },
-  job_exam_date: { type: Number, required: false },
-  job_exam_date_extended: { type: Number, required: false },
-  job_admit_card_release_date: { type: Number, required: false },
-  job_result_declaration_date: { type: Number, required: false },
-  job_joining_date: { type: Number, required: false },
-  job_re_exam_date: { type: Number, required: false },
-  job_answer_key_release_date: { type: Number, required: false },
+  job_start_date: { type: Number, required: false, default: 0 },
+  job_end_date: { type: Number, required: false, default: 0 },
+  job_notification_release_date: { type: Number, required: false, default: 0 },
+  job_fees_pmt_last_date: { type: Number, required: false, default: 0 },
+  job_correction_start_date: { type: Number, required: false, default: 0 },
+  job_correction_end_date: { type: Number, required: false, default: 0 },
+  job_reopen_start_date: { type: Number, required: false, default: 0 },
+  job_reopen_end_date: { type: Number, required: false, default: 0 },
+  job_last_date_extended: { type: Number, required: false, default: 0 },
+  job_fees_pmt_last_date_extended: { type: Number, required: false, default: 0 },
+  job_exam_date: { type: Number, required: false, default: 0 },
+  job_exam_date_extended: { type: Number, required: false, default: 0 },
+  job_joining_date: { type: Number, required: false, default: 0 },
+  job_re_exam_date: { type: Number, required: false, default: 0 },
 
   // APPLICATION FEES
   job_fees_general: { type: Number, default: 0 },
@@ -65,9 +62,9 @@ const JobSchema = new mongoose.Schema({
   // ELIGIBILITY CRITERIA
   job_eligibility_age_min: { type: Number, default: 0 },
   job_eligibility_age_max: { type: Number, default: 0 },
-  job_eligibility_qualifications: { type: String, required: false },
-  job_eligibility_experience: { type: String, required: false },
-  job_extra_criteria: { type: String, required: false },
+  job_eligibility_qualifications: { type: String, required: false, default: "" },
+  job_eligibility_experience: { type: String, required: false, default: "" },
+  job_extra_criteria: { type: String, required: false, default: "" },
 
   // JOB VACANCY DETAILS
   job_vacancy_total: { type: Number, default: 0 },
@@ -92,23 +89,23 @@ const JobSchema = new mongoose.Schema({
   job_salary_max: { type: Number, default: 0 },
   job_salary_allowance: { type: Number, default: 0 },
   job_salary_inhand: { type: Number, default: 0 },
-  job_salary_bond_condition: { type: String, required: false },
+  job_salary_bond_condition: { type: String, required: false, default: "" },
 
   // SELECTION PROCESS
-  selection: [{ type: String }], 
+  selection: [{ type: String, default: "" }],
 
   // IMPORTANT LINKS
   job_important_links: [{
-      type: { type: String, default: "Other", trim: true },
-      label: { type: String, default: "", trim: true },
-      url: { type: String, default: "", trim: true },
-    }],
+    type: { type: String, default: "Other", trim: true },
+    label: { type: String, default: "", trim: true },
+    url: { type: String, default: "", trim: true },
+  }],
 
   // HOW TO APPLY
-  howToApply: { type: String, required: false },
+  howToApply: { type: String, required: false, default: "" },
 
   // FILES
-  files: [{ type: String }],
+  files: [{ type: String, default: "" }],
 
   jobRecommendation: { type: Boolean, default: false },
   jobFeatured: { type: Boolean, default: false },
