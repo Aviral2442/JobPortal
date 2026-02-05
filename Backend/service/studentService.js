@@ -24,6 +24,7 @@ const sendMobileOtp = require("../utils/mobileNoOtp");
 const NotificationModel = require("../models/NotificationModel");
 const JobAppliedMapperModel = require("../models/JobAppliedMapperModel");
 const JobModel = require("../models/JobModel");
+const JobSectorModel = require("../models/JobSectorModel");
 
 // STUDENT LIST SERVICE
 exports.studentListService = async (query) => {
@@ -833,6 +834,10 @@ exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
     }
     await student.save();
 
+    const getStudentSectorNameAndId = await JobSectorModel.findById(
+      student.studentJobSector,
+    );
+
     return {
       status: 200,
       message: "Student primary details updated successfully",
@@ -840,7 +845,7 @@ exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
         studentId: student._id,
         studentFirstName: student.studentFirstName,
         studentLastName: student.studentLastName,
-        studentJobSector: student.studentJobSector,
+        studentJobSector: getStudentSectorNameAndId,
         studentProfilePic: student.studentProfilePic,
       },
     };
