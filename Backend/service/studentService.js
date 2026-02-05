@@ -25,6 +25,7 @@ const NotificationModel = require("../models/NotificationModel");
 const JobAppliedMapperModel = require("../models/JobAppliedMapperModel");
 const JobModel = require("../models/JobModel");
 const JobSectorModel = require("../models/JobSectorModel");
+const JobResultModel = require("../models/ResultModel");
 
 // STUDENT LIST SERVICE
 exports.studentListService = async (query) => {
@@ -1927,20 +1928,19 @@ exports.studentDashboardData = async (studentId) => {
 };
 
 // STUDENT JOB RESULT LIST WITH FILTER SERVICE
-exports.studentJobResultListWithFilter = async (studentId, filter) => {
+exports.studentJobResultListWithFilter = async (studentId, query) => {
   try {
 
-    const { dateFilter, fromDate, toDate, searchFilter, page = 1, limit = 10 } = query;
+    const { dateFilter, fromDate, toDate, searchFilter, customFilter, page = 1, limit = 10 } = query;
 
     const skip = (page - 1) * limit;
     const filter = {};
 
-    // 🔍 Search Filter
     if (searchFilter) {
-      filter.job_sector_name = { $regex: searchFilter, $options: 'i' };
+      filter.result_Title = { $regex: searchFilter, $options: 'i' };
+      filter.job_title = { $regex: searchFilter, $options: 'i' };
     }
 
-    // 📅 Date Filter
     if (dateFilter) {
       const today = moment().startOf('day');
       const now = moment().endOf('day');
@@ -1972,23 +1972,42 @@ exports.studentJobResultListWithFilter = async (studentId, filter) => {
       }
 
       if (startDate && endDate) {
-        filter.job_sector_created_at = { $gte: startDate, $lte: endDate };
+        filter.result_CreatedAt = { $gte: startDate, $lte: endDate };
       }
     }
 
-    // 📄 Pagination and Data Retrieval
-    const total = await JobSectorModel.countDocuments(filter);
-    const data = await JobSectorModel.find(filter)
+    if (customFilter) {
+      filter.result_Status = customFilter;
+    }
+
+    const student = await studentModel.findById(studentId);
+
+    if (!student) {
+      return {
+        status: 404,
+        message: "Student not found with the provided ID",
+        jsonData: {},
+      };
+    }
+
+    const total = await JobResultModel.countDocuments(filter);
+    const studentSector = student.studentJobSector;
+    const data = await JobResultModel.find(filter)
       .skip(skip)
       .limit(limit)
-      .sort({ job_sector_created_at: -1 });
+      .populate({ path: 'jobId', model: 'JobModel', select: 'job_sector', match: { job_sector: studentSector } })
+      .sort({ result_CreatedAt: -1 });
 
     return {
-      total,
-      page: parseInt(page),
-      limit: parseInt(limit),
-      totalPages: Math.ceil(total / limit),
-      data,
+      status: 200,
+      message: "Student job result list with filter fetched successfully",
+      jsonData: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit),
+        job_result_list: data,
+      }
     };
 
   } catch (error) {
