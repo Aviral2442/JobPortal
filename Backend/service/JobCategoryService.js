@@ -6,8 +6,6 @@ const JobCategoryModel = require("../models/JobCategoryModel");
 const JobSubCategoryModel = require("../models/JobSubCategoryModel");
 const AdmitCardModel = require("../models/AdmitCardModel");
 const AnswerKeyModel = require("../models/AnswerKeyModel");
-// const studentModel = require("../models/studentModel");
-// const AnswerKeyModel = require("../models/AnswerKeyModel");
 const ResultModel = require("../models/ResultModel");
 const moment = require("moment");
 const { saveBase64File } = require("../middleware/base64FileUpload");
@@ -1118,10 +1116,21 @@ exports.jobFullDetailsById = async (jobId) => {
       return { status: 404, message: "Job not found", jsonData: {} };
     }
 
+    const admitCardData = await AdmitCardModel.findOne({ admitCard_JobId: jobId });
+
+    const answerKeyData = await AnswerKeyModel.findOne({ answerKey_JobId: jobId });
+
+    const resultData = await ResultModel.findOne({ result_JobId: jobId });
+
     return {
       status: 200,
       message: "Job details fetched successfully",
-      jsonData: job,
+      jsonData: {
+        job_main_details: job,
+        admit_card_details: admitCardData || null,
+        answer_key_details: answerKeyData || null,
+        result_details: resultData || null,
+      },
     };
   } catch (error) {
     console.error("Error in jobFullDetailsById Service:", error);
