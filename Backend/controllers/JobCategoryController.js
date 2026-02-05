@@ -199,6 +199,32 @@ exports.updateJobSubCategory = async (req, res) => {
 
 };
 
+// GET SUBCATEGORY LIST USING CATEGORY ID CONTROLLER
+exports.getSubCategoryListUsingCategoryId = async (req, res) => {
+    try {
+        const categoryId = req.params.categoryId;
+        if (!categoryId) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Category ID is required',
+            });
+        }
+        const result = await JobCategoryService.getSubCategoryListUsingCategoryId(categoryId);
+        res.status(200).json({
+            status: 200,
+            message: 'Job subcategory list fetched successfully',
+            jsonData: result,
+        });
+    } catch (error) {
+        console.error('Error in getSubCategoryListUsingCategoryId Controller:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+}
+
 // Apply On Job Controller
 exports.applyOnJob = async (req, res) => {
     try {
