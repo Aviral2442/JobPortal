@@ -632,3 +632,72 @@ exports.updateAnswerKey = async (req, res) => {
         });
     }
 };
+
+// GOVERNMENT RESULT LIST CONTROLLER
+exports.govResultList = async (req, res) => {
+    try {
+        const result = await JobCategoryService.govResultList(req.query);
+        res.status(200).json({
+            status: 200,
+            message: 'Government result list fetched successfully',
+            jsonData: result,
+        });
+    } catch (error) {
+        console.error('Error in govResultList Controller:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};
+
+// PSU RESULT LIST CONTROLLER
+exports.psuResultList = async (req, res) => {
+    try {
+        const result = await JobCategoryService.psuResultList(req.query);
+        res.status(200).json({
+            status: 200,
+            message: 'PSU result list fetched successfully',
+            jsonData: result,
+        });
+    } catch (error) {
+        console.error('Error in psuResultList Controller:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};
+
+// ADD RESULT CONTROLLER
+exports.addResult = async (req, res) => {
+    try {
+        const result = await JobCategoryService.addResult(req.body);
+        console.log("Add Result:", result);
+        return res.status(result.status).json(result);
+    } catch (error) {
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};
+
+// UPDATE RESULT CONTROLLER
+exports.updateResult = async (req, res) => {
+    try {
+        const resultId = req.params.resultId;
+        const updateData = req.body;
+        const result = await JobCategoryService.updateResult(resultId, updateData);
+        return res.status(result.status).json(result);
+    } catch (error) {
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};

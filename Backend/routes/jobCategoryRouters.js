@@ -63,6 +63,11 @@ router.get('/psu_answer_key_list', JobCategoryController.psuAnswerKeyList);
 router.post('/add_answer_key', JobCategoryController.addAnswerKey);
 router.put('/update_answer_key/:answerKeyId', JobCategoryController.updateAnswerKey);
 
+// GOVERNMENT AND PSU RESULT ROUTES
+router.get('/government_result_list', JobCategoryController.govResultList);
+router.get('/psu_result_list', JobCategoryController.psuResultList);
+router.post('/add_result', JobCategoryController.addResult);
+router.put('/update_result/:resultId', JobCategoryController.updateResult);
 
 
 module.exports = router;

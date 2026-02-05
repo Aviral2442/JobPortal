@@ -1947,3 +1947,317 @@ exports.updateAnswerKey = async (answerKeyId, data) => {
 };
 
 // ...................................  JOB RESULT SERVICES START  ....................................................
+exports.govResultList = async (query) => {
+  const {
+    dateFilter,
+    fromDate,
+    toDate,
+    searchFilter,
+    page = 1,
+    limit = 10,
+  } = query;
+
+  const skip = (page - 1) * limit;
+  const filter = {};
+
+  // 🔍 Search
+  if (searchFilter) {
+    filter.result_Title = { $regex: searchFilter, $options: "i" };
+  }
+
+  // 📅 Date filter
+  if (dateFilter) {
+    const today = moment().startOf("day");
+    const now = moment().endOf("day");
+    let startDate, endDate;
+
+    switch (dateFilter) {
+      case "today":
+        startDate = today.unix();
+        endDate = now.unix();
+        break;
+
+      case "yesterday":
+        startDate = today.clone().subtract(1, "days").unix();
+        endDate = now.clone().subtract(1, "days").unix();
+        break;
+
+      case "this_week":
+        startDate = moment().startOf("week").unix();
+        endDate = moment().endOf("week").unix();
+        break;
+
+      case "this_month":
+        startDate = moment().startOf("month").unix();
+        endDate = moment().endOf("month").unix();
+        break;
+
+      case "custom":
+        if (fromDate && toDate) {
+          startDate = moment(fromDate).startOf("day").unix();
+          endDate = moment(toDate).endOf("day").unix();
+        }
+        break;
+    }
+
+    if (startDate && endDate) {
+      filter.result_CreatedAt = { $gte: startDate, $lte: endDate };
+    }
+  }
+
+  // ✅ Get Government sector ID
+  const governmentSector = await JobSector.findOne({
+    job_sector_name: { $regex: /^government/i },
+  }).select("_id");
+
+  if (!governmentSector) {
+    return {
+      total: 0,
+      page,
+      limit,
+      totalPages: 0,
+      resultData: [],
+    };
+  }
+
+  // ✅ Main query
+  const resultData = await ResultModel.find(filter)
+    .select(
+      "result_JobId result_Title result_Desc result_URL result_FilePath result_ReleaseDate result_CreatedAt",
+    )
+    .populate({
+      path: "result_JobId",
+      model: "Jobs",
+      match: { job_sector: governmentSector._id }, // ⭐ IMPORTANT
+      select: "job_title job_category job_type job_sector",
+      populate: [
+        { path: "job_category", select: "category_name" },
+        { path: "job_type", select: "job_type_name" },
+        { path: "job_sector", select: "job_sector_name" },
+      ],
+    })
+    .sort({ result_CreatedAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  // 🚿 Remove non-government jobs
+  const filteredData = resultData.filter(
+    (item) => item.result_JobId !== null,
+  );
+
+  const total = filteredData.length;
+
+  return {
+    total,
+    page: parseInt(page),
+    limit: parseInt(limit),
+    totalPages: Math.ceil(total / limit),
+    resultData: filteredData,
+  };
+};
+
+// GET PSU RESULT LIST SERVICE WITH FILTERS AND PAGINATION
+exports.psuResultList = async (query) => {
+  const {
+    dateFilter,
+    fromDate,
+    toDate,
+    searchFilter,
+    page = 1,
+    limit = 10,
+  } = query;
+
+  const skip = (page - 1) * limit;
+  const filter = {};
+
+  // 🔍 Search
+  if (searchFilter) {
+    filter.result_Title = { $regex: searchFilter, $options: "i" };
+  }
+
+  // 📅 Date filter
+  if (dateFilter) {
+    const today = moment().startOf("day");
+    const now = moment().endOf("day");
+    let startDate, endDate;
+
+    switch (dateFilter) {
+      case "today":
+        startDate = today.unix();
+        endDate = now.unix();
+        break;
+
+      case "yesterday":
+        startDate = today.clone().subtract(1, "days").unix();
+        endDate = now.clone().subtract(1, "days").unix();
+        break;
+
+      case "this_week":
+        startDate = moment().startOf("week").unix();
+        endDate = moment().endOf("week").unix();
+        break;
+
+      case "this_month":
+        startDate = moment().startOf("month").unix();
+        endDate = moment().endOf("month").unix();
+        break;
+
+      case "custom":
+        if (fromDate && toDate) {
+          startDate = moment(fromDate).startOf("day").unix();
+          endDate = moment(toDate).endOf("day").unix();
+        }
+        break;
+    }
+
+    if (startDate && endDate) {
+      filter.result_CreatedAt = { $gte: startDate, $lte: endDate };
+    }
+  }
+
+  // ✅ Get PSU sector ID
+  const psuSector = await JobSector.findOne({
+    job_sector_name: { $regex: /^psu/i },
+  }).select("_id");
+
+  if (!psuSector) {
+    return {
+      total: 0,
+      page,
+      limit,
+      totalPages: 0,
+      answerKeyData: [],
+    };
+  }
+
+  // ✅ Main query
+  const resultData = await ResultModel.find(filter)
+    .select(
+      "result_JobId result_Title result_Desc result_URL result_FilePath result_ReleaseDate result_CreatedAt",
+    )
+    .populate({
+      path: "result_JobId",
+      model: "Jobs",
+      match: { job_sector: psuSector._id }, // ⭐ IMPORTANT
+      select: "job_title job_category job_type job_sector",
+      populate: [
+        { path: "job_category", select: "category_name" },
+        { path: "job_type", select: "job_type_name" },
+        { path: "job_sector", select: "job_sector_name" },
+      ],
+    })
+    .sort({ result_CreatedAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  // 🚿 Remove non-psu jobs
+  const filteredData = resultData.filter(
+    (item) => item.result_JobId !== null,
+  );
+
+  const total = filteredData.length;
+
+  return {
+    total,
+    page: parseInt(page),
+    limit: parseInt(limit),
+    totalPages: Math.ceil(total / limit),
+    resultData: filteredData,
+  };
+};
+
+// ADD RESULT SERVICE
+exports.addResult = async (data) => {
+  try {
+    const newResult = new ResultModel({
+      result_JobId: data.result_JobId,
+      result_Title: data.result_Title,
+      result_Desc: data.result_Desc,
+      result_URL: data.result_URL,
+      result_FilePath: "",
+      result_ReleaseDate: data.result_ReleaseDate,
+    });
+
+    let result_FilePath = null;
+    if (data.result_FilePath) {
+      result_FilePath = saveBase64File(
+        data.result_FilePath,
+        "result",
+        "job",
+        data.extension,
+      );
+    }
+
+    newResult.result_FilePath = result_FilePath;
+
+    await newResult.save();
+
+    return {
+      status: 200,
+      message: "Result added successfully",
+      jsonData: newResult,
+    };
+  } catch (error) {
+    console.error("Error in addResult Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+    };
+  }
+};
+
+// UPDATE RESULT SERVICE
+exports.updateResult = async (resultId, data) => {
+  try {
+    const fetchResult = await ResultModel.findById(resultId);
+    if (!fetchResult) {
+      return {
+        status: 404,
+        message: "Result not found",
+        jsonData: {},
+      };
+    }
+
+    console.log(data);
+    let result_FilePath = fetchResult.result_FilePath;
+    if (
+      data.result_FilePath &&
+      data.result_FilePath !== result_FilePath
+    ) {
+      result_FilePath = saveBase64File(
+        data.result_FilePath,
+        "result",
+        "job",
+        data.extension,
+      );
+    }
+
+    const updateData = {
+      result_JobId: data.result_JobId || fetchResult.result_JobId,
+      result_Title: data.result_Title || fetchResult.result_Title,
+      result_Desc: data.result_Desc || fetchResult.result_Desc,
+      result_URL: data.result_URL || fetchResult.result_URL,
+      result_FilePath: result_FilePath,
+      result_ReleaseDate:
+        data.result_ReleaseDate || fetchResult.result_ReleaseDate,
+    };
+
+    const updatedResult = await ResultModel.findByIdAndUpdate(
+      resultId,
+      updateData,
+      { new: true },
+    );
+
+    return {
+      status: 200,
+      message: "Result updated successfully",
+      jsonData: updatedResult,
+    };
+  } catch (error) {
+    console.error("Error in updateResult Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+    };
+  }
+};
