@@ -399,7 +399,7 @@ exports.studentLogin = async (studentLoginData) => {
           studentFirstName: studentLoginData.studentFirstName,
           studentLastName: studentLoginData.studentLastName || "",
           studentEmail: email,
-          studentProfilePic: studentLoginData.studentProfilePic || "",
+          studentProfilePic: "",
           studentLastLoginType: studentLoginData.provider,
           studentJobSector: "697c55559f27582a27b27c2a",
         });
