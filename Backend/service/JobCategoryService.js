@@ -1261,7 +1261,6 @@ exports.getAnswerKeyListByStudentId = async (studentId) => {
   }
 };
 
-
 // GOV ADMIN JOB CATEGORY CARD LIST SERVICE WITH FILTERS AND PAGINATION
 exports.govAdminCardList = async (query) => {
   const {
