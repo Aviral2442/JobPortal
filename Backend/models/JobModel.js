@@ -26,7 +26,7 @@ const JobSchema = new mongoose.Schema({
     ref: "JobSector",
     required: true,
   },
-  job_logo: { type: String, required: false },
+  job_logo: { type: String, required: false, default: " " },
   job_status: { type: Number, default: 0 }, // 0 = Active, 1 = Inactive
   job_posted_date: {
     type: Number,
