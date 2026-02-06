@@ -14,7 +14,7 @@ router.post('/studentForgetPassword', studentController.studentForgetPassword);
 router.post('/verifyStudentOtp', studentController.verifyStudentOtp);
 router.post('/resetStudentPassword', studentController.resetStudentPassword);
 router.post('/send_otp_on_email_or_mobile/:studentId', studentController.sendOtpOnEmailOrMobile);
-router.post('/changeStudentEmailOrMobile', studentController.changeStudentEmailOrMobile);
+router.post('/changeStudentEmailOrMobile/:studentId', studentController.changeStudentEmailOrMobile);
 router.put('/updateStudentPrimaryDetails/:studentId', studentController.updateStudentPrimaryDetails);
 router.put('/updateStudentAddress/:studentId', studentController.updateStudentAddress);
 router.put('/updateStudentBasicDetails/:studentId', studentController.updateStudentBasicDetail);
