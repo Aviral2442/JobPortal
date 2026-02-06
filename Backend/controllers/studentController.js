@@ -585,6 +585,42 @@ exports.studentDashboardData = async (req, res) => {
   }
 };
 
+// STUDENT JOB Admit Card LIST WITH FILTER CONTROLLER
+exports.studentJobAdmitCardListWithFilter = async (req, res) => {
+  try {
+
+    const studentId = req.params.studentId;
+    const filter = req.query;
+    const result = await studentService.studentJobAdmitCardListWithFilter(studentId, filter);
+    return res.status(result.status).json(result);
+
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+// STUDENT JOB ANSWER KEY LIST WITH FILTER CONTROLLER
+exports.studentJobAnswerKeyListWithFilter = async (req, res) => {
+  try {
+
+    const studentId = req.params.studentId;
+    const filter = req.query;
+    const result = await studentService.studentJobAnswerKeyListWithFilter(studentId, filter);
+    return res.status(result.status).json(result);
+
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
 // STUDENT JOB RESULT LIST WITH FILTER CONTROLLER
 exports.studentJobResultListWithFilter = async (req, res) => {
   try {
