@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const DocumentSchema = new mongoose.Schema({
+    document_logo: { type: String, required: false, default: " " },
     document_title: { type: String, required: true },
     document_short_desc: { type: String, required: true },
     document_long_desc: { type: String, required: true },
@@ -8,6 +9,10 @@ const DocumentSchema = new mongoose.Schema({
     document_formated_desc2: { type: String, required: false, default: " " },
     document_formated_desc3: { type: String, required: false, default: " " },
     document_formated_desc4: { type: String, required: false, default: " " },
+    document_files: [{ 
+        file_label: { type: String, required: true }, 
+        file_path: { type: String, required: true } 
+    }],
     document_important_dates: [{
         dates_label: { type: String, required: true },
         dates_value: { type: String, required: true }

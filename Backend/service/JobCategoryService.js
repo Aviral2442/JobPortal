@@ -9,6 +9,7 @@ const AnswerKeyModel = require("../models/AnswerKeyModel");
 const ResultModel = require("../models/ResultModel");
 const moment = require("moment");
 const { saveBase64File } = require("../middleware/base64FileUpload");
+const DocumentModel = require("../models/DocumentModel");
 
 // Job Category List Service with Filters and Pagination
 exports.getJobCategoryList = async (query) => {
@@ -2332,6 +2333,238 @@ exports.updateResult = async (resultId, data) => {
     };
   } catch (error) {
     console.error("Error in updateResult Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+    };
+  }
+};
+
+// ...................................  DOCUMENT SERVICES ....................................................
+exports.getDocumentList = async (query) => {
+  const {
+    dateFilter,
+    fromDate,
+    toDate,
+    searchFilter,
+    page = 1,
+    limit = 10,
+  } = query;
+
+  const skip = (page - 1) * limit;
+  const filter = {};
+
+  // 🔍 Search
+  if (searchFilter) {
+    filter.document_title = { $regex: searchFilter, $options: "i" };
+  }
+
+  // 📅 Date filter
+  if (dateFilter) {
+    const today = moment().startOf("day");
+    const now = moment().endOf("day");
+    let startDate, endDate;
+
+    switch (dateFilter) {
+      case "today":
+        startDate = today.unix();
+        endDate = now.unix();
+        break;
+
+      case "yesterday":
+        startDate = today.clone().subtract(1, "days").unix();
+        endDate = now.clone().subtract(1, "days").unix();
+        break;
+
+      case "this_week":
+        startDate = moment().startOf("week").unix();
+        endDate = moment().endOf("week").unix();
+        break;
+
+      case "this_month":
+        startDate = moment().startOf("month").unix();
+        endDate = moment().endOf("month").unix();
+        break;
+
+      case "custom":
+        if (fromDate && toDate) {
+          startDate = moment(fromDate).startOf("day").unix();
+          endDate = moment(toDate).endOf("day").unix();
+        }
+        break;
+    }
+
+    if (startDate && endDate) {
+      filter.document_created_date = { $gte: startDate, $lte: endDate };
+    }
+  }
+
+  // ✅ Main query
+  const resultData = await DocumentModel.find(filter)
+    .sort({ document_created_date: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = resultData.length;
+
+  return {
+    total,
+    page: parseInt(page),
+    limit: parseInt(limit),
+    totalPages: Math.ceil(total / limit),
+    documentData: resultData,
+  };
+};
+
+// ADD DOCUMENT SERVICE
+exports.addDocument = async (data) => {
+  try {
+    const logo = saveBase64File(
+      data.document_logo,
+      "document",
+      "job",
+      data.extension,
+    );
+
+    if (
+      data.document_files &&
+      Array.isArray(data.document_files) &&
+      data.document_files.length > 0
+    ) {
+      const files = [];
+
+      for (let i = 0; i < data.document_files.length; i++) {
+        const fileUrl = await saveBase64File(
+          data.document_files[i].file_path, // base64
+          "document",
+          `file_${i + 1}`,
+          data.extensions[i],
+        );
+
+        files.push({
+          file_label: data.document_files[i].file_label || `File ${i + 1}`,
+          file_path: fileUrl,
+        });
+      }
+
+      data.document_files = files;
+    }
+
+    // Remove extension fields before saving to database
+    delete data.extension;
+    delete data.extensions;
+
+    const newDocument = new DocumentModel({
+      document_title: data.document_title,
+      document_short_desc: data.document_short_desc,
+      document_long_desc: data.document_long_desc,
+      document_formated_desc1: data.document_formated_desc1,
+      document_formated_desc2: data.document_formated_desc2,
+      document_formated_desc3: data.document_formated_desc3,
+      document_formated_desc4: data.document_formated_desc4,
+      document_posted_date: data.document_posted_date,
+      document_important_dates: data.document_important_dates || [],
+      document_important_links: data.document_important_links || [],
+      document_application_fees: data.document_application_fees || [],
+      document_files: data.document_files || [],
+      document_logo: logo,
+    });
+
+    await newDocument.save();
+
+    return {
+      status: 200,
+      message: "Document added successfully",
+      jsonData: newDocument,
+    };
+  } catch (error) {
+    console.error("Error in addDocument Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+    };
+  }
+};
+
+// UPDATE DOCUMENT SERVICE
+exports.updateDocument = async (documentId, data) => {
+  try {
+    const fetchDocument = await DocumentModel.findById(documentId);
+    if (!fetchDocument) {
+      return {
+        status: 404,
+        message: "Document not found",
+        jsonData: {},
+      };
+    }
+
+    let logo = fetchDocument.document_logo;
+    if (data.document_logo && data.document_logo !== logo) {
+      logo = saveBase64File(
+        data.document_logo,
+        "document",
+        "job",
+        data.extension,
+      );
+    }
+
+    let files = fetchDocument.document_files || [];
+    if (
+      data.document_files &&
+      Array.isArray(data.document_files) &&
+      data.document_files.length > 0
+    ) {
+      files = [];
+      for (let i = 0; i < data.document_files.length; i++) {
+        const fileUrl = await saveBase64File(
+          data.document_files[i].file_path, // base64
+          "document",
+          `file_${i + 1}`,
+          data.extensions[i],
+        );
+
+        files.push({
+          file_label: data.document_files[i].file_label || `File ${i + 1}`,
+          file_path: fileUrl,
+        });
+      }
+
+      data.document_files = files;
+    }
+
+    // Remove extension fields before saving to database
+    delete data.extension;
+    delete data.extensions;
+
+    const updateData = {
+      document_title: data.document_title || fetchDocument.document_title,
+      document_short_desc: data.document_short_desc || fetchDocument.document_short_desc,
+      document_long_desc: data.document_long_desc || fetchDocument.document_long_desc,
+      document_formated_desc1: data.document_formated_desc1 || fetchDocument.document_formated_desc1,
+      document_formated_desc2: data.document_formated_desc2 || fetchDocument.document_formated_desc2,
+      document_formated_desc3: data.document_formated_desc3 || fetchDocument.document_formated_desc3,
+      document_formated_desc4: data.document_formated_desc4 || fetchDocument.document_formated_desc4,
+      document_posted_date: data.document_posted_date || fetchDocument.document_posted_date,
+      document_important_dates: data.document_important_dates || fetchDocument.document_important_dates,
+      document_important_links: data.document_important_links || fetchDocument.document_important_links,
+      document_application_fees: data.document_application_fees || fetchDocument.document_application_fees,
+      document_files: data.document_files || fetchDocument.document_files,
+      document_logo: logo,
+    };
+
+    const updatedDocument = await DocumentModel.findByIdAndUpdate(
+      documentId,
+      updateData,
+      { new: true },
+    );
+
+    return {
+      status: 200,
+      message: "Document updated successfully",
+      jsonData: updatedDocument,
+    };
+  } catch (error) {
+    console.error("Error in updateDocument Service:", error);
     return {
       status: 500,
       message: "Server error",

@@ -72,5 +72,10 @@ router.post('/add_result', JobCategoryController.addResult);
 router.get('/get_result_list_of_job/:resultId', JobCategoryController.getResultListById);
 router.put('/update_result/:resultId', JobCategoryController.updateResult);
 
+// DOCUMENT ROUTES
+router.get('/get_document_list', JobCategoryController.getDocumentList);
+router.post('/add_document', JobCategoryController.addDocument);
+router.put('/update_document/:documentId', JobCategoryController.updateDocument);
+
 
 module.exports = router;

@@ -759,3 +759,53 @@ exports.updateResult = async (req, res) => {
         });
     }
 };
+
+// ...................................  DOCUMENT CONTROLLERS ....................................................
+exports.getDocumentList = async (req, res) => {
+    try {
+        const result = await JobCategoryService.getDocumentList(req.query);
+        res.status(200).json({
+            status: 200,
+            message: 'Document list fetched successfully',
+            jsonData: result,
+        });
+    } catch (error) {
+        console.error('Error in getDocumentList Controller:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};
+
+// ADD DOCUMENT CONTROLLER
+exports.addDocument = async (req, res) => {
+    try {
+        const result = await JobCategoryService.addDocument(req.body);
+        console.log("Add Document Result:", result);
+        return res.status(result.status).json(result);
+    } catch (error) {
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};
+
+// UPDATE DOCUMENT CONTROLLER
+exports.updateDocument = async (req, res) => {
+    try {
+        const documentId = req.params.documentId;
+        const updateData = req.body;
+        const result = await JobCategoryService.updateDocument(documentId, updateData);
+        return res.status(result.status).json(result);
+    } catch (error) {
+        res.status(500).json({
+            status: 500,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};
