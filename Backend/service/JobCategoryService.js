@@ -1467,6 +1467,34 @@ exports.addAdmitCard = async (data) => {
   }
 };
 
+// GET ADMIT CARD DETAILS BY ID SERVICE
+exports.getAdmitCardListById = async (admitCardId) => {
+  try {
+    const admitCardDetails = await AdmitCardModel.findById(admitCardId);
+
+    if (!admitCardDetails) {
+      return {
+        status: 404,
+        message: "Admit card not found",
+        jsonData: {},
+      };
+    }
+
+    return {
+      status: 200,
+      message: "Admit card details fetched successfully",
+      jsonData: admitCardDetails,
+    };
+  } catch (error) {
+    console.error("Error in getAdmitCardListById Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+      jsonData: {},
+    };
+  }
+};
+
 // UPDATE ADMIT CARD SERVICE
 exports.updateAdmitCard = async (admitCardId, data) => {
   try {
@@ -1890,6 +1918,34 @@ exports.addAnswerKey = async (data) => {
   }
 };
 
+// GET ANSWER KEY DETAILS BY ID SERVICE
+exports.getAnswerKeyListById = async (answerKeyId) => {
+  try {
+    const answerKeyDetails = await AnswerKeyModel.findById(answerKeyId);
+
+    if (!answerKeyDetails) {
+      return {
+        status: 404,
+        message: "Answer key not found",
+        jsonData: {},
+      };
+    }
+
+    return {
+      status: 200,
+      message: "Answer key details fetched successfully",
+      jsonData: answerKeyDetails,
+    };
+  } catch (error) {
+    console.error("Error in getAnswerKeyListById Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+      jsonData: {},
+    };
+  }
+};
+
 // UPDATE ANSWER KEY SERVICE
 exports.updateAnswerKey = async (answerKeyId, data) => {
   try {
@@ -2041,9 +2097,7 @@ exports.govResultList = async (query) => {
     .limit(limit);
 
   // 🚿 Remove non-government jobs
-  const filteredData = resultData.filter(
-    (item) => item.result_JobId !== null,
-  );
+  const filteredData = resultData.filter((item) => item.result_JobId !== null);
 
   const total = filteredData.length;
 
@@ -2151,9 +2205,7 @@ exports.psuResultList = async (query) => {
     .limit(limit);
 
   // 🚿 Remove non-psu jobs
-  const filteredData = resultData.filter(
-    (item) => item.result_JobId !== null,
-  );
+  const filteredData = resultData.filter((item) => item.result_JobId !== null);
 
   const total = filteredData.length;
 
@@ -2206,6 +2258,34 @@ exports.addResult = async (data) => {
   }
 };
 
+// GET RESULT DETAILS BY ID SERVICE
+exports.getResultListById = async (resultId) => {
+  try {
+    const resultDetails = await ResultModel.findById(resultId);
+
+    if (!resultDetails) {
+      return {
+        status: 404,
+        message: "Result not found",
+        jsonData: {},
+      };
+    }
+
+    return {
+      status: 200,
+      message: "Result details fetched successfully",
+      jsonData: resultDetails,
+    };
+  } catch (error) {
+    console.error("Error in getResultListById Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+      jsonData: {},
+    };
+  }
+};
+
 // UPDATE RESULT SERVICE
 exports.updateResult = async (resultId, data) => {
   try {
@@ -2220,10 +2300,7 @@ exports.updateResult = async (resultId, data) => {
 
     console.log(data);
     let result_FilePath = fetchResult.result_FilePath;
-    if (
-      data.result_FilePath &&
-      data.result_FilePath !== result_FilePath
-    ) {
+    if (data.result_FilePath && data.result_FilePath !== result_FilePath) {
       result_FilePath = saveBase64File(
         data.result_FilePath,
         "result",

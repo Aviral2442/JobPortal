@@ -55,18 +55,21 @@ router.get('/get_admit_card_list/:studentId', JobCategoryController.getAdmitCard
 router.get('/government_admit_card_list', JobCategoryController.govAdminCardList);
 router.get('/psu_admit_card_list', JobCategoryController.psuAdminCardList);
 router.post('/add_admit_card', JobCategoryController.addAdmitCard);
+router.get('/get_admit_card_list_of_job/:admitCardId', JobCategoryController.getAdmitCardListById);
 router.put('/update_admit_card/:admitCardId', JobCategoryController.updateAdmitCard);
 
 // GOVERNMENT AND PSU ANSWER KEY ROUTES
 router.get('/government_answer_key_list', JobCategoryController.govAnswerKeyList);
 router.get('/psu_answer_key_list', JobCategoryController.psuAnswerKeyList);
 router.post('/add_answer_key', JobCategoryController.addAnswerKey);
+router.get('/get_answer_key_list_of_job/:answerKeyId', JobCategoryController.getAnswerKeyListById);
 router.put('/update_answer_key/:answerKeyId', JobCategoryController.updateAnswerKey);
 
 // GOVERNMENT AND PSU RESULT ROUTES
 router.get('/government_result_list', JobCategoryController.govResultList);
 router.get('/psu_result_list', JobCategoryController.psuResultList);
 router.post('/add_result', JobCategoryController.addResult);
+router.get('/get_result_list_of_job/:resultId', JobCategoryController.getResultListById);
 router.put('/update_result/:resultId', JobCategoryController.updateResult);
 
 

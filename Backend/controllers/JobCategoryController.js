@@ -529,6 +529,26 @@ exports.addAdmitCard = async (req, res) => {
     }
 };
 
+// GET ADMIT CARD DETAILS BY ID CONTROLLER
+exports.getAdmitCardListById = async (req, res) => {
+    try {
+        const admitCardId = req.params.admitCardId;
+        const response = await JobCategoryService.getAdmitCardListById(admitCardId);
+        return res.status(response.status).json({
+            status: response.status,
+            message: response.message,
+            jsonData: response.jsonData || null,
+        });
+    } catch (error) {
+        console.error("Get Admit Card Details By Id Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
+};
+
+
 // UPDATE ADMIT CARD CONTROLLER
 exports.updateAdmitCard = async (req, res) => {
     try {
@@ -617,6 +637,25 @@ exports.addAnswerKey = async (req, res) => {
     }
 };
 
+// GET ANSWER KEY DETAILS BY ID CONTROLLER
+exports.getAnswerKeyListById = async (req, res) => {
+    try {
+        const answerKeyId = req.params.answerKeyId;
+        const response = await JobCategoryService.getAnswerKeyListById(answerKeyId);
+        return res.status(response.status).json({
+            status: response.status,
+            message: response.message,
+            jsonData: response.jsonData || null,
+        });
+    } catch (error) {
+        console.error("Get Answer Key Details By Id Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
+};
+
 // UPDATE ANSWER KEY CONTROLLER
 exports.updateAnswerKey = async (req, res) => {
     try {
@@ -682,6 +721,25 @@ exports.addResult = async (req, res) => {
             status: 500,
             message: 'Internal server error',
             error: error.message,
+        });
+    }
+};
+
+// GET RESULT DETAILS BY ID CONTROLLER
+exports.getResultListById = async (req, res) => {
+    try {
+        const resultId = req.params.resultId;
+        const response = await JobCategoryService.getResultListById(resultId);
+        return res.status(response.status).json({
+            status: response.status,
+            message: response.message,
+            jsonData: response.jsonData || null,
+        });
+    } catch (error) {
+        console.error("Get Result Details By Id Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
         });
     }
 };
