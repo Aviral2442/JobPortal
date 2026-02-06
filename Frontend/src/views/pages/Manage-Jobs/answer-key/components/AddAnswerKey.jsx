@@ -331,4 +331,4 @@ const AddAnswerKey = () => {
   );
 };
 
-export default AddAdmitCard;
+export default AddAnswerKey;

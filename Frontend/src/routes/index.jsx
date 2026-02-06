@@ -18,10 +18,13 @@ const AddJob = lazy(() => import('@/views/pages/Manage-Jobs/jobs/components/AddJ
 const ViewJob = lazy(() => import('@/views/pages/Manage-Jobs/jobs/components/ViewJob'));
 const AdmitCard = lazy(() => import('@/views/pages/Manage-Jobs/admit-card'));
 const AddAdmitCard = lazy(() => import('@/views/pages/Manage-Jobs/admit-card/components/AddAdmitCard'));
+const EditAdmitCard = lazy(() => import('@/views/pages/Manage-Jobs/admit-card/components/AddAdmitCard'));
 const Results = lazy(() => import('@/views/pages/Manage-Jobs/results'));
 const AddResult = lazy(() => import('@/views/pages/Manage-Jobs/results/components/AddResult'));
+const EditResult = lazy(() => import('@/views/pages/Manage-Jobs/results/components/AddResult'));
 const AnswerKey = lazy(() => import('@/views/pages/Manage-Jobs/answer-key'));
 const AddAnswerKey = lazy(() => import('@/views/pages/Manage-Jobs/answer-key/components/AddAnswerKey'));
+const EditAnswerKey = lazy(() => import('@/views/pages/Manage-Jobs/answer-key/components/AddAnswerKey'));
 const Documents = lazy(() => import('@/views/pages/Manage-Jobs/documents'));
 const Admissions = lazy(() => import('@/views/pages/Manage-Jobs/admission'));
 const RegisterStudent = lazy(() => import('@/views/pages/student/Register'));
@@ -126,6 +129,9 @@ const admitRoutes=[{
 },{
   path:'/admin/admit-card/add',
   element:<AddAdmitCard/>
+},{
+  path: '/admin/admit-card/edit/:id',
+  element:<AddAdmitCard/>
 }];
 
 const resultRoutes=[{
@@ -133,6 +139,9 @@ const resultRoutes=[{
   element:<Results/>
 },{
   path: '/admin/result/add',
+  element: <AddResult/>
+},{
+  path: '/admin/result/edit/:id',
   element: <AddResult/>
 }
 ];
@@ -144,6 +153,9 @@ const answerKeyRoutes=[{
 },{
   path: '/admin/answer-key/add',
   element: <AddAnswerKey/>
+},{
+  path: '/admin/answer-key/edit/:id',
+  element: <EditAnswerKey/>
 }
 ];
 
