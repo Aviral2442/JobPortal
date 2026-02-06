@@ -805,6 +805,95 @@ exports.resetStudentPassword = async (studentPasswordData) => {
   }
 };
 
+// SEND OTP SERVICE FOR STUDENT FORGOT PASSWORD AND LOGIN WITH OTP
+exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
+  try {
+    let reqEmailOrMobileNo = OtpData.emailOrMobileNo;
+
+    if (!reqEmailOrMobileNo) {
+      return {
+        status: 400,
+        message: "Email or mobile number is required",
+        jsonData: {},
+      };
+    }
+
+    reqEmailOrMobileNo = reqEmailOrMobileNo.trim();
+
+    const isEmail = reqEmailOrMobileNo.includes("@");
+
+    const formattedInput = isEmail
+      ? reqEmailOrMobileNo.toLowerCase()
+      : reqEmailOrMobileNo;
+
+    const student = await studentModel.findOne({ _id: studentId });
+
+    if (!student) {
+      return {
+        status: 404,
+        message: "Student not found with the provided email or mobile number",
+        jsonData: {},
+      };
+    }
+
+    const generateRandomOTP = () => {
+      return Math.floor(100000 + Math.random() * 900000).toString();
+    };
+
+    const otp = generateRandomOTP();
+    const expiry = Date.now() + 5 * 60 * 1000;
+
+    student.studentOtp = otp;
+    student.studentOtpExpiry = expiry;
+    await student.save();
+
+    if (isEmail) {
+      const lowercaseEmail = student.studentEmail.toLowerCase();
+
+      await sendEmailOtp(lowercaseEmail, otp);
+
+      return {
+        status: 200,
+        message: "OTP sent to registered email successfully",
+        jsonData: {
+          studentId: student._id,
+          studentEmail: student.studentEmail,
+        },
+      };
+    }
+
+    const lowerCaseMobileNO = student.studentMobileNo;
+
+    sendMobileOtp(lowerCaseMobileNO, otp);
+
+    if (sendMobileOtp.success === false) {
+      return {
+        status: 500,
+        message: "Failed to send OTP to mobile number",
+        jsonData: {},
+      };
+    }
+
+    return {
+      status: 200,
+      message: "OTP sent to mobile number successfully",
+      jsonData: {
+        studentId: student._id,
+        studentMobileNo: student.studentMobileNo,
+      },
+    };
+
+  } catch (error) {
+    console.log(error);
+
+    return {
+      status: 500,
+      message: "An error occurred during password reset",
+      error: error.message,
+    };
+  }
+};
+
 // UPDATE STUDENT PRIMARY DETAILS SERVICE
 exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
   try {

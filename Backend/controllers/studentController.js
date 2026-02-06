@@ -1,3 +1,4 @@
+const { param } = require("../routes/studentRoutes");
 const studentService = require("../service/studentService");
 
 // STUDENT LIST CONTROLLER
@@ -127,6 +128,22 @@ exports.resetStudentPassword = async (req, res) => {
   } catch (error) {
     return res
       .status(500)
+      .json({
+        status: 500,
+        message: "Internal server error",
+        error: error.message,
+      });
+  }
+};
+
+// SEND OTP ON EMAIL OR MOBILE CONTROLLER
+exports.sendOtpOnEmailOrMobile = async (req, res) => {
+  try {
+    const studentId = req.params.studentId;
+    const result = await studentService.sendOtpOnEmailOrMobile(req.body, studentId);
+    return res.status(result.status).json(result);
+  } catch (error) {
+    status(500)
       .json({
         status: 500,
         message: "Internal server error",
