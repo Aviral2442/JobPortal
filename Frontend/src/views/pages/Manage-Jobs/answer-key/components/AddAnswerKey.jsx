@@ -1,8 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { Form, Button, Row, Col, Card, Alert, FormSelect } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ComponentCard from "@/components/ComponentCard";
 import axios from "@/api/axios";
 import React from "react";
@@ -54,11 +54,15 @@ const FormInput = ({
 
 const AddAnswerKey = () => {
   const navigate = useNavigate();
+  const { id } = useParams(); // Get answer key ID from URL params for edit mode
+  const isEditMode = Boolean(id);
   const [answerKeyFile, setAnswerKeyFile] = useState(null);
   const [message, setMessage] = useState({ text: "", variant: "" });
   const [jobsList, setJobsList] = useState([]);
-  const [answerKeyId, setAnswerKeyId] = useState(null);
+  const [answerKeyId, setAnswerKeyId] = useState(id || null);
   const [fileBase64, setFileBase64] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [answerKeyData, setAnswerKeyData] = useState(null);
 
   const initialValues = useMemo(() => ({
     _id: "",
@@ -108,9 +112,30 @@ const AddAnswerKey = () => {
     }
   };
 
+  // Fetch answer key data if in edit mode
+  const fetchAnswerKeyData = async (answerKeyId) => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`/job-categories/get_answer_key_list_of_job/${answerKeyId}`);
+      if (res.data.status === 200) {
+        const data = res.data.jsonData;
+        setAnswerKeyData(data);
+        return data;
+      }
+    } catch (error) {
+      console.error("Error fetching answer key:", error);
+      setMessage({ text: "Error loading answer key data", variant: "danger" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   React.useEffect(() => {
     fetchJobsList();
-  }, []);
+    if (isEditMode && id) {
+      fetchAnswerKeyData(id);
+    }
+  }, [isEditMode, id]);
 
   // Create answer key using POST API
   const createAnswerKey = async (values) => {
@@ -206,8 +231,23 @@ const AddAnswerKey = () => {
           initialValues={initialValues}
           validationSchema={answerKeyValidationSchema}
           onSubmit={handleSubmit}
+          enableReinitialize={true}
         >
-          {({ values, errors, touched, handleChange, handleBlur, setFieldValue, isSubmitting }) => (
+          {({ values, errors, touched, handleChange, handleBlur, setFieldValue, isSubmitting }) => {
+            // Load answer key data in edit mode
+            useEffect(() => {
+              if (isEditMode && answerKeyData) {
+                setFieldValue("_id", answerKeyData._id || "");
+                setFieldValue("answerKey_JobId", answerKeyData.answerKey_JobId?._id || answerKeyData.answerKey_JobId || "");
+                setFieldValue("answerKey_Title", answerKeyData.answerKey_Title || "");
+                setFieldValue("answerKey_Desc", answerKeyData.answerKey_Desc || "");
+                setFieldValue("answerKey_URL", answerKeyData.answerKey_URL || "");
+                setFieldValue("answerKey_ReleaseDate", answerKeyData.answerKey_ReleaseDate ? new Date(answerKeyData.answerKey_ReleaseDate).toISOString().split('T')[0] : "");
+                setFieldValue("answerKey_FilePath", answerKeyData.answerKey_FilePath || "");
+              }
+            }, [isEditMode, answerKeyData]);
+
+            return (
             <Form onSubmit={(e) => { e.preventDefault(); handleSubmit(values); }}>
               {/* Basic Answer Key Details */}
               <ComponentCard className="mb-3" title="Answer Key Details">
@@ -324,7 +364,8 @@ const AddAnswerKey = () => {
                 </Card.Body>
               </ComponentCard>
             </Form>
-          )}
+          );}
+        }
         </Formik>
       </Card.Body>
     </div>

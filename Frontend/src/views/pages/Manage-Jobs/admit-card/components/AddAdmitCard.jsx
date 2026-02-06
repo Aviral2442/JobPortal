@@ -1,8 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { Form, Button, Row, Col, Card, Alert, FormSelect } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ComponentCard from "@/components/ComponentCard";
 import axios from "@/api/axios";
 import React from "react";
@@ -54,11 +54,15 @@ const FormInput = ({
 
 const AddAdmitCard = () => {
   const navigate = useNavigate();
+  const { id } = useParams(); // Get admit card ID from URL params for edit mode
+  const isEditMode = Boolean(id);
   const [admitCardFile, setAdmitCardFile] = useState(null);
   const [message, setMessage] = useState({ text: "", variant: "" });
   const [jobsList, setJobsList] = useState([]);
-  const [admitCardId, setAdmitCardId] = useState(null);
+  const [admitCardId, setAdmitCardId] = useState(id || null);
   const [fileBase64, setFileBase64] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [admitCardData, setAdmitCardData] = useState(null);
 
   const initialValues = useMemo(() => ({
     _id: "",
@@ -108,9 +112,30 @@ const AddAdmitCard = () => {
     }
   };
 
+  // Fetch admit card data if in edit mode
+  const fetchAdmitCardData = async (admitCardId) => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`/job-categories/get_admit_card_list_of_job/${admitCardId}`);
+      if (res.data.status === 200) {
+        const data = res.data.jsonData;
+        setAdmitCardData(data);
+        return data;
+      }
+    } catch (error) {
+      console.error("Error fetching admit card:", error);
+      setMessage({ text: "Error loading admit card data", variant: "danger" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   React.useEffect(() => {
     fetchJobsList();
-  }, []);
+    if (isEditMode && id) {
+      fetchAdmitCardData(id);
+    }
+  }, [isEditMode, id]);
 
   // Create admit card using POST API
   const createAdmitCard = async (values) => {
@@ -206,8 +231,23 @@ const AddAdmitCard = () => {
           initialValues={initialValues}
           validationSchema={admitCardValidationSchema}
           onSubmit={handleSubmit}
+          enableReinitialize={true}
         >
-          {({ values, errors, touched, handleChange, handleBlur, setFieldValue, isSubmitting }) => (
+          {({ values, errors, touched, handleChange, handleBlur, setFieldValue, isSubmitting }) => {
+            // Load admit card data in edit mode
+            useEffect(() => {
+              if (isEditMode && admitCardData) {
+                setFieldValue("_id", admitCardData._id || "");
+                setFieldValue("admitCard_JobId", admitCardData.admitCard_JobId?._id || admitCardData.admitCard_JobId || "");
+                setFieldValue("admitCard_Title", admitCardData.admitCard_Title || "");
+                setFieldValue("admitCard_Desc", admitCardData.admitCard_Desc || "");
+                setFieldValue("admitCard_URL", admitCardData.admitCard_URL || "");
+                setFieldValue("admitCard_ReleaseDate", admitCardData.admitCard_ReleaseDate ? new Date(admitCardData.admitCard_ReleaseDate).toISOString().split('T')[0] : "");
+                setFieldValue("admitCard_FilePath", admitCardData.admitCard_FilePath || "");
+              }
+            }, [isEditMode, admitCardData]);
+
+            return (
             <Form onSubmit={(e) => { e.preventDefault(); handleSubmit(values); }}>
               {/* Basic Admit Card Details */}
               <ComponentCard className="mb-3" title="Admit Card Details">
@@ -324,7 +364,8 @@ const AddAdmitCard = () => {
                 </Card.Body>
               </ComponentCard>
             </Form>
-          )}
+          );}
+        }
         </Formik>
       </Card.Body>
     </div>
