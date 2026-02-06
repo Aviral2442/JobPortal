@@ -153,7 +153,7 @@ const StudentList = ({ refreshFlag }) => {
           <div>
             <button
               className="eye-icon"
-              onClick={() => navigate(`/admin/student/detail/${rowData._id}`)}
+              onClick={() => navigate(`/admin/students/view/${rowData._id}`)}
             >
               <TbEye className="" />
             </button>

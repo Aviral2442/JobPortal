@@ -1744,7 +1744,7 @@ const WizardStudentDetail = () => {
   return (
     <Container fluid>
       {/* <PageTitle title="Student Wizard" subtitle="All student details" /> */}
-      <Row className="mt-4">
+      <Row className="">
         <Col cols={12}>
           <ComponentCard title="Profile Completion Status" className="pb-3">
             <ProgressBar
