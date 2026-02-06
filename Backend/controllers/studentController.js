@@ -72,7 +72,7 @@ exports.studentLoginWithOtp = async (req, res) => {
       .status(500)
       .json({ status: 500, message: "Internal server error", error: error.message });
   }
-}
+};
 
 // STUDENT LOGOUT CONTROLLER
 exports.studentLogout = async (req, res) => {
