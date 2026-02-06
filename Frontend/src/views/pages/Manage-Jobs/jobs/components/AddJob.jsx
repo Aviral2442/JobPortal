@@ -717,10 +717,7 @@ export default function AddJob() {
         // Convert files to base64
         const { base64Files, extensions } = await filesToBase64(uploadedFiles);
         
-        // Append new files to existing files array
-        const existingFiles = values.files || [];
-        
-        // Update job with files (append mode)
+        // Send new files to backend (backend will append them)
         const res = await axios.put(`/jobs/update_job/${id}`, {
           files: base64Files,
           extensions: extensions
@@ -728,8 +725,8 @@ export default function AddJob() {
           headers: { "Content-Type": "application/json" }
         });
         
-        // Get updated files from response
-        const updatedFiles = res.data?.data?.files || [...existingFiles, ...base64Files];
+        // Update form with all files from response (existing + newly uploaded)
+        const updatedFiles = res.data?.data?.files || [];
         setFieldValue('files', updatedFiles);
         
         console.log("Files uploaded:", res.data);
@@ -1501,7 +1498,7 @@ export default function AddJob() {
                             <Row key={idx} className="mb-2">
                               <Col md={3}>
                                 <Form.Control
-                                  name={``}
+                                  name={`links.${idx}.type`}
                                   value={l.type}
                                   onChange={handleChange}
                                   placeholder="Type"

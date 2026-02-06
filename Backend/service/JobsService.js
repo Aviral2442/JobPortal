@@ -90,18 +90,17 @@ exports.getJobByIdService = async (jobId) => {
 // UPDATE JOB USING ID SERVICE
 exports.updateJobByIdService = async (jobId, updateData) => {
   try {
-    const job = await JobModel.findByIdAndUpdate(jobId, updateData, {
-      new: true,
-    });
-    if (!job) {
+    // Get existing job to preserve existing files
+    const existingJob = await JobModel.findById(jobId);
+    if (!existingJob) {
       return {
         status: 404,
         message: "Job not found",
       };
     }
 
-    if (updateData.job_logo && Array.isArray(updateData.files)) {
-      // Save logo
+    // Process logo if provided
+    if (updateData.job_logo && updateData.extension) {
       const logoPath = await saveBase64File(
         updateData.job_logo,
         "jobs",
@@ -109,22 +108,36 @@ exports.updateJobByIdService = async (jobId, updateData) => {
         updateData.extension,
       );
       updateData.job_logo = logoPath;
+    }
 
-      // Save files
-      const filePaths = [];
+    // Process files if provided - APPEND to existing files
+    if (updateData.files && Array.isArray(updateData.files) && updateData.files.length > 0 && updateData.extensions) {
+      const existingFiles = existingJob.files || [];
+      const newFilePaths = [];
+      
       for (let i = 0; i < updateData.files.length; i++) {
+        const fileIndex = existingFiles.length + i + 1;
         const filePath = await saveBase64File(
           updateData.files[i],
           "jobs",
-          `file_${i + 1}`,
+          `file_${fileIndex}`,
           updateData.extensions[i],
         );
-        filePaths.push(filePath);
+        newFilePaths.push(filePath);
       }
-      updateData.files = filePaths;
+      
+      // Append new files to existing files
+      updateData.files = [...existingFiles, ...newFilePaths];
     }
 
-    await job.save();
+    // Remove extension fields before saving to database
+    delete updateData.extension;
+    delete updateData.extensions;
+
+    // Update the job with processed data
+    const job = await JobModel.findByIdAndUpdate(jobId, updateData, {
+      new: true,
+    });
 
     return {
       status: 200,
