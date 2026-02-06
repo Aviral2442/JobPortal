@@ -1,17 +1,19 @@
 import { useState, useMemo } from "react";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import { Form, Button, Row, Col, Card, Alert } from "react-bootstrap";
+import { Form, Button, Row, Col, Card, Alert, FormSelect } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import ComponentCard from "@/components/ComponentCard";
 import axios from "@/api/axios";
+import React from "react";
 
-const answerkeyValidationSchema = Yup.object({
+const answerKeyValidationSchema = Yup.object({
   _id: Yup.string(),
-  answerkey_post_name: Yup.string().required("Post Name is required"),
-  answerkey_short_desc: Yup.string().required("Short Description is required"),
-  answerkey_file: Yup.mixed().required("Admit Card file is required"),
-  answerkey_Url: Yup.string().url("Invalid URL format").required("Admit Card URL is required"),
+  answerKey_JobId: Yup.string().required("Job is required"),
+  answerKey_Title: Yup.string().required("Title is required"),
+  answerKey_Desc: Yup.string().required("Description is required"),
+  answerKey_URL: Yup.string().url("Invalid URL format").required("Answer Key URL is required"),
+  answerKey_ReleaseDate: Yup.date().required("Release Date is required"),
 });
 
 const FormInput = ({
@@ -52,138 +54,142 @@ const FormInput = ({
 
 const AddAnswerKey = () => {
   const navigate = useNavigate();
-  const [answerkeyFile, setAnswerkeyFile] = useState(null);
+  const [answerKeyFile, setAnswerKeyFile] = useState(null);
   const [message, setMessage] = useState({ text: "", variant: "" });
-
-  const requiredSections = ["basicDetails"];
-  const [sectionsTracking, setSectionsTracking] = useState(
-    Object.fromEntries(requiredSections.map((s) => [s, false]))
-  );
+  const [jobsList, setJobsList] = useState([]);
+  const [answerKeyId, setAnswerKeyId] = useState(null);
+  const [fileBase64, setFileBase64] = useState("");
 
   const initialValues = useMemo(() => ({
     _id: "",
-    answerkey_post_name: "",
-    answerkey_short_desc: "",
-    answerkey_file: null,
-    answerkey_Url: "",
+    answerKey_JobId: "",
+    answerKey_Title: "",
+    answerKey_Desc: "",
+    answerKey_URL: "",
+    answerKey_ReleaseDate: "",
+    answerKey_FilePath: "",
   }), []);
 
-  const ensureAnswerkeyId = async (values, setFieldValue) => {
-    if (values._id) return values._id;
+  // Convert file to base64
+  const convertFileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(file);
+    });
+  };
 
-    if (!values.answerkey_post_name || !values.answerkey_short_desc) {
-      setMessage({ text: "Please fill required fields: Post Name and Short Description", variant: "danger" });
-      return null;
+  // Handle file change
+  const handleFileChange = async (e, setFieldValue) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAnswerKeyFile(file);
+      try {
+        const base64 = await convertFileToBase64(file);
+        setFileBase64(base64);
+        setFieldValue("answerKey_FilePath", file.name);
+      } catch (error) {
+        console.error("Error converting file:", error);
+        setMessage({ text: "Error processing file", variant: "danger" });
+      }
     }
+  };
 
-    const minimal = {
-      answerkey_post_name: values.answerkey_post_name.trim(),
-      answerkey_short_desc: values.answerkey_short_desc.trim(),
-      answerkey_status: 0, // Active by default
-    };
-
-    const fd = new FormData();
-    fd.append("answerkeyData", JSON.stringify(minimal));
-
+  // Fetch jobs list
+  const fetchJobsList = async () => {
     try {
-      const res = await axios.post(`/admit-cards`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      const id = res?.data?.answerkeyId || res?.data?._id;
-      console.log("Created admit card with ID:", res.data);
-      if (id) {
-        setFieldValue("_id", id);
-        setMessage({ text: "Admit card created successfully.", variant: "success" });
-      }
-      return id;
-    } catch (error) {
-      console.error("Error creating admit card:", error);
-      setMessage({ text: error.response?.data?.error || "Error creating admit card", variant: "danger" });
-      return null;
+      const res = await axios.get(`/job-categories/government_and_psu_sector_job_list`);
+      console.log("Fetched jobs for answer key:", res.data);
+      setJobsList(res.data?.jsonData?.govAndPsuJobList || []);
+    } catch (err) {
+      console.error("Error fetching jobs for answer key:", err);
+      setMessage({ text: "Error fetching jobs list", variant: "danger" });
     }
   };
 
-  const uploadFile = async (values, setFieldValue) => {
-    const id = await ensureAnswerkeyId(values, setFieldValue);
-    if (!id || !answerkeyFile) {
-      setMessage({ text: "Select a file to upload.", variant: "warning" });
-      return;
-    }
+  React.useEffect(() => {
+    fetchJobsList();
+  }, []);
 
-    const fd = new FormData();
-    fd.append("answerkeyId", id);
-    fd.append("files", answerkeyFile);
-
+  // Create answer key using POST API
+  const createAnswerKey = async (values) => {
     try {
-      await axios.post(`/admit-cards/files`, fd, { headers: { "Content-Type": "multipart/form-data" } });
-      setFieldValue("answerkey_file", answerkeyFile.name || "");
-      setAnswerkeyFile(null);
-      setMessage({ text: "File uploaded successfully.", variant: "success" });
-    } catch (e) {
-      console.error("Error uploading file:", e);
-      setMessage({ text: "Error uploading file", variant: "danger" });
-    }
-  };
-
-  const maybeRedirect = (state) => {
-    if (requiredSections.every((s) => state[s])) {
-      setTimeout(() => navigate("/admin/admit-cards"), 500);
-    }
-  };
-
-  const saveSection = async (section, values, setFieldValue) => {
-    const id = await ensureanswerkeyId(values, setFieldValue);
-    if (!id) return;
-
-    let sectionData = null;
-
-    if (section === "basicDetails") {
-      if (!values.answerkey_post_name || !values.answerkey_short_desc || !values.answerkey_Url) {
-        setMessage({ text: "Please fill all required fields", variant: "danger" });
-        return;
-      }
-
-      if (!answerkeyFile && !values.answerkey_file) {
-        setMessage({ text: "Please upload admit card file", variant: "warning" });
-        return;
-      }
-
-      sectionData = {
-        answerkey_post_name: values.answerkey_post_name.trim(),
-        answerkey_short_desc: values.answerkey_short_desc.trim(),
-        answerkey_Url: values.answerkey_Url.trim(),
+      const payload = {
+        answerKey_JobId: values.answerKey_JobId,
+        answerKey_Title: values.answerKey_Title,
+        answerKey_Desc: values.answerKey_Desc,
+        answerKey_URL: values.answerKey_URL,
+        answerKey_ReleaseDate: Number(new Date(values.answerKey_ReleaseDate).getTime()),
+        answerKey_FilePath: fileBase64,
       };
-    }
 
-    if (!sectionData || Object.keys(sectionData).length === 0) {
-      console.warn("No valid data to save for section:", section);
-      setMessage({ text: "No data to save. Please fill required fields.", variant: "warning" });
-      return;
-    }
-    console.log(`Saving section ${section} with data:`, sectionData);
+      const res = await axios.post(`/job-categories/add_answer_key`, payload);
 
-    try {
-      const res = await axios.post(`/admit-cards/save-section`, {
-        answerkeyId: id,
-        section,
-        data: sectionData
-      });
-      console.log(`Saved section ${section}:`, res.data);
-      setMessage({ text: `${section} saved successfully!`, variant: "success" });
+      if (res.data.status === 200 || res.data.status === 201) {
+        const newAnswerKeyId = res.data.answerKeyId || res.data.jsonData?._id;
+        setAnswerKeyId(newAnswerKeyId);
+        setMessage({ text: "Answer key created successfully!", variant: "success" });
 
-      if (requiredSections.includes(section)) {
-        setSectionsTracking((prev) => {
-          const updated = { ...prev, [section]: true };
-          maybeRedirect(updated);
-          return updated;
-        });
+        setTimeout(() => {
+          navigate("/admin/answer-key");
+        }, 1500);
+
+        return newAnswerKeyId;
       }
     } catch (error) {
-      console.error("Error saving section:", error);
+      console.error("Error creating answer key:", error);
       setMessage({
-        text: error.response?.data?.error || `Error saving ${section}`,
+        text: error.response?.data?.message || "Error creating answer key",
         variant: "danger"
       });
+      return null;
+    }
+  };
+
+  // Update answer key using PUT API
+  const updateAnswerKey = async (values) => {
+    if (!answerKeyId) {
+      setMessage({ text: "No answer key to update", variant: "warning" });
+      return;
+    }
+
+    try {
+      const payload = {
+        answerKey_Title: values.answerKey_Title,
+        answerKey_Desc: values.answerKey_Desc,
+        answerKey_URL: values.answerKey_URL,
+        answerKey_ReleaseDate: Number(new Date(values.answerKey_ReleaseDate).getTime()),
+      };
+
+      if (fileBase64) {
+        payload.answerKey_FilePath = fileBase64;
+      }
+
+      const res = await axios.put(`/job-categories/update_answer_key/${answerKeyId}`, payload);
+
+      if (res.data.status === 200) {
+        setMessage({ text: "Answer key updated successfully!", variant: "success" });
+
+        setTimeout(() => {
+          navigate("/admin/answer-key");
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Error updating answer key:", error);
+      setMessage({
+        text: error.response?.data?.message || "Error updating answer key",
+        variant: "danger"
+      });
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = async (values) => {
+    if (answerKeyId) {
+      await updateAnswerKey(values);
+    } else {
+      await createAnswerKey(values);
     }
   };
 
@@ -198,12 +204,12 @@ const AddAnswerKey = () => {
 
         <Formik
           initialValues={initialValues}
-          validationSchema={answerkeyValidationSchema}
-          onSubmit={(values) => console.log("Form submitted:", values)}
+          validationSchema={answerKeyValidationSchema}
+          onSubmit={handleSubmit}
         >
-          {({ values, errors, touched, handleChange, handleBlur, setFieldValue }) => (
-            <Form onSubmit={(e) => e.preventDefault()}>
-              {/* Basic Admit Card Details */}
+          {({ values, errors, touched, handleChange, handleBlur, setFieldValue, isSubmitting }) => (
+            <Form onSubmit={(e) => { e.preventDefault(); handleSubmit(values); }}>
+              {/* Basic Answer Key Details */}
               <ComponentCard className="mb-3" title="Answer Key Details">
                 <Card.Body>
                   <Row>
@@ -212,31 +218,14 @@ const AddAnswerKey = () => {
                         <Form.Label className="mb-1">
                           Answer Key File <span className="text-danger ms-1">*</span>
                         </Form.Label>
-                        <div className="d-flex align-items-center gap-3">
-                          <Form.Control
-                            type="file"
-                            accept=".pdf,.doc,.docx"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              setanswerkeyFile(file || null);
-                            }}
-                            isInvalid={touched.answerkey_file && errors.answerkey_file}
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline-primary"
-                            onClick={() => uploadFile(values, setFieldValue)}
-                            disabled={!answerkeyFile}
-                          >
-                            Upload
-                          </Button>
-                        </div>
-                        {touched.answerkey_file && errors.answerkey_file && (
-                          <div className="text-danger small mt-1">{errors.answerkey_file}</div>
-                        )}
-                        {values.answerkey_file && (
+                        <Form.Control
+                          type="file"
+                          accept=".pdf,.doc,.docx"
+                          onChange={(e) => handleFileChange(e, setFieldValue)}
+                        />
+                        {values.answerKey_FilePath && (
                           <div className="text-success small mt-1">
-                            File uploaded: {values.answerkey_file}
+                            File selected: {values.answerKey_FilePath}
                           </div>
                         )}
                       </Form.Group>
@@ -245,70 +234,91 @@ const AddAnswerKey = () => {
                       <Form.Group className="mb-2">
                         <div className="d-flex justify-content-between align-items-end">
                           <Form.Label className="mb-0 mt-1">
-                            Post Name <span className="text-danger ms-1">*</span>
+                            Select Job <span className="text-danger ms-1">*</span>
                           </Form.Label>
                         </div>
                         <Form.Select
-                          name="admitCard_post_name"
-                          value={values.admitCard_post_name}
+                          name="answerKey_JobId"
+                          value={values.answerKey_JobId}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          isInvalid={touched.admitCard_post_name && errors.admitCard_post_name}
+                          isInvalid={touched.answerKey_JobId && errors.answerKey_JobId}
                         >
-                          <option value="">Select Post Name</option>
-                          <option value="Post A">Post A</option>
-                          <option value="Post B">Post B</option>
-                          <option value="Post C">Post C</option>
+                          <option value="">Select Job</option>
+                          {jobsList.map((job) => (
+                            <option key={job._id} value={job._id}>
+                              {job.job_title}
+                            </option>
+                          ))}
                         </Form.Select>
-                        <Form.Control.Feedback type="invalid">{errors.admitCard_post_name}</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">{errors.answerKey_JobId}</Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                     <Col md={4}>
                       <FormInput
-                        name="answerkey_Url"
-                        label="Answer Key URL"
-                        type="url"
-                        value={values.answerkey_Url}
+                        name="answerKey_Title"
+                        label="Answer Key Title"
+                        type="text"
+                        value={values.answerKey_Title}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        touched={touched.answerkey_Url}
-                        errors={errors.answerkey_Url}
-                        placeholder="https://example.com/admit-card"
+                        touched={touched.answerKey_Title}
+                        errors={errors.answerKey_Title}
+                        placeholder="Enter answer key title"
                         required
                       />
                     </Col>
                     <Col md={4}>
                       <FormInput
-                        name="answer_key_date"
-                        label="Answer Key Date"
-                        type="date"
-                        value={values.answer_key_date}
+                        name="answerKey_URL"
+                        label="Answer Key URL"
+                        type="url"
+                        value={values.answerKey_URL}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        touched={touched.answer_key_date}
-                        errors={errors.answer_key_date}
+                        touched={touched.answerKey_URL}
+                        errors={errors.answerKey_URL}
+                        placeholder="https://example.com/answer-key"
+                        required
+                      />
+                    </Col>
+                    <Col md={4}>
+                      <FormInput
+                        name="answerKey_ReleaseDate"
+                        label="Release Date"
+                        type="date"
+                        value={values.answerKey_ReleaseDate}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        touched={touched.answerKey_ReleaseDate}
+                        errors={errors.answerKey_ReleaseDate}
                         required
                       />
                     </Col>
                     <Col md={12}>
                       <FormInput
-                        name="answerkey_short_desc"
-                        label="Short Description"
+                        name="answerKey_Desc"
+                        label="Description"
                         as="textarea"
-                        value={values.answerkey_short_desc}
+                        value={values.answerKey_Desc}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        touched={touched.answerkey_short_desc}
-                        errors={errors.answerkey_short_desc}
+                        touched={touched.answerKey_Desc}
+                        errors={errors.answerKey_Desc}
                         rows={3}
+                        placeholder="Enter answer key description"
                         required
                       />
                     </Col>
                   </Row>
 
                   <div className="text-end my-2">
-                    <Button size="sm" onClick={() => saveSection("basicDetails", values, setFieldValue)}>
-                      Save Basic Details
+                    <Button
+                      size="md"
+                      type="submit"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Saving..." : answerKeyId ? "Update Answer Key" : "Create Answer Key"}
                     </Button>
                   </div>
                 </Card.Body>
@@ -321,4 +331,4 @@ const AddAnswerKey = () => {
   );
 };
 
-export default AddAnswerKey;
+export default AddAdmitCard;
