@@ -307,6 +307,8 @@ const AddAnswerKey = () => {
                         placeholder="Enter answer key title"
                         required
                       />
+                      {/* validation */}
+                      <Form.Control.Feedback type="invalid">{errors.answerKey_Title}</Form.Control.Feedback>
                     </Col>
                     <Col md={4}>
                       <FormInput
@@ -334,6 +336,7 @@ const AddAnswerKey = () => {
                         errors={errors.answerKey_ReleaseDate}
                         required
                       />
+                    
                     </Col>
                     <Col md={12}>
                       <FormInput

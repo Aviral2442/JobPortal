@@ -15,6 +15,7 @@ import {
   TbEye,
 } from "react-icons/tb";
 import axios from "@/api/axios";
+import { formatDate } from "@/components/DateFormat";
 
 const ResultsPSUList = ({ isActive }) => {
   const [jobs, setJobs] = useState([]);
@@ -24,17 +25,16 @@ const ResultsPSUList = ({ isActive }) => {
   const navigate = useNavigate();
   const tableRef = useRef(null);
 
-  const BASE_URL = import.meta.env.VITE_BASE_URL;
+  // const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-  // Fetch jobs - PSU sector
+  // Fetch results - PSU sector
   const fetchJobs = async () => {
-    setLoading(true);
+    setLoading(true); 
     try {
-      const res = await axios.get(`${BASE_URL}/api/jobs`);
-      console.log("Fetched jobs:", res.data);
-      // Filter for PSU sector jobs
-      const psuJobs = res.data?.filter(job => job.job_sector?.job_sector_name === "PSU") || [];
-      setJobs(psuJobs);
+      const res = await axios.get(`/job-categories/psu_result_list`);
+      console.log("Fetched PSU results:", res.data);
+      const results = res.data?.jsonData?.resultData || res.data?.data || [];
+      setJobs(results);
     } catch (err) {
       console.error(err);
       setJobs([]);
@@ -52,10 +52,15 @@ const ResultsPSUList = ({ isActive }) => {
   }, [isActive]);
 
   const columns = [
-    { title: "Post Name", data: "job_title" },
-    { title: "Organization", data: "job_organization" },
-    { title: "Job Type", data: "job_type.job_type_name" },
-    { title: "Category", data: "job_category.category_name" },
+    { title: "S.No", data: null, render: (data, type, row, meta) => meta.row + 1 },
+    { title: "Job", data: "result_JobId.job_title" },
+    { title: "Title", data: "result_Title" },
+    { title: "Category", data: "result_JobId.job_category.category_name" },
+    { title: "Job Type", data: "result_JobId.job_type.job_type_name" },
+    { title: "Release Date", data: "result_ReleaseDate", render: (data) => {
+      return formatDate(data);
+    } },
+    { title: "Created At", data: "result_CreatedAt", render: (data) => formatDate(data) },
     {
       title: "Actions",
       data: null,
@@ -88,7 +93,7 @@ const ResultsPSUList = ({ isActive }) => {
                 onClick={async () => {
                   if (!window.confirm("Are you sure you want to delete this result?")) return;
                   try {
-                    await fetch(`${BASE_URL}/api/jobs/${rowData._id || rowData.id}`, { method: "DELETE" });
+                    await axios.delete(`/job-categories/delete_result/${rowData._id || rowData.id}`);
                     setMessage("Result deleted successfully!");
                     setVariant("success");
                     fetchJobs();

@@ -3,9 +3,6 @@ import ComponentCard from '@/components/ComponentCard';
 import { Link } from "react-router-dom";
 
 import { Col, Nav, NavItem, NavLink, Row, TabContainer, TabContent, TabPane } from 'react-bootstrap';
-import { TbBriefcase, TbHome, TbInfoCircle, TbMail, TbSettings, TbUser, TbUserCircle } from 'react-icons/tb';
-import { appTitle } from '@/helpers';
-import ResultsList from './components/ResultsList';
 import ResultsGovernmentList from './components/ResultsGovernmentList';
 import ResultsPSUList from './components/ResultsPSUList';
 import { useState } from 'react';
