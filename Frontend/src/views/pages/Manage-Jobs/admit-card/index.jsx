@@ -1,13 +1,10 @@
 import ComponentCard from '@/components/ComponentCard';
 
 import { Link } from "react-router-dom";
-import AdmitCardList from './components/AdmitCardList';
 import AdmitCardGovernmentList from './components/AdmitCardGovernmentList';
 import AdmitCardPSUList from './components/AdmitCardPSUList';
 
 import { Col, Nav, NavItem, NavLink, Row, TabContainer, TabContent, TabPane } from 'react-bootstrap';
-import { TbBriefcase, TbHome, TbInfoCircle, TbMail, TbSettings, TbUser, TbUserCircle } from 'react-icons/tb';
-import { appTitle } from '@/helpers';
 import { useState } from 'react';
 
 
@@ -16,15 +13,15 @@ const Page = () => {
 
     return <>
         <div className="mt-4 pb-3 ">
-           
+
             <TabContainer activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
                 <Nav className="nav-tabs nav-bordered mb-3">
                     <NavItem className="nav-tabs-nav d-flex">
                         <NavLink eventKey="Government" id='1'>
-                           Government Sector
+                            Government Sector
                         </NavLink>
                         <NavLink eventKey="PSU" id='2'>
-                           PSU Sector
+                            PSU Sector
                         </NavLink>
                     </NavItem>
 
@@ -33,7 +30,7 @@ const Page = () => {
                     <div className="d-flex align-items-center justify-content-between">
                         <h4 className="mb-0 ">{activeTab} Admit Cards</h4>
                     </div>
-                } className="py-2"  isLink={<Link to="/admin/admit-card/add"  >
+                } className="py-2" isLink={<Link to="/admin/admit-card/add"  >
                     + Add Admit Card
                 </Link>}>
                     <TabContent className="pt-2">
