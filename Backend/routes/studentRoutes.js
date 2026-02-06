@@ -32,6 +32,8 @@ router.put('/removeNotification', studentController.studentRemoveNotification);
 router.get('/studentNotifications/:studentId', studentController.notificationListForStudent);
 
 router.get('/student_dashboard_data/:studentId', studentController.studentDashboardData);
+router.get('/student_job_admit_card_list/:studentId', studentController.studentJobAdmitCardListWithFilter);
+router.get('/student_job_answer_key_list/:studentId', studentController.studentJobAnswerKeyListWithFilter);
 router.get('/student_job_result_list/:studentId', studentController.studentJobResultListWithFilter);
 
 module.exports = router;

@@ -26,6 +26,8 @@ const JobAppliedMapperModel = require("../models/JobAppliedMapperModel");
 const JobModel = require("../models/JobModel");
 const JobSectorModel = require("../models/JobSectorModel");
 const JobResultModel = require("../models/ResultModel");
+const AdmitCardModel = require("../models/AdmitCardModel");
+const JobAnswerKeyModel = require("../models/AnswerKeyModel");
 
 // STUDENT LIST SERVICE
 exports.studentListService = async (query) => {
@@ -1927,6 +1929,195 @@ exports.studentDashboardData = async (studentId) => {
   }
 };
 
+// STUDENT JOB ADMIT CARD LIST WITH FILTER SERVICE
+exports.studentJobAdmitCardListWithFilter = async (studentId, query) => {
+  try {
+
+    const { dateFilter, fromDate, toDate, searchFilter, customFilter, page = 1, limit = 10 } = query;
+
+    const skip = (page - 1) * limit;
+    const filter = {};
+
+    if (searchFilter) {
+      filter.admitCard_Title = { $regex: searchFilter, $options: 'i' };
+      filter.job_title = { $regex: searchFilter, $options: 'i' };
+    }
+
+    if (dateFilter) {
+      const today = moment().startOf('day');
+      const now = moment().endOf('day');
+      let startDate, endDate;
+
+      switch (dateFilter) {
+        case 'today':
+          startDate = today.unix();
+          endDate = now.unix();
+          break;
+        case 'yesterday':
+          startDate = today.subtract(1, 'days').unix();
+          endDate = now.subtract(1, 'days').unix();
+          break;
+        case 'this_week':
+          startDate = moment().startOf('week').unix();
+          endDate = moment().endOf('week').unix();
+          break;
+        case 'this_month':
+          startDate = moment().startOf('month').unix();
+          endDate = moment().endOf('month').unix();
+          break;
+        case 'custom':
+          if (fromDate && toDate) {
+            startDate = moment(fromDate, 'YYYY-MM-DD').startOf('day').unix();
+            endDate = moment(toDate, 'YYYY-MM-DD').endOf('day').unix();
+          }
+          break;
+      }
+
+      if (startDate && endDate) {
+        filter.admitCard_ReleaseDate = { $gte: startDate, $lte: endDate };
+      }
+    }
+
+    if (customFilter) {
+      filter.admitCard_Status = customFilter;
+    }
+
+    const student = await studentModel.findById(studentId);
+
+    if (!student) {
+      return {
+        status: 404,
+        message: "Student not found with the provided ID",
+        jsonData: {},
+      };
+    }
+
+    const total = await AdmitCardModel.countDocuments(filter);
+    const studentSector = student.studentJobSector;
+    const data = await AdmitCardModel.find(filter)
+      .skip(skip)
+      .limit(limit)
+      .populate({
+        path: 'admitCard_JobId',
+        model: 'Jobs',
+        select: 'job_sector',
+        match: { job_sector: studentSector }
+      })
+      .sort({ admitCard_ReleaseDate: -1 });
+
+    return {
+      status: 200,
+      message: "Student job admit card list with filter fetched successfully",
+      jsonData: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit),
+        job_admit_card_list: data,
+      }
+    };
+
+  } catch (error) {
+    return {
+      status: 500,
+      message: "An error occurred while fetching student job admit card list with filter",
+      error: error.message,
+    };
+  }
+};
+
+// STUDENT JOB ANSWER KEY LIST WITH FILTER SERVICE
+exports.studentJobAnswerKeyListWithFilter = async (studentId, query) => {
+  try {
+
+    const { dateFilter, fromDate, toDate, searchFilter, customFilter, page = 1, limit = 10 } = query;
+
+    const skip = (page - 1) * limit;
+    const filter = {};
+
+    if (searchFilter) {
+      filter.answerKey_Title = { $regex: searchFilter, $options: 'i' };
+      filter.job_title = { $regex: searchFilter, $options: 'i' };
+    }
+
+    if (dateFilter) {
+      const today = moment().startOf('day');
+      const now = moment().endOf('day');
+      let startDate, endDate;
+
+      switch (dateFilter) {
+        case 'today':
+          startDate = today.unix();
+          endDate = now.unix();
+          break;
+        case 'yesterday':
+          startDate = today.subtract(1, 'days').unix();
+          endDate = now.subtract(1, 'days').unix();
+          break;
+        case 'this_week':
+          startDate = moment().startOf('week').unix();
+          endDate = moment().endOf('week').unix();
+          break;
+        case 'this_month':
+          startDate = moment().startOf('month').unix();
+          endDate = moment().endOf('month').unix();
+          break;
+        case 'custom':
+          if (fromDate && toDate) {
+            startDate = moment(fromDate, 'YYYY-MM-DD').startOf('day').unix();
+            endDate = moment(toDate, 'YYYY-MM-DD').endOf('day').unix();
+          }
+          break;
+      }
+
+      if (startDate && endDate) {
+        filter.answerKey_ReleaseDate = { $gte: startDate, $lte: endDate };
+      }
+    }
+
+    if (customFilter) {
+      filter.answerKey_Status = customFilter;
+    }
+
+    const student = await studentModel.findById(studentId);
+
+    if (!student) {
+      return {
+        status: 404,
+        message: "Student not found with the provided ID",
+        jsonData: {},
+      };
+    }
+
+    const total = await JobAnswerKeyModel.countDocuments(filter);
+    const studentSector = student.studentJobSector;
+    const data = await JobAnswerKeyModel.find(filter)
+      .skip(skip)
+      .limit(limit)
+      .populate({ path: 'jobId', model: 'Jobs', select: 'job_sector', match: { job_sector: studentSector } })
+      .sort({ answerKey_ReleaseDate: -1 });
+
+    return {
+      status: 200,
+      message: "Student job answer key list with filter fetched successfully",
+      jsonData: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit),
+        job_answer_key_list: data,
+      }
+    };
+
+  } catch (error) {
+    return {
+      status: 500,
+      message: "An error occurred while fetching student job answer key list with filter",
+      error: error.message,
+    };
+  }
+};
+
 // STUDENT JOB RESULT LIST WITH FILTER SERVICE
 exports.studentJobResultListWithFilter = async (studentId, query) => {
   try {
@@ -1972,12 +2163,13 @@ exports.studentJobResultListWithFilter = async (studentId, query) => {
       }
 
       if (startDate && endDate) {
-        filter.result_CreatedAt = { $gte: startDate, $lte: endDate };
+        filter.result_ReleaseDate = { $gte: startDate, $lte: endDate };
       }
     }
 
     if (customFilter) {
       filter.result_Status = customFilter;
+      filter.result_Status = { $in: ['active', 'inactive'].includes(customFilter) ? [customFilter] : [] };
     }
 
     const student = await studentModel.findById(studentId);
@@ -1995,8 +2187,8 @@ exports.studentJobResultListWithFilter = async (studentId, query) => {
     const data = await JobResultModel.find(filter)
       .skip(skip)
       .limit(limit)
-      .populate({ path: 'jobId', model: 'JobModel', select: 'job_sector', match: { job_sector: studentSector } })
-      .sort({ result_CreatedAt: -1 });
+      .populate({ path: 'jobId', model: 'Jobs', select: 'job_sector', match: { job_sector: studentSector } })
+      .sort({ result_ReleaseDate: -1 });
 
     return {
       status: 200,
