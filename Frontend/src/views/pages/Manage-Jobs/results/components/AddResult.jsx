@@ -1,8 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { Form, Button, Row, Col, Card, Alert, FormSelect } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ComponentCard from "@/components/ComponentCard";
 import axios from "@/api/axios";
 import React from "react";
@@ -54,11 +54,15 @@ const FormInput = ({
 
 const AddResult = () => {
   const navigate = useNavigate();
+  const { id } = useParams(); // Get result ID from URL params for edit mode
+  const isEditMode = Boolean(id);
   const [resultFile, setResultFile] = useState(null);
   const [message, setMessage] = useState({ text: "", variant: "" });
   const [jobsList, setJobsList] = useState([]);
-  const [resultId, setResultId] = useState(null);
+  const [resultId, setResultId] = useState(id || null);
   const [fileBase64, setFileBase64] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [resultData, setResultData] = useState(null);
 
   const initialValues = useMemo(() => ({
     _id: "",
@@ -108,9 +112,30 @@ const AddResult = () => {
     }
   };
 
+  // Fetch result data if in edit mode
+  const fetchResultData = async (resultId) => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`/job-categories/get_result_list_of_job/${resultId}`);
+      if (res.data.status === 200) {
+        const data = res.data.jsonData;
+        setResultData(data);
+        return data;
+      }
+    } catch (error) {
+      console.error("Error fetching result:", error);
+      setMessage({ text: "Error loading result data", variant: "danger" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   React.useEffect(() => {
     fetchJobsList();
-  }, []);
+    if (isEditMode && id) {
+      fetchResultData(id);
+    }
+  }, [isEditMode, id]);
 
   // Create result using POST API
   const createResult = async (values) => {
@@ -189,7 +214,7 @@ const AddResult = () => {
     if (resultId) {
       await updateResult(values);
     } else {
-      await createAnswerKey(values);
+      await createResult(values);
     }
   };
 
@@ -206,8 +231,23 @@ const AddResult = () => {
           initialValues={initialValues}
           validationSchema={resultValidationSchema}
           onSubmit={handleSubmit}
+          enableReinitialize={true}
         >
-          {({ values, errors, touched, handleChange, handleBlur, setFieldValue, isSubmitting }) => (
+          {({ values, errors, touched, handleChange, handleBlur, setFieldValue, isSubmitting }) => {
+            // Load result data in edit mode
+            useEffect(() => {
+              if (isEditMode && resultData) {
+                setFieldValue("_id", resultData._id || "");
+                setFieldValue("result_JobId", resultData.result_JobId?._id || resultData.result_JobId || "");
+                setFieldValue("result_Title", resultData.result_Title || "");
+                setFieldValue("result_Desc", resultData.result_Desc || "");
+                setFieldValue("result_URL", resultData.result_URL || "");
+                setFieldValue("result_ReleaseDate", resultData.result_ReleaseDate ? new Date(resultData.result_ReleaseDate).toISOString().split('T')[0] : "");
+                setFieldValue("result_FilePath", resultData.result_FilePath || "");
+              }
+            }, [isEditMode, resultData]);
+
+            return (
             <Form onSubmit={(e) => { e.preventDefault(); handleSubmit(values); }}>
               {/* Basic Result Details */}
               <ComponentCard className="mb-3" title="Result Details">
@@ -324,7 +364,8 @@ const AddResult = () => {
                 </Card.Body>
               </ComponentCard>
             </Form>
-          )}
+          );}
+        }
         </Formik>
       </Card.Body>
     </div>
