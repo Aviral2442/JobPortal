@@ -15,6 +15,7 @@ import {
   TbEye,
 } from "react-icons/tb";
 import axios from "@/api/axios";
+import { formatDate } from "@/components/DateFormat";
 
 const AdmitCardPSUList = ({ isActive }) => {
   const [jobs, setJobs] = useState([]);
@@ -26,13 +27,13 @@ const AdmitCardPSUList = ({ isActive }) => {
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-  // Fetch jobs - PSU sector
+  // Fetch jobs - government sector
   const fetchJobs = async () => {
     setLoading(true);
     try {
       const res = await axios.get(`${BASE_URL}/api/job-categories/psu_admit_card_list`);
       console.log("Fetched jobs:", res.data);
-      // Filter for PSU sector jobs
+      // Filter for government sector jobs
       setJobs(res.data?.jsonData?.psuAdmitCardData || []);
     } catch (err) {
       console.error(err);
@@ -51,10 +52,17 @@ const AdmitCardPSUList = ({ isActive }) => {
   }, [isActive]);
 
   const columns = [
-    { title: "Post Name", data: "job_title" },
-    { title: "Organization", data: "job_organization" },
-    { title: "Job Type", data: "job_type.job_type_name" },
-    { title: "Category", data: "job_category.category_name" },
+    { title: "S.No", data: null, render: (data, type, row, meta) => meta.row + 1 },
+    { title: "Job Title", data: "admitCard_JobId.job_title" },
+    { title: "Admit Card", data: "admitCard_Title" },
+    { title: "Category", data: "admitCard_JobId.job_category.category_name" },
+    { title: "Job Type", data: "admitCard_JobId.job_type.job_type_name" },
+    {
+      title: "Release Date", data: "admitCard_ReleaseDate",
+      render: (data) => {
+        return formatDate(data);
+      }
+    },
     {
       title: "Actions",
       data: null,
