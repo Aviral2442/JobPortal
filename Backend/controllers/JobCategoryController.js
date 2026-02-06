@@ -809,3 +809,22 @@ exports.updateDocument = async (req, res) => {
         });
     }
 };
+
+// GET DOCUMENT DETAILS BY ID CONTROLLER
+exports.getDocumentListById = async (req, res) => {
+    try {
+        const documentId = req.params.documentId;
+        const response = await JobCategoryService.getDocumentListById(documentId);
+        return res.status(response.status).json({
+            status: response.status,
+            message: response.message,
+            jsonData: response.jsonData || null,
+        });
+    } catch (error) {
+        console.error("Get Document Details By Id Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
+};

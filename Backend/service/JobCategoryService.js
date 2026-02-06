@@ -2571,3 +2571,31 @@ exports.updateDocument = async (documentId, data) => {
     };
   }
 };
+
+// GET DOCUMENT DETAILS BY ID SERVICE
+exports.getDocumentListById = async (documentId) => {
+  try {
+    const documentDetails = await DocumentModel.findById(documentId);
+
+    if (!documentDetails) {
+      return {
+        status: 404,
+        message: "Document not found",
+        jsonData: {},
+      };
+    }
+
+    return {
+      status: 200,
+      message: "Document details fetched successfully",
+      jsonData: documentDetails,
+    };
+  } catch (error) {
+    console.error("Error in getDocumentById Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+      jsonData: {},
+    };
+  }
+};
