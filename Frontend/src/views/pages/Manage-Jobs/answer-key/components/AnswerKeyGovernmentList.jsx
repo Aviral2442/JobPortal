@@ -15,6 +15,7 @@ import {
   TbEye,
 } from "react-icons/tb";
 import axios from "@/api/axios";
+import { formatDate } from "@/components/DateFormat";
 
 const AnswerKeyGovernmentList = ({ isActive }) => {
   const [jobs, setJobs] = useState([]);
@@ -26,15 +27,14 @@ const AnswerKeyGovernmentList = ({ isActive }) => {
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-  // Fetch jobs - government sector
+  // Fetch answer keys - government sector
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/jobs`);
-      console.log("Fetched jobs:", res.data);
-      // Filter for government sector jobs
-      const governmentJobs = res.data?.filter(job => job.job_sector?.job_sector_name === "Government") || [];
-      setJobs(governmentJobs);
+      const res = await axios.get(`/job-categories/government_answer_key_list`);
+      console.log("Fetched government answer keys:", res.data);
+      const answerKeys = res.data?.jsonData?.answerKeyData || res.data?.data || [];
+      setJobs(answerKeys);
     } catch (err) {
       console.error(err);
       setJobs([]);
@@ -52,10 +52,16 @@ const AnswerKeyGovernmentList = ({ isActive }) => {
   }, [isActive]);
 
   const columns = [
-    { title: "Post Name", data: "job_title" },
-    { title: "Organization", data: "job_organization" },
-    { title: "Job Type", data: "job_type.job_type_name" },
-    { title: "Category", data: "job_category.category_name" },
+    { title: "S.No", data: null, render: (data, type, row, meta) => meta.row + 1 },
+    { title: "Job", data: "answerKey_JobId.job_title" },
+    { title: "Title", data: "answerKey_Title" },
+    { title: "Category", data: "answerKey_JobId.job_category.category_name" },
+    { title: "Job Type", data: "answerKey_JobId.job_type.job_type_name" },
+    { title: "Release Date", data: "answerKey_ReleaseDate", render: (data) => {
+      return formatDate(data);
+    } },
+    { title: "Created At", data: "answerKey_CreatedAt", render: (data) => formatDate(data) },
+    // { title: "Description", data: "answerKey_Desc" },
     {
       title: "Actions",
       data: null,
@@ -88,7 +94,7 @@ const AnswerKeyGovernmentList = ({ isActive }) => {
                 onClick={async () => {
                   if (!window.confirm("Are you sure you want to delete this answer key?")) return;
                   try {
-                    await fetch(`${BASE_URL}/api/jobs/${rowData._id || rowData.id}`, { method: "DELETE" });
+                    await axios.delete(`/job-categories/delete_answer_key/${rowData._id || rowData.id}`);
                     setMessage("Answer key deleted successfully!");
                     setVariant("success");
                     fetchJobs();
