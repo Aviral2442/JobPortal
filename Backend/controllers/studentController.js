@@ -152,6 +152,23 @@ exports.sendOtpOnEmailOrMobile = async (req, res) => {
   }
 };
 
+// UPDATE STUDENT EMAIL OR MOBILE NUMBER CONTROLLER
+exports.changeStudentEmailOrMobile = async (req, res) => {
+  try {
+    const studentId = req.params.studentId;
+    const result = await studentService.changeStudentEmailOrMobile(req.body, studentId);
+    return res.status(result.status).json(result);
+  } catch (error) {
+    return res
+      .status(500)
+      .json({
+        status: 500,
+        message: "Internal server error",
+        error: error.message,
+      });
+  }
+};
+
 // UPDATE STUDENT PRIMARY DETAILS CONTROLLER
 exports.updateStudentPrimaryDetails = async (req, res) => {
   try {

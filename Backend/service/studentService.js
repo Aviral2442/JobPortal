@@ -894,6 +894,85 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
   }
 };
 
+// CHANGE STUDENT EMAIL OR MOBILE NO SERVICE
+exports.changeStudentEmailOrMobile = async (updateData, studentId) => {
+  try {
+
+    const student = await studentModel.findById(studentId);
+    if (!student) {
+      return {
+        status: 404,
+        message: "Student not found with the provided ID",
+        jsonData: {},
+      };
+    }
+
+    const updateEmailOrMobile = updateData.emailOrMobile.trim();
+    const isEmail = updateEmailOrMobile.includes("@");
+    const formattedInput = isEmail ? updateEmailOrMobile.toLowerCase() : updateEmailOrMobile;
+    if (isEmail) {
+      const updateEmail = await studentModel.findOne({ studentEmail: formattedInput });
+      if (updateEmail) {
+        return {
+          status: 409,
+          message: "The provided email is already registered with another account",
+          jsonData: {
+            studentId: student._id,
+            studentEmail: student.studentEmail,
+          },
+        };
+      } else {
+        student.studentEmail = formattedInput;
+        await student.save();
+        return {
+          status: 200,
+          message: "Email changed successfully",
+          jsonData: {
+            studentId: student._id,
+            studentEmail: student.studentEmail,
+          },
+        };
+      }
+    } else if (!isEmail) {
+      const updateMobile = await studentModel.findOne({ studentMobileNo: formattedInput });
+      if (updateMobile) {
+        return {
+          status: 409,
+          message: "The provided mobile number is already registered with another account",
+          jsonData: {
+            studentId: student._id,
+            studentMobileNo: student.studentMobileNo,
+          },
+        };
+      } else {
+        student.studentMobileNo = formattedInput;
+        await student.save();
+        return {
+          status: 200,
+          message: "Mobile number changed successfully",
+          jsonData: {
+            studentId: student._id,
+            studentMobileNo: student.studentMobileNo,
+          },
+        };
+      }
+    } else {
+      return {
+        status: 400,
+        message: "Invalid input. Please provide a valid email or mobile number.",
+        jsonData: {},
+      };
+    }
+
+  } catch (error) {
+    return {
+      status: 500,
+      message: "An error occurred during updating student email or mobile number",
+      error: error.message,
+    };
+  }
+};
+
 // UPDATE STUDENT PRIMARY DETAILS SERVICE
 exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
   try {
