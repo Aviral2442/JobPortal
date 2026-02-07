@@ -975,62 +975,6 @@ exports.changeStudentEmailOrMobile = async (updateData, studentId) => {
 };
 
 // UPDATE STUDENT PRIMARY DETAILS SERVICE
-// exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
-//   try {
-//     const student = await studentModel.findById(studentId);
-//     if (!student) {
-//       return { status: 404, message: "Student not found", jsonData: {} };
-//     }
-
-//     let profilePicUrl = null;
-//     if (studentPrimaryData.studentProfilePic) {
-//       profilePicUrl = saveBase64File(
-//         studentPrimaryData.studentProfilePic,
-//         "StudentProfile",
-//         "student",
-//         studentPrimaryData.extension,
-//       );
-//     }
-
-//     if (studentPrimaryData.studentFirstName) {
-//       student.studentFirstName = studentPrimaryData.studentFirstName;
-//     }
-//     if (studentPrimaryData.studentLastName) {
-//       student.studentLastName = studentPrimaryData.studentLastName;
-//     }
-//     if (studentPrimaryData.studentJobSector) {
-//       student.studentJobSector = studentPrimaryData.studentJobSector;
-//     }
-//     if (studentPrimaryData.studentProfilePic) {
-//       student.studentProfilePic = profilePicUrl;
-//     }
-//     await student.save();
-
-//     const getStudentSectorNameAndId = await JobSectorModel.findById(
-//       student.studentJobSector,
-//     );
-
-//     return {
-//       status: 200,
-//       message: "Student primary details updated successfully",
-//       jsonData: {
-//         studentId: student._id,
-//         studentFirstName: student.studentFirstName,
-//         studentLastName: student.studentLastName,
-//         studentJobSector: getStudentSectorNameAndId,
-//         studentProfilePic: student.studentProfilePic,
-//       },
-//     };
-
-//   } catch (error) {
-//     return {
-//       status: 500,
-//       message: "An error occurred during updating student primary details, " + error.message,
-//       jsonData: {},
-//     };
-//   }
-// };
-
 exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
   try {
     const student = await studentModel.findById(studentId);
@@ -2364,53 +2308,39 @@ exports.studentJobResultListWithFilter = async (studentId, query) => {
 
     const { dateFilter, fromDate, toDate, searchFilter, customFilter, page = 1, limit = 10 } = query;
 
-    const skip = (page - 1) * limit;
-    const filter = {};
+    let filter = {};
 
     if (searchFilter) {
       filter.result_Title = { $regex: searchFilter, $options: 'i' };
       filter.job_title = { $regex: searchFilter, $options: 'i' };
     }
 
-    if (dateFilter) {
-      const today = moment().startOf('day');
-      const now = moment().endOf('day');
-      let startDate, endDate;
-
-      switch (dateFilter) {
-        case 'today':
-          startDate = today.unix();
-          endDate = now.unix();
-          break;
-        case 'yesterday':
-          startDate = today.subtract(1, 'days').unix();
-          endDate = now.subtract(1, 'days').unix();
-          break;
-        case 'this_week':
-          startDate = moment().startOf('week').unix();
-          endDate = moment().endOf('week').unix();
-          break;
-        case 'this_month':
-          startDate = moment().startOf('month').unix();
-          endDate = moment().endOf('month').unix();
-          break;
-        case 'custom':
-          if (fromDate && toDate) {
-            startDate = moment(fromDate, 'YYYY-MM-DD').startOf('day').unix();
-            endDate = moment(toDate, 'YYYY-MM-DD').endOf('day').unix();
-          }
-          break;
-      }
-
-      if (startDate && endDate) {
-        filter.result_ReleaseDate = { $gte: startDate, $lte: endDate };
-      }
-    }
+    const dateQuery = buildDateFilter({
+      dateFilter,
+      fromDate,
+      toDate,
+      dateField: "result_ReleaseDate",
+    });
 
     if (customFilter) {
       filter.result_Status = customFilter;
       filter.result_Status = { $in: ['active', 'inactive'].includes(customFilter) ? [customFilter] : [] };
     }
+
+    filter = { ...filter, ...dateQuery };
+
+    const {
+      skip,
+      limit: finalLimit,
+      currentPage,
+    } = buildPagination({
+      dateFilter,
+      fromDate,
+      toDate,
+      searchFilter,
+      page,
+      limit,
+    });
 
     const student = await studentModel.findById(studentId);
 
@@ -2426,7 +2356,7 @@ exports.studentJobResultListWithFilter = async (studentId, query) => {
     const studentSector = student.studentJobSector;
     const data = await JobResultModel.find(filter)
       .skip(skip)
-      .limit(limit)
+      .limit(finalLimit)
       .populate({ path: 'result_JobId', model: 'Jobs', select: 'job_sector', match: { job_sector: studentSector } })
       .sort({ result_ReleaseDate: -1 });
 
@@ -2435,9 +2365,9 @@ exports.studentJobResultListWithFilter = async (studentId, query) => {
       message: "Student job result list with filter fetched successfully",
       jsonData: {
         total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(total / limit),
+        page: parseInt(currentPage),
+        limit: parseInt(finalLimit),
+        totalPages: Math.ceil(total / finalLimit),
         job_result_list: data,
       }
     };
