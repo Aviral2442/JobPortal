@@ -88,8 +88,8 @@ exports.studentListService = async (query) => {
   } catch (error) {
     return {
       result: 500,
-      message: "Internal server error",
-      error: error.message,
+      message: "Internal server error, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -141,8 +141,8 @@ exports.studentLoginLogoutHistory = async (query) => {
   } catch (error) {
     return {
       result: 500,
-      message: "Internal server error",
-      error: error.message,
+      message: "Internal server error, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -186,8 +186,8 @@ exports.studentProgressMeter = async (studentId) => {
   } catch (error) {
     return {
       result: 500,
-      message: "Internal server error",
-      error: error.message,
+      message: "Internal server error, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -267,8 +267,8 @@ exports.studentAllDetails = async (studentId) => {
   } catch (error) {
     return {
       result: 500,
-      message: "Internal server error",
-      error: error.message,
+      message: "Internal server error, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -371,7 +371,7 @@ exports.studentRegistration = async (studentData) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during student registration",
+      message: "An error occurred during student registration, " + error.message,
       jsonData: {},
     };
   }
@@ -457,8 +457,8 @@ exports.studentLogin = async (studentLoginData) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during student login",
-      error: error.message,
+      message: "An error occurred during student login, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -543,8 +543,8 @@ exports.studentLoginWithOtp = async (studentLoginCredentials) => {
     console.error("OTP Login Error:", error);
     return {
       status: 500,
-      message: "An error occurred during student login with OTP",
-      error: error.message,
+      message: "An error occurred during student login with OTP, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -579,8 +579,8 @@ exports.studentLogout = async (studentId) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during student logout",
-      error: error.message,
+      message: "An error occurred during student logout, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -678,8 +678,8 @@ exports.studentForgetPassword = async (studentForgetData) => {
 
     return {
       status: 500,
-      message: "An error occurred during password reset",
-      error: error.message,
+      message: "An error occurred during password reset, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -762,8 +762,8 @@ exports.verifyStudentOtp = async (studentOtpData) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during OTP verification",
-      error: error.message,
+      message: "An error occurred during OTP verification, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -799,8 +799,8 @@ exports.resetStudentPassword = async (studentPasswordData) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during password update",
-      error: error.message,
+      message: "An error occurred during password update, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -888,8 +888,8 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
 
     return {
       status: 500,
-      message: "An error occurred during password reset",
-      error: error.message,
+      message: "An error occurred during password reset, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -967,8 +967,8 @@ exports.changeStudentEmailOrMobile = async (updateData, studentId) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during updating student email or mobile number",
-      error: error.message,
+      message: "An error occurred during updating student email or mobile number, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -1024,8 +1024,8 @@ exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during updating student primary details",
-      error: error.message,
+      message: "An error occurred during updating student primary details, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -1073,8 +1073,8 @@ exports.updateStudentAddress = async (studentId, studentAddressData) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during student address update",
-      error: error.message,
+      message: "An error occurred during student address update, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -1126,8 +1126,8 @@ exports.updateStudentBasicDetail = async (
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during student basic detail update",
-      error: error.message,
+      message: "An error occurred during student basic detail update, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -1197,8 +1197,8 @@ exports.updateStudentBankDetails = async (studentId, studentBankData) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during student bank detail update",
-      error: error.message,
+      message: "An error occurred during student bank detail update, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -1253,8 +1253,8 @@ exports.updateStudentBodyDetails = async (
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during student body detail update",
-      error: error.message,
+      message: "An error occurred during student body detail update, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -1305,8 +1305,8 @@ exports.updateStudentPreferences = async (
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during student career preferences update",
-      error: error.message,
+      message: "An error occurred during student career preferences update, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -1400,8 +1400,8 @@ exports.updateStudentCertificates = async (studentId, certificates) => {
     console.error("Certificate service error:", error);
     return {
       status: 500,
-      message: "An error occurred during student certificates update",
-      error: error.message,
+      message: "An error occurred during student certificates update, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -1529,8 +1529,8 @@ exports.updateStudentDocumentUpload = async (studentId, data) => {
   } catch (error) {
     return {
       status: 500,
-      message: "Error updating student document",
-      error: error.message,
+      message: "Error updating student document, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -1632,8 +1632,8 @@ exports.updateStudentEducation = async (studentId, studentEducationData) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during student education update",
-      error: error.message,
+      message: "An error occurred during student education update, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -1679,8 +1679,8 @@ exports.updateStudentEmergencyData = async (
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during student emergency contact update",
-      error: error.message,
+      message: "An error occurred during student emergency contact update, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -1735,8 +1735,8 @@ exports.updateStudentParentsInfo = async (studentId, studentParentsData) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during student parental info update",
-      error: error.message,
+      message: "An error occurred during student parental info update, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -1785,8 +1785,8 @@ exports.updateStudentSkills = async (studentId, data) => {
     console.error("updateStudentSkills error:", error);
     return {
       status: 500,
-      message: "An error occurred during student skills update",
-      error: error.message,
+      message: "An error occurred during student skills update, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -1827,8 +1827,8 @@ exports.updateStudentSocialLink = async (studentId, studentSocial) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during student social link update",
-      error: error.message,
+      message: "An error occurred during student social link update, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -1923,8 +1923,8 @@ exports.updateStudentWorkExperience = async (
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during student work experience update",
-      error: error.message,
+      message: "An error occurred during student work experience update, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -1971,10 +1971,8 @@ exports.uploadStudentResume = async (studentId, studentResumeData) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during student resume upload",
-      jsonData: {
-        error: error.message,
-      },
+      message: "An error occurred during student resume upload, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -2017,8 +2015,8 @@ exports.studentRemoveNotification = async (data) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during removing student notification",
-      error: error.message,
+      message: "An error occurred during removing student notification, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -2053,8 +2051,8 @@ exports.notificationListForStudent = async (studentId) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred while fetching notifications for student",
-      error: error.message,
+      message: "An error occurred while fetching notifications for student, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -2091,8 +2089,8 @@ exports.studentDashboardData = async (studentId) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred while fetching student dashboard data",
-      error: error.message,
+      message: "An error occurred while fetching student dashboard data, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -2188,8 +2186,8 @@ exports.studentJobAdmitCardListWithFilter = async (studentId, query) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred while fetching student job admit card list with filter",
-      error: error.message,
+      message: "An error occurred while fetching student job admit card list with filter, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -2280,8 +2278,8 @@ exports.studentJobAnswerKeyListWithFilter = async (studentId, query) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred while fetching student job answer key list with filter",
-      error: error.message,
+      message: "An error occurred while fetching student job answer key list with filter, " + error.message,
+      jsonData: {},
     };
   }
 };
@@ -2373,8 +2371,8 @@ exports.studentJobResultListWithFilter = async (studentId, query) => {
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred while fetching student job result list with filter",
-      error: error.message,
+      message: "An error occurred while fetching student job result list with filter, " + error.message,
+      jsonData: {},
     };
   }
 };
