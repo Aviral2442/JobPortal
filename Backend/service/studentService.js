@@ -2077,6 +2077,8 @@ exports.studentDashboardData = async (studentId) => {
 
     const allJobsCount = await JobModel.countDocuments({ job_sector: student.studentJobSector });
 
+    const studentData = await studentModel.findById(studentId).select("studentProfilePic studentFirstName");
+
     return {
       status: 200,
       message: "Student dashboard data fetched successfully",
@@ -2084,6 +2086,7 @@ exports.studentDashboardData = async (studentId) => {
         appliedJobsCount: appliedJobsCount,
         eligibleJobsCount: eligibleJobsCount,
         allJobsCount: allJobsCount,
+        studentData: studentData,
       }
     };
 
@@ -2145,9 +2148,9 @@ exports.studentJobAdmitCardListWithFilter = async (studentId, query) => {
       }
     }
 
-    if (customFilter) {
-      filter.admitCard_Status = customFilter;
-    }
+    // if (customFilter) {
+    //   filter.admitCard_Status = customFilter;
+    // }
 
     const student = await studentModel.findById(studentId);
 
