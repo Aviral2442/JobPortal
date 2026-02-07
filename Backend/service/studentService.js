@@ -1041,7 +1041,7 @@ exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
     // ✅ Upload ONLY when both exist
     if (
       studentPrimaryData.studentProfilePic &&
-      studentPrimaryData.extension
+      studentPrimaryData.extension != null
     ) {
       const profilePicUrl = await saveBase64File(
         studentPrimaryData.studentProfilePic,
