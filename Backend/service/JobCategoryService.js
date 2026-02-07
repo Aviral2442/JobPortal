@@ -672,7 +672,7 @@ exports.recommendJobsForStudent = async (studentId) => {
       jobRecommendation: true,
     })
       .select(
-        "job_title job_short_desc job_posted_date job_category job_sector job_type job_vacancy_total",
+        "job_title job_logo job_short_desc job_posted_date job_category job_sector job_type job_vacancy_total",
       )
       .populate({
         path: "job_category",
@@ -737,7 +737,7 @@ exports.featuredJobsForStudent = async (studentId) => {
       jobFeatured: true,
     })
       .select(
-        "job_title job_short_desc job_posted_date job_category job_sector job_type job_vacancy_total",
+        "job_title job_logo job_short_desc job_posted_date job_category job_sector job_type job_vacancy_total",
       )
       .populate({
         path: "job_category",
@@ -784,7 +784,7 @@ exports.jobListSectorWise = async (studentId) => {
 
     const fetchJobSectorWise = await Job.find({ job_sector: studentSector })
       .select(
-        "job_title job_short_desc job_category job_sector job_type job_vacancy_total job_start_date",
+        "job_title job_logo job_short_desc job_category job_sector job_type job_vacancy_total job_start_date",
       )
       .populate({
         path: "job_category",
