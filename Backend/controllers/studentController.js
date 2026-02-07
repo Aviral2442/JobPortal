@@ -658,7 +658,6 @@ exports.studentJobAnswerKeyListWithFilter = async (req, res) => {
 // STUDENT JOB RESULT LIST WITH FILTER CONTROLLER
 exports.studentJobResultListWithFilter = async (req, res) => {
   try {
-
     const studentId = req.params.studentId;
     const filter = req.query;
     const result = await studentService.studentJobResultListWithFilter(studentId, filter);
@@ -667,8 +666,8 @@ exports.studentJobResultListWithFilter = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       status: 500,
-      message: "Internal server error",
-      error: error.message,
+      message: "Internal server error, " + error.message,
+      jsonData: {}
     });
   }
 };
