@@ -982,11 +982,11 @@ exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
       return { status: 404, message: "Student not found", jsonData: {} };
     }
 
-    let profilePicUrl = null;
 
     const profileExtension = studentPrimaryData.extension;
 
     if (profileExtension != null) {
+      let profilePicUrl = null;
       if (studentPrimaryData.studentProfilePic) {
         profilePicUrl = saveBase64File(
           studentPrimaryData.studentProfilePic,
