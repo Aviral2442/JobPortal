@@ -1038,7 +1038,7 @@ exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
       return { status: 404, message: "Student not found", jsonData: {} };
     }
 
-    if (studentPrimaryData.extension == null) {
+    if (studentPrimaryData.extension == null && studentPrimaryData.extension == 'null') {
 
       const existStudentPic = student.studentProfilePic;
       student.studentProfilePic = existStudentPic;
