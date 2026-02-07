@@ -28,6 +28,7 @@ const JobSectorModel = require("../models/JobSectorModel");
 const JobResultModel = require("../models/ResultModel");
 const AdmitCardModel = require("../models/AdmitCardModel");
 const JobAnswerKeyModel = require("../models/AnswerKeyModel");
+const moment = require('moment');
 
 // STUDENT LIST SERVICE
 exports.studentListService = async (query) => {
