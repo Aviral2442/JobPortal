@@ -2262,7 +2262,7 @@ exports.studentJobAnswerKeyListWithFilter = async (studentId, query) => {
     const data = await JobAnswerKeyModel.find(filter)
       .skip(skip)
       .limit(limit)
-      .populate({ path: 'jobId', model: 'Jobs', select: 'job_sector', match: { job_sector: studentSector } })
+      .populate({ path: 'answerKey_JobId', model: 'Jobs', select: 'job_sector', match: { job_sector: studentSector } })
       .sort({ answerKey_ReleaseDate: -1 });
 
     return {
@@ -2355,7 +2355,7 @@ exports.studentJobResultListWithFilter = async (studentId, query) => {
     const data = await JobResultModel.find(filter)
       .skip(skip)
       .limit(limit)
-      .populate({ path: 'jobId', model: 'Jobs', select: 'job_sector', match: { job_sector: studentSector } })
+      .populate({ path: 'result_JobId', model: 'Jobs', select: 'job_sector', match: { job_sector: studentSector } })
       .sort({ result_ReleaseDate: -1 });
 
     return {
