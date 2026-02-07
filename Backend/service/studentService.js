@@ -1038,22 +1038,29 @@ exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
       return { status: 404, message: "Student not found", jsonData: {} };
     }
 
-    // ✅ Upload ONLY when both exist
-    if (
-      studentPrimaryData.studentProfilePic &&
-      studentPrimaryData.extension != null
-    ) {
-      const profilePicUrl = await saveBase64File(
-        studentPrimaryData.studentProfilePic,
-        "StudentProfile",
-        "student",
-        studentPrimaryData.extension
-      );
+    if (studentPrimaryData.extension == null) {
 
-      student.studentProfilePic = profilePicUrl;
+      const existStudentPic = student.studentProfilePic;
+      student.studentProfilePic = existStudentPic;
+      await student.save();
+
+    } else {
+
+      if (
+        studentPrimaryData.studentProfilePic &&
+        studentPrimaryData.extension
+      ) {
+        const profilePicUrl = await saveBase64File(
+          studentPrimaryData.studentProfilePic,
+          "StudentProfile",
+          "student",
+          studentPrimaryData.extension
+        );
+
+        student.studentProfilePic = profilePicUrl;
+      }
     }
 
-    // ✅ Update fields only if defined (important)
     if (studentPrimaryData.studentFirstName !== undefined) {
       student.studentFirstName = studentPrimaryData.studentFirstName;
     }
@@ -1093,7 +1100,6 @@ exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
     };
   }
 };
-
 
 // UPDATE STUDENT ADDRESS SERVICE
 exports.updateStudentAddress = async (studentId, studentAddressData) => {
