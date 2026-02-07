@@ -982,19 +982,14 @@ exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
       return { status: 404, message: "Student not found", jsonData: {} };
     }
 
-
-    const profileExtension = studentPrimaryData.extension;
-
-    if (profileExtension != null) {
-      let profilePicUrl = null;
-      if (studentPrimaryData.studentProfilePic) {
-        profilePicUrl = saveBase64File(
-          studentPrimaryData.studentProfilePic,
-          "StudentProfile",
-          "student",
-          profileExtension,
-        );
-      }
+    let profilePicUrl = null;
+    if (studentPrimaryData.studentProfilePic) {
+      profilePicUrl = saveBase64File(
+        studentPrimaryData.studentProfilePic,
+        "StudentProfile",
+        "student",
+        studentPrimaryData.extension,
+      );
     }
 
     if (studentPrimaryData.studentFirstName) {
