@@ -983,13 +983,18 @@ exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
     }
 
     let profilePicUrl = null;
-    if (studentPrimaryData.studentProfilePic) {
-      profilePicUrl = saveBase64File(
-        studentPrimaryData.studentProfilePic,
-        "StudentProfile",
-        "student",
-        studentPrimaryData.extension,
-      );
+
+    const profileExtension = studentPrimaryData.extension;
+
+    if (profileExtension != null) {
+      if (studentPrimaryData.studentProfilePic) {
+        profilePicUrl = saveBase64File(
+          studentPrimaryData.studentProfilePic,
+          "StudentProfile",
+          "student",
+          profileExtension,
+        );
+      }
     }
 
     if (studentPrimaryData.studentFirstName) {
