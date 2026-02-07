@@ -584,7 +584,7 @@ exports.upcommingJobForStudents = async (studentId) => {
       job_start_date: { $gte: sevenDaysFromNow },
     })
       .select(
-        "job_title job_short_desc job_category job_sector job_type job_vacancy_total job_start_date",
+        "job_title job_logo job_short_desc job_category job_sector job_type job_vacancy_total job_start_date",
       )
       .populate({
         path: "job_category",
@@ -2334,7 +2334,7 @@ exports.updateResult = async (resultId, data) => {
   }
 };
 
-// ...................................  DOCUMENT SERVICES ....................................................
+// ...................................  DOCUMENT SECTION SERVICES ....................................................
 exports.getDocumentList = async (query) => {
   const {
     dateFilter,
