@@ -975,6 +975,62 @@ exports.changeStudentEmailOrMobile = async (updateData, studentId) => {
 };
 
 // UPDATE STUDENT PRIMARY DETAILS SERVICE
+// exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
+//   try {
+//     const student = await studentModel.findById(studentId);
+//     if (!student) {
+//       return { status: 404, message: "Student not found", jsonData: {} };
+//     }
+
+//     let profilePicUrl = null;
+//     if (studentPrimaryData.studentProfilePic) {
+//       profilePicUrl = saveBase64File(
+//         studentPrimaryData.studentProfilePic,
+//         "StudentProfile",
+//         "student",
+//         studentPrimaryData.extension,
+//       );
+//     }
+
+//     if (studentPrimaryData.studentFirstName) {
+//       student.studentFirstName = studentPrimaryData.studentFirstName;
+//     }
+//     if (studentPrimaryData.studentLastName) {
+//       student.studentLastName = studentPrimaryData.studentLastName;
+//     }
+//     if (studentPrimaryData.studentJobSector) {
+//       student.studentJobSector = studentPrimaryData.studentJobSector;
+//     }
+//     if (studentPrimaryData.studentProfilePic) {
+//       student.studentProfilePic = profilePicUrl;
+//     }
+//     await student.save();
+
+//     const getStudentSectorNameAndId = await JobSectorModel.findById(
+//       student.studentJobSector,
+//     );
+
+//     return {
+//       status: 200,
+//       message: "Student primary details updated successfully",
+//       jsonData: {
+//         studentId: student._id,
+//         studentFirstName: student.studentFirstName,
+//         studentLastName: student.studentLastName,
+//         studentJobSector: getStudentSectorNameAndId,
+//         studentProfilePic: student.studentProfilePic,
+//       },
+//     };
+
+//   } catch (error) {
+//     return {
+//       status: 500,
+//       message: "An error occurred during updating student primary details, " + error.message,
+//       jsonData: {},
+//     };
+//   }
+// };
+
 exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
   try {
     const student = await studentModel.findById(studentId);
@@ -982,32 +1038,38 @@ exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
       return { status: 404, message: "Student not found", jsonData: {} };
     }
 
-    let profilePicUrl = null;
-    if (studentPrimaryData.studentProfilePic) {
-      profilePicUrl = saveBase64File(
+    // ✅ Upload ONLY when both exist
+    if (
+      studentPrimaryData.studentProfilePic &&
+      studentPrimaryData.extension
+    ) {
+      const profilePicUrl = await saveBase64File(
         studentPrimaryData.studentProfilePic,
         "StudentProfile",
         "student",
-        studentPrimaryData.extension,
+        studentPrimaryData.extension
       );
-    }
 
-    if (studentPrimaryData.studentFirstName) {
-      student.studentFirstName = studentPrimaryData.studentFirstName;
-    }
-    if (studentPrimaryData.studentLastName) {
-      student.studentLastName = studentPrimaryData.studentLastName;
-    }
-    if (studentPrimaryData.studentJobSector) {
-      student.studentJobSector = studentPrimaryData.studentJobSector;
-    }
-    if (studentPrimaryData.studentProfilePic) {
       student.studentProfilePic = profilePicUrl;
     }
+
+    // ✅ Update fields only if defined (important)
+    if (studentPrimaryData.studentFirstName !== undefined) {
+      student.studentFirstName = studentPrimaryData.studentFirstName;
+    }
+
+    if (studentPrimaryData.studentLastName !== undefined) {
+      student.studentLastName = studentPrimaryData.studentLastName;
+    }
+
+    if (studentPrimaryData.studentJobSector !== undefined) {
+      student.studentJobSector = studentPrimaryData.studentJobSector;
+    }
+
     await student.save();
 
     const getStudentSectorNameAndId = await JobSectorModel.findById(
-      student.studentJobSector,
+      student.studentJobSector
     );
 
     return {
@@ -1021,15 +1083,17 @@ exports.updateStudentPrimaryDetails = async (studentId, studentPrimaryData) => {
         studentProfilePic: student.studentProfilePic,
       },
     };
-
   } catch (error) {
     return {
       status: 500,
-      message: "An error occurred during updating student primary details, " + error.message,
+      message:
+        "An error occurred during updating student primary details, " +
+        error.message,
       jsonData: {},
     };
   }
 };
+
 
 // UPDATE STUDENT ADDRESS SERVICE
 exports.updateStudentAddress = async (studentId, studentAddressData) => {
