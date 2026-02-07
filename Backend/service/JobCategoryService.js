@@ -579,8 +579,6 @@ exports.upcommingJobForStudents = async (studentId) => {
 
     const sevenDaysFromNow = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
 
-    console.log(sevenDaysFromNow);
-
     const upcommingJobSectorWise = await Job.find({
       job_sector: studentSector,
       job_start_date: { $gte: sevenDaysFromNow },
@@ -604,18 +602,15 @@ exports.upcommingJobForStudents = async (studentId) => {
         select: "job_type_name",
       });
 
-    const upcommingJobSectorWiseCount = upcommingJobSectorWise.length;
-
     return {
       status: 200,
       message: "Upcomming jobs fetched successfully",
       jsonData: {
-        upcommingJobSectorWiseCount,
-        upcommingJobSectorWise,
+        upcommingJobSectorWiseCount: upcommingJobSectorWise.length,
+        upcommingJobSectorWise: upcommingJobSectorWise,
       },
     };
   } catch (error) {
-    console.error("Error in upcommingJobForStudents Service:", error);
     return {
       status: 500,
       message: "Server error",
@@ -699,7 +694,6 @@ exports.recommendJobsForStudent = async (studentId) => {
       },
     };
   } catch (error) {
-    console.error("Error in recommendJobsForStudent Service:", error);
     return {
       status: 500,
       message: "Server error",
