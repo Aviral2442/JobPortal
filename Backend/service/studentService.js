@@ -2093,6 +2093,14 @@ exports.studentDashboardData = async (studentId) => {
 
     const studentData = await studentModel.findById(studentId).select("studentProfilePic studentFirstName");
 
+    const studentSector = student.studentJobSector;
+    const sectorDetails = await JobSectorModel.findById(studentSector);
+
+    let jobSectorUpdateStatus = false;
+    if (sectorDetails && sectorDetails.job_sector_name === "Not Specified") {
+      jobSectorUpdateStatus = true;
+    }
+
     return {
       status: 200,
       message: "Student dashboard data fetched successfully",
@@ -2100,6 +2108,7 @@ exports.studentDashboardData = async (studentId) => {
         appliedJobsCount: appliedJobsCount,
         eligibleJobsCount: eligibleJobsCount,
         allJobsCount: allJobsCount,
+        jobSectorUpdateStatus: jobSectorUpdateStatus,
         studentData: studentData,
       }
     };
