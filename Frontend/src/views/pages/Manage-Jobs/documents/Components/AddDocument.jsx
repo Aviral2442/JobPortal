@@ -6,7 +6,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import ComponentCard from "@/components/ComponentCard";
 import axios from "@/api/axios";
 import React from "react";
-import { TbTrash } from "react-icons/tb";
+import { TbTrash, TbEye, TbPlus } from "react-icons/tb";
+import ImageModal from "@/components/ImageModel";
 
 const documentValidationSchema = Yup.object({
     _id: Yup.string(),
@@ -85,6 +86,11 @@ const AddDocument = () => {
     const [loading, setLoading] = useState(false);
     const [documentData, setDocumentData] = useState(null);
 
+    // Image Modal States
+    const [showImageModal, setShowImageModal] = useState(false);
+    const [selectedImage, setSelectedImage] = useState("");
+    const [selectedImageTitle, setSelectedImageTitle] = useState("");
+
     const initialValues = useMemo(
         () => ({
             _id: "",
@@ -157,9 +163,10 @@ const AddDocument = () => {
     const fetchDocumentData = async (documentId) => {
         setLoading(true);
         try {
-            const res = await axios.get(`/job-categories/get_document_list_by_id/${documentId}`);
+            const res = await axios.get(`/job-categories/get_document_by_id/${documentId}`);
             if (res.data.status === 200) {
-                const data = res.data.jsonData;
+                const data = res.data?.jsonData;
+                console.log(res.data?.jsonData);
                 setDocumentData(data);
                 return data;
             }
@@ -286,6 +293,13 @@ const AddDocument = () => {
         }
     };
 
+    // Function to handle image/file preview
+    const handleViewFile = (fileSrc, title) => {
+        setSelectedImage(fileSrc);
+        setSelectedImageTitle(title);
+        setShowImageModal(true);
+    };
+
     return (
         <div className="mb-4 pt-4">
             <Card.Body>
@@ -362,7 +376,7 @@ const AddDocument = () => {
                                 <ComponentCard className="mb-3 pb-3" title="Document Details">
                                     <Card.Body>
                                         <Row>
-                                            <Col md={10}>
+                                            <Col md={8}>
                                                 <Form.Group className="mb-2">
                                                     <Form.Label className="mb-1">Document Logo</Form.Label>
                                                     <Form.Control
@@ -377,14 +391,29 @@ const AddDocument = () => {
                                                     )}
                                                 </Form.Group>
                                             </Col>
-                                            <Col md={2}>
+                                            <Col md={4}>
                                                 {values.document_logo && (
-                                                    <div className="mt-2">
+                                                    <div className="mt-2 d-flex align-items-center gap-2">
                                                         <img
-                                                            src={logoBase64 || values.document_logo}
+                                                            src={logoBase64 || `http://localhost:5000${values.document_logo}`}
                                                             alt="Document Logo"
-                                                            style={{ maxWidth: "100px", maxHeight: "100px" }}
+                                                            style={{ maxWidth: "80px", maxHeight: "80px", cursor: "pointer" }}
+                                                            onClick={() => handleViewFile(
+                                                                logoBase64 || `http://localhost:5000${values.document_logo}`,
+                                                                "Document Logo"
+                                                            )}
                                                         />
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline-primary"
+                                                            onClick={() => handleViewFile(
+                                                                logoBase64 || `http://localhost:5000${values.document_logo}`,
+                                                                "Document Logo"
+                                                            )}
+                                                            title="View Logo"
+                                                        >
+                                                            <TbEye size={18} />
+                                                        </Button>
                                                     </div>
                                                 )}
                                             </Col>
@@ -541,6 +570,7 @@ const AddDocument = () => {
                                                                 <FormInput
                                                                     name={`document_important_dates[${index}].dates_value`}
                                                                     label="Date Value"
+                                                                    type="date"
                                                                     value={date.dates_value}
                                                                     onChange={handleChange}
                                                                     onBlur={handleBlur}
@@ -568,9 +598,9 @@ const AddDocument = () => {
                                                                         variant="primary"
                                                                         size="sm"
                                                                         onClick={() => push({ dates_label: "", dates_value: "" })}
-                                                                        className="mt-3 py-1"
+                                                                        className="mt-3 py-2"
                                                                     >
-                                                                        +
+                                                                        <TbPlus className="" />
                                                                     </Button>
                                                                 )}
                                                             </Col>
@@ -638,9 +668,9 @@ const AddDocument = () => {
                                                                         variant="primary"
                                                                         size="sm"
                                                                         onClick={() => push({ links_label: "", links_url: "" })}
-                                                                        className="mt-3 py-1"
+                                                                        className="mt-3 py-2"
                                                                     >
-                                                                        +
+                                                                        <TbPlus className="" />
                                                                     </Button>
                                                                 )}
                                                             </Col>
@@ -708,9 +738,9 @@ const AddDocument = () => {
                                                                         variant="primary"
                                                                         size="sm"
                                                                         onClick={() => push({ links_label: "", links_url: "" })}
-                                                                        className="mt-3 py-1"
+                                                                        className="mt-3 py-2"
                                                                     >
-                                                                        +
+                                                                        <TbPlus className="" />
                                                                     </Button>
                                                                 )}
                                                             </Col>
@@ -742,7 +772,7 @@ const AddDocument = () => {
                                                                     placeholder="Enter file label"
                                                                 />
                                                             </Col>
-                                                            <Col md={6}>
+                                                            <Col md={4}>
                                                                 <Form.Group className="mb-2">
                                                                     <Form.Label>Upload File</Form.Label>
                                                                     <Form.Control
@@ -757,7 +787,23 @@ const AddDocument = () => {
                                                                     )}
                                                                 </Form.Group>
                                                             </Col>
-                                                            <Col md={2} className="d-flex align-items-center gap-1">
+                                                            <Col md={2} className="d-flex align-items-center gap-1 mb-4">
+                                                                {(filesBase64[index]?.base64 || file.file_path) && (
+                                                                    <div className="mt-4">
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="outline-info"
+                                                                            onClick={() => {
+                                                                                const fileSrc = filesBase64[index]?.base64 || `http://localhost:5000${file.file_path}`;
+                                                                                handleViewFile(fileSrc, file.file_label || `Document File ${index + 1}`);
+                                                                            }}
+                                                                            title="Preview File"
+                                                                            className=" py-2 mb-2"
+                                                                        >
+                                                                            <TbEye size={13} className="" />
+                                                                        </Button>
+                                                                    </div>
+                                                                )}
                                                                 <Button
                                                                     variant="danger"
                                                                     size="sm"
@@ -772,9 +818,9 @@ const AddDocument = () => {
                                                                         variant="primary"
                                                                         size="sm"
                                                                         onClick={() => push({ file_label: "", file_path: "" })}
-                                                                        className="mt-3 py-1"
+                                                                        className="mt-3 py-2"
                                                                     >
-                                                                        +
+                                                                        <TbPlus className="" />
                                                                     </Button>
                                                                 )}
                                                             </Col>
@@ -800,6 +846,14 @@ const AddDocument = () => {
                     }}
                 </Formik>
             </Card.Body>
+
+            {/* Image/PDF Preview Modal */}
+            <ImageModal
+                show={showImageModal}
+                onHide={() => setShowImageModal(false)}
+                imageSrc={selectedImage}
+                title={selectedImageTitle}
+            />
         </div>
     );
 };
