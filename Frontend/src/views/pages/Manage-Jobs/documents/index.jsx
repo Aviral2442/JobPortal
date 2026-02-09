@@ -20,7 +20,7 @@ const Results = () => {
                     </NavItem>
 
                 </Nav>
-                <ComponentCard title="Document List" className="py-2"  isLink={<Link to="/"  >
+                <ComponentCard title="Document List" className="py-2"  isLink={<Link to="/admin/documents/add"  >
                     + Add Documents
                 </Link>}>
                     <TabPane eventKey="Document-List" >
