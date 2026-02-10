@@ -704,8 +704,8 @@ exports.recommendJobsForStudent = async (studentId) => {
 // FEATURED JOBS FOR STUDENT SERVICE
 exports.featuredJobsForStudent = async (studentId) => {
   try {
-    const student =
-      await Student.findById(studentId).select("studentJobSector");
+    const student = await Student.findById(studentId)
+      .select("studentJobSector");
 
     if (!student) {
       return { status: 404, message: "Student not found" };
@@ -713,41 +713,35 @@ exports.featuredJobsForStudent = async (studentId) => {
 
     const studentSector = student.studentJobSector;
 
-    if (!studentSector || studentSector.length === 0) {
-      return {
-        status: 200,
-        message: "No job sector assigned to student",
-        jsonData: {
-          featuredJobsCount: 0,
-          featuredJobs: [],
-        },
-      };
+    // Find "Not Specified" sector id
+    const notSpecifiedSector = await JobSector.findOne({
+      job_sector_name: "Not Specified",
+    }).select("_id");
+
+    let filter = { jobFeatured: true };
+
+    // Apply sector filter ONLY if sector is valid
+    if (
+      studentSector &&
+      (!Array.isArray(studentSector) ||
+        studentSector.length > 0) &&
+      (!notSpecifiedSector ||
+        (Array.isArray(studentSector)
+          ? !studentSector.includes(notSpecifiedSector._id)
+          : !studentSector.equals(notSpecifiedSector._id)))
+    ) {
+      filter.job_sector = Array.isArray(studentSector)
+        ? { $in: studentSector }
+        : studentSector;
     }
 
-    const featuredJobs = await Job.find({
-      job_sector: Array.isArray(studentSector)
-        ? { $in: studentSector }
-        : studentSector,
-      jobFeatured: true,
-    })
+    const featuredJobs = await Job.find(filter)
       .select(
-        "job_title job_logo job_short_desc job_start_date job_category job_sector job_type job_vacancy_total",
+        "job_title job_logo job_short_desc job_start_date job_category job_sector job_type job_vacancy_total"
       )
-      .populate({
-        path: "job_category",
-        model: "JobCategory",
-        select: "category_name",
-      })
-      .populate({
-        path: "job_sector",
-        model: "JobSector",
-        select: "job_sector_name",
-      })
-      .populate({
-        path: "job_type",
-        model: "JobType",
-        select: "job_type_name",
-      });
+      .populate("job_category", "category_name")
+      .populate("job_sector", "job_sector_name")
+      .populate("job_type", "job_type_name");
 
     return {
       status: 200,
