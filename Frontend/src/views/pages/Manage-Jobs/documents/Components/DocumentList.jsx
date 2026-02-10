@@ -15,9 +15,11 @@ import {
   TbEye,
 } from "react-icons/tb";
 import axios from "@/api/axios";
+import { formatDate } from "@/components/DateFormat";
+import "@/global.css";
 
-const JobList = () => {
-  const [jobs, setJobs] = useState([]);
+const DocumentList = () => {
+  const [document, setDocument] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [variant, setVariant] = useState("success");
@@ -26,17 +28,17 @@ const JobList = () => {
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-  // Fetch jobs
-  const fetchJobs = async () => {
+  // Fetch document
+  const fetchdocument = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/jobs/`);
-      console.log("Fetched jobs:", res.data);
-      setJobs(res.data);
+      const res = await axios.get("/job-categories/get_document_list");
+      console.log("Fetched document:", res.data?.jsonData?.documentData);
+      setDocument(res.data?.jsonData?.documentData);
     } catch (err) {
       console.error(err);
-      setJobs([]);
-      setMessage("Failed to fetch jobs.");
+      setDocument([]);
+      setMessage("Failed to fetch document.");
       setVariant("danger");
     } finally {
       setLoading(false);
@@ -44,15 +46,29 @@ const JobList = () => {
   };
 
   useEffect(() => {
-    fetchJobs();
+    fetchdocument();
   }, []);
 
   const columns = [
-    { title: "Post", data: "job_title" },
-    { title: "Organization", data: "job_organization" },
-    { title: "Sector", data: "job_sector.job_sector_name" },
-    { title: "Category", data: "job_category.category_name" },
-    // { title: "Location", data: "jobLocation" },
+    { title: "S.No.", data: null, render: (data, type, row, meta) => meta.row + 1 },
+    { title: "Title", data: "document_title" },
+    { title: "Desc", data: "document_short_desc" },
+    {
+      title: "Date", data: "document_posted_date",
+      render: (data) => {
+        return formatDate(data);
+      }
+    },
+    {
+      title: "Status", data: "document_status",
+      render: (data) => {
+        switch (data) {
+          case 0: return `<span class="badge badge-label badge-soft-success">Active</span>`;
+          case 1: return `<span class="badge badge-label badge-soft-danger">Inactive</span>`;
+          default: return `<span class="badge badge-label badge-soft-secondary">Unknown</span>`;
+        }
+      }
+    },
     {
       title: "Actions",
       data: null,
@@ -61,52 +77,31 @@ const JobList = () => {
         td.innerHTML = "";
         const root = createRoot(td);
         root.render(
-          <Dropdown align="end" className="text-muted">
-            <Dropdown.Toggle variant="link" className="drop-arrow-none p-0">
-              <TbDotsVertical />
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item
-                onClick={() =>
-                  navigate(`/admin/jobs/view/${rowData._id || rowData.id}`, { state: rowData })
-                }
-              >
-                <TbEye className="me-1" /> View
-              </Dropdown.Item>
-              <Dropdown.Item
-                onClick={() =>
-                  navigate(`/admin/jobs/edit/${rowData._id || rowData.id}`, { state: rowData })
-                }
-              >
-                <TbEdit className="me-1" /> Edit
-              </Dropdown.Item>
-              <Dropdown.Item
-                className="text-danger"
-                onClick={async () => {
-                  if (!window.confirm("Are you sure you want to delete this job?")) return;
-                  try {
-                    await fetch(`${BASE_URL}/api/jobs/${rowData._id || rowData.id}`, { method: "DELETE" });
-                    setMessage("Job deleted successfully!");
-                    setVariant("success");
-                    fetchJobs();
-                  } catch (err) {
-                    console.error(err);
-                    setMessage("Failed to delete job");
-                    setVariant("danger");
-                  }
-                }}
-              >
-                <TbTrash className="me-1" /> Delete
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
+          <div className="d-flex flex-row gap-1">
+            <button
+              className="eye-icon"
+              onClick={() =>
+                navigate(`/admin/documents/view/${rowData._id || rowData.id}`, { state: rowData })
+              }
+            >
+              <TbEye className="" />
+            </button>
+            <button
+              className="edit-icon"
+              onClick={() =>
+                navigate(`/admin/documents/edit/${rowData._id || rowData.id}`, { state: rowData })
+              }
+            >
+              <TbEdit className="" />
+            </button>
+          </div>
         );
       },
     },
   ];
 
 
-  
+
 
 
   return (
@@ -122,7 +117,7 @@ const JobList = () => {
           <Col>
             <TableList
               ref={tableRef}
-              data={jobs}
+              data={document}
               columns={columns}
               options={{
                 responsive: true,
@@ -155,4 +150,4 @@ const JobList = () => {
   );
 };
 
-export default JobList;
+export default DocumentList;

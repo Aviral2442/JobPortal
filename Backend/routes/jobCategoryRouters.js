@@ -76,6 +76,6 @@ router.put('/update_result/:resultId', JobCategoryController.updateResult);
 router.get('/get_document_list', JobCategoryController.getDocumentList);
 router.post('/add_document', JobCategoryController.addDocument);
 router.put('/update_document/:documentId', JobCategoryController.updateDocument);
-router.get('/get_document_list_by_id/:documentId', JobCategoryController.getDocumentListById);
+router.get('/get_document_by_id/:documentId', JobCategoryController.getDocumentListById);
 
 module.exports = router;

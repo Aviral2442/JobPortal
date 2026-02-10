@@ -31,7 +31,9 @@ const RegisterStudent = lazy(() => import('@/views/pages/student/Register'));
 const Students = lazy(() => import('@/views/pages/student'));
 const StudentDetail = lazy(() => import('@/views/pages/student/components/StudentDetail'));
 const AppliedJobs = lazy(() => import('@/views/pages/student/AppliedOn'));
-
+const Douments = lazy(() => import('@/views/pages/Manage-Jobs/documents'));
+const AddDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/components/AddDocument'));
+const EditDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/components/AddDocument'));
 
 
 // login
@@ -158,6 +160,12 @@ const answerKeyRoutes=[{
 const documentsRoutes=[{
   path:'/admin/documents',
   element:<Documents/>
+},{
+  path: '/admin/documents/add',
+  element: <AddDocument/>
+},{
+  path: '/admin/documents/edit/:id',
+  element: <EditDocument/>
 }]
 
 const admissionsRoutes=[{
