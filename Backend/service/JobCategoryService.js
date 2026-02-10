@@ -655,48 +655,68 @@ exports.updateJobStatus = async (jobId, updateColumnName, updateValue) => {
 // RECOMMEND JOBS FOR STUDENT SERVICE
 exports.recommendJobsForStudent = async (studentId) => {
   try {
-    const student = await Student.findById(studentId);
+    const student = await Student.findById(studentId)
+      .select("studentJobSector")
+      .lean(); // faster
+
     if (!student) {
-      return { status: 404, message: "Student not found" };
+      return { status: 404, message: "Student not found", jsonData: {} };
     }
 
     const studentSector = student.studentJobSector;
 
-    const recommendedJobs = await Job.find({
-      job_sector: studentSector,
-      jobRecommendation: true,
+    const notSpecifiedSector = await JobSector.findOne({
+      job_sector_name: "Not Specified",
     })
+      .select("_id")
+      .lean();
+
+    let filter = {
+      jobRecommendation: true,
+    };
+
+    const notSpecifiedId = notSpecifiedSector?._id?.toString();
+
+    const hasValidSector =
+      studentSector &&
+      (
+        Array.isArray(studentSector)
+          ? studentSector.length > 0 &&
+            !studentSector.map(id => id.toString()).includes(notSpecifiedId)
+          : studentSector.toString() !== notSpecifiedId
+      );
+
+    // Apply sector filter ONLY when valid
+    if (hasValidSector) {
+      filter.job_sector = Array.isArray(studentSector)
+        ? { $in: studentSector }
+        : studentSector;
+    }
+
+    const recommendedJobs = await Job.find(filter)
       .select(
-        "job_title job_logo job_short_desc job_start_date job_category job_sector job_type job_vacancy_total",
+        "job_title job_logo job_short_desc job_start_date job_category job_sector job_type job_vacancy_total"
       )
-      .populate({
-        path: "job_category",
-        model: "JobCategory",
-        select: "category_name",
-      })
-      .populate({
-        path: "job_sector",
-        model: "JobSector",
-        select: "job_sector_name",
-      })
-      .populate({
-        path: "job_type",
-        model: "JobType",
-        select: "job_type_name",
-      });
+      .populate("job_category", "category_name")
+      .populate("job_sector", "job_sector_name")
+      .populate("job_type", "job_type_name")
+      .limit(5)
+      .sort({ job_posted_date: -1 })
+      .lean(); // faster
 
     return {
       status: 200,
       message: "Recommended jobs fetched successfully",
       jsonData: {
         recommendedJobsCount: recommendedJobs.length,
-        recommendedJobs: recommendedJobs,
+        recommendedJobs,
       },
     };
   } catch (error) {
     return {
       status: 500,
-      message: "Server error",
+      message: "Server error" + error.message,
+      jsonData: {},
     };
   }
 };
