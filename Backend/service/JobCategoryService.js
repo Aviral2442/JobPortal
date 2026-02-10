@@ -708,7 +708,7 @@ exports.featuredJobsForStudent = async (studentId) => {
       .select("studentJobSector");
 
     if (!student) {
-      return { status: 404, message: "Student not found" };
+      return { status: 404, message: "Student not found", jsonData: {} };
     }
 
     const studentSector = student.studentJobSector;
@@ -741,7 +741,10 @@ exports.featuredJobsForStudent = async (studentId) => {
       )
       .populate("job_category", "category_name")
       .populate("job_sector", "job_sector_name")
-      .populate("job_type", "job_type_name");
+      .populate("job_type", "job_type_name")
+      .limit(5)
+      .sort({ job_posted_date: -1 });
+
 
     return {
       status: 200,
