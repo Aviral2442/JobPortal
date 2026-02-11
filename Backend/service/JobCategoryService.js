@@ -570,47 +570,70 @@ exports.jobAppliedListOfStudents = async (query) => {
 // UPCOMMING JOBS FOR STUDENTS SERVICE
 exports.upcommingJobForStudents = async (studentId) => {
   try {
-    const student = await Student.findById(studentId);
+    const student = await Student.findById(studentId)
+      .select("studentJobSector")
+      .lean();
+
     if (!student) {
       return { status: 404, message: "Student not found" };
     }
 
     const studentSector = student.studentJobSector;
 
+    // ⚠️ Prefer ENV constant instead of DB call (explained below)
+    const notSpecifiedSector = await JobSector.findOne({
+      job_sector_name: "Not Specified",
+    })
+      .select("_id")
+      .lean();
+
+    const notSpecifiedId = notSpecifiedSector?._id?.toString();
+
     const sevenDaysFromNow = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
 
-    const upcommingJobSectorWise = await Job.find({
-      job_sector: studentSector,
+    let filter = {
       job_start_date: { $gte: sevenDaysFromNow },
-    })
+    };
+
+    // ✅ Check if sector is valid
+    const hasValidSector =
+      studentSector &&
+      (
+        Array.isArray(studentSector)
+          ? studentSector.length > 0 &&
+            !studentSector.map(id => id.toString()).includes(notSpecifiedId)
+          : studentSector.toString() !== notSpecifiedId
+      );
+
+    // Apply sector filter ONLY when valid
+    if (hasValidSector) {
+      filter.job_sector = Array.isArray(studentSector)
+        ? { $in: studentSector }
+        : studentSector;
+    }
+
+    const upcommingJobSectorWise = await Job.find(filter)
       .select(
-        "job_title job_logo job_short_desc job_category job_sector job_type job_vacancy_total job_start_date",
+        "job_title job_logo job_short_desc job_category job_sector job_type job_vacancy_total job_start_date"
       )
-      .populate({
-        path: "job_category",
-        model: "JobCategory",
-        select: "category_name",
-      })
-      .populate({
-        path: "job_sector",
-        model: "JobSector",
-        select: "job_sector_name",
-      })
-      .populate({
-        path: "job_type",
-        model: "JobType",
-        select: "job_type_name",
-      });
+      .populate("job_category", "category_name")
+      .populate("job_sector", "job_sector_name")
+      .populate("job_type", "job_type_name")
+      .limit(5)
+      .sort({ job_start_date: 1 })
+      .lean();
 
     return {
       status: 200,
       message: "Upcomming jobs fetched successfully",
       jsonData: {
         upcommingJobSectorWiseCount: upcommingJobSectorWise.length,
-        upcommingJobSectorWise: upcommingJobSectorWise,
+        upcommingJobSectorWise,
       },
     };
   } catch (error) {
+    console.error("Error in upcommingJobForStudents:", error);
+
     return {
       status: 500,
       message: "Server error",
@@ -655,48 +678,68 @@ exports.updateJobStatus = async (jobId, updateColumnName, updateValue) => {
 // RECOMMEND JOBS FOR STUDENT SERVICE
 exports.recommendJobsForStudent = async (studentId) => {
   try {
-    const student = await Student.findById(studentId);
+    const student = await Student.findById(studentId)
+      .select("studentJobSector")
+      .lean(); // faster
+
     if (!student) {
-      return { status: 404, message: "Student not found" };
+      return { status: 404, message: "Student not found", jsonData: {} };
     }
 
     const studentSector = student.studentJobSector;
 
-    const recommendedJobs = await Job.find({
-      job_sector: studentSector,
-      jobRecommendation: true,
+    const notSpecifiedSector = await JobSector.findOne({
+      job_sector_name: "Not Specified",
     })
+      .select("_id")
+      .lean();
+
+    let filter = {
+      jobRecommendation: true,
+    };
+
+    const notSpecifiedId = notSpecifiedSector?._id?.toString();
+
+    const hasValidSector =
+      studentSector &&
+      (
+        Array.isArray(studentSector)
+          ? studentSector.length > 0 &&
+            !studentSector.map(id => id.toString()).includes(notSpecifiedId)
+          : studentSector.toString() !== notSpecifiedId
+      );
+
+    // Apply sector filter ONLY when valid
+    if (hasValidSector) {
+      filter.job_sector = Array.isArray(studentSector)
+        ? { $in: studentSector }
+        : studentSector;
+    }
+
+    const recommendedJobs = await Job.find(filter)
       .select(
-        "job_title job_logo job_short_desc job_start_date job_category job_sector job_type job_vacancy_total",
+        "job_title job_logo job_short_desc job_start_date job_category job_sector job_type job_vacancy_total"
       )
-      .populate({
-        path: "job_category",
-        model: "JobCategory",
-        select: "category_name",
-      })
-      .populate({
-        path: "job_sector",
-        model: "JobSector",
-        select: "job_sector_name",
-      })
-      .populate({
-        path: "job_type",
-        model: "JobType",
-        select: "job_type_name",
-      });
+      .populate("job_category", "category_name")
+      .populate("job_sector", "job_sector_name")
+      .populate("job_type", "job_type_name")
+      .limit(5)
+      .sort({ job_posted_date: -1 })
+      .lean(); // faster
 
     return {
       status: 200,
       message: "Recommended jobs fetched successfully",
       jsonData: {
         recommendedJobsCount: recommendedJobs.length,
-        recommendedJobs: recommendedJobs,
+        recommendedJobs,
       },
     };
   } catch (error) {
     return {
       status: 500,
-      message: "Server error",
+      message: "Server error" + error.message,
+      jsonData: {},
     };
   }
 };
@@ -704,50 +747,47 @@ exports.recommendJobsForStudent = async (studentId) => {
 // FEATURED JOBS FOR STUDENT SERVICE
 exports.featuredJobsForStudent = async (studentId) => {
   try {
-    const student =
-      await Student.findById(studentId).select("studentJobSector");
+    const student = await Student.findById(studentId)
+      .select("studentJobSector");
 
     if (!student) {
-      return { status: 404, message: "Student not found" };
+      return { status: 404, message: "Student not found", jsonData: {} };
     }
 
     const studentSector = student.studentJobSector;
 
-    if (!studentSector || studentSector.length === 0) {
-      return {
-        status: 200,
-        message: "No job sector assigned to student",
-        jsonData: {
-          featuredJobsCount: 0,
-          featuredJobs: [],
-        },
-      };
+    // Find "Not Specified" sector id
+    const notSpecifiedSector = await JobSector.findOne({
+      job_sector_name: "Not Specified",
+    }).select("_id");
+
+    let filter = { jobFeatured: true };
+
+    // Apply sector filter ONLY if sector is valid
+    if (
+      studentSector &&
+      (!Array.isArray(studentSector) ||
+        studentSector.length > 0) &&
+      (!notSpecifiedSector ||
+        (Array.isArray(studentSector)
+          ? !studentSector.includes(notSpecifiedSector._id)
+          : !studentSector.equals(notSpecifiedSector._id)))
+    ) {
+      filter.job_sector = Array.isArray(studentSector)
+        ? { $in: studentSector }
+        : studentSector;
     }
 
-    const featuredJobs = await Job.find({
-      job_sector: Array.isArray(studentSector)
-        ? { $in: studentSector }
-        : studentSector,
-      jobFeatured: true,
-    })
+    const featuredJobs = await Job.find(filter)
       .select(
-        "job_title job_logo job_short_desc job_start_date job_category job_sector job_type job_vacancy_total",
+        "job_title job_logo job_short_desc job_start_date job_category job_sector job_type job_vacancy_total"
       )
-      .populate({
-        path: "job_category",
-        model: "JobCategory",
-        select: "category_name",
-      })
-      .populate({
-        path: "job_sector",
-        model: "JobSector",
-        select: "job_sector_name",
-      })
-      .populate({
-        path: "job_type",
-        model: "JobType",
-        select: "job_type_name",
-      });
+      .populate("job_category", "category_name")
+      .populate("job_sector", "job_sector_name")
+      .populate("job_type", "job_type_name")
+      .limit(5)
+      .sort({ job_posted_date: -1 });
+
 
     return {
       status: 200,
