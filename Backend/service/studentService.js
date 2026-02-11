@@ -895,7 +895,7 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
   }
 };
 
-// CHANGE STUDENT EMAIL OR MOBILE NO SERVICE
+// CHANGE STUDENT EMAIL OR MOBILE NO SERVICE 
 exports.changeStudentEmailOrMobile = async (updateData, studentId) => {
   try {
 
