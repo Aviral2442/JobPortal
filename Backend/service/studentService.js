@@ -858,7 +858,7 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
         message: "OTP sent to registered email successfully",
         jsonData: {
           studentId: student._id,
-          studentEmail: student.studentEmail,
+          studentEmailOrMobileNo: student.studentEmail,
         },
       };
     }
@@ -880,7 +880,7 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
       message: "OTP sent to mobile number successfully",
       jsonData: {
         studentId: student._id,
-        studentMobileNo: student.studentMobileNo,
+        studentEmailOrMobileNo: student.studentMobileNo,
       },
     };
 
