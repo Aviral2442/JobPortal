@@ -649,7 +649,7 @@ exports.studentForgetPassword = async (studentForgetData) => {
         message: "OTP sent to registered email successfully",
         jsonData: {
           studentId: student._id,
-          studentEmail: student.studentEmail,
+          studentEmailOrMobileNo: student.studentEmail,
         },
       };
     }
@@ -671,7 +671,7 @@ exports.studentForgetPassword = async (studentForgetData) => {
       message: "OTP sent to registered mobile number successfully",
       jsonData: {
         studentId: student._id,
-        studentMobileNo: student.studentMobileNo,
+        studentEmailOrMobileNo: student.studentMobileNo,
       },
     };
   } catch (error) {
