@@ -858,7 +858,7 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
         message: "OTP sent to registered email successfully",
         jsonData: {
           studentId: student._id,
-          studentEmail: student.studentEmail,
+          studentEmailOrMobileNo: student.studentEmail,
         },
       };
     }
@@ -880,7 +880,7 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
       message: "OTP sent to mobile number successfully",
       jsonData: {
         studentId: student._id,
-        studentMobileNo: student.studentMobileNo,
+        studentEmailOrMobileNo: student.studentMobileNo,
       },
     };
 
@@ -895,7 +895,7 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
   }
 };
 
-// CHANGE STUDENT EMAIL OR MOBILE NO SERVICE
+// CHANGE STUDENT EMAIL OR MOBILE NO SERVICE 
 exports.changeStudentEmailOrMobile = async (updateData, studentId) => {
   try {
 
@@ -919,7 +919,7 @@ exports.changeStudentEmailOrMobile = async (updateData, studentId) => {
           message: "The provided email is already registered with another account",
           jsonData: {
             studentId: student._id,
-            studentEmail: student.studentEmail,
+            studentEmailOrMobileNo: student.studentEmail,
           },
         };
       } else {
@@ -930,7 +930,7 @@ exports.changeStudentEmailOrMobile = async (updateData, studentId) => {
           message: "Email changed successfully",
           jsonData: {
             studentId: student._id,
-            studentEmail: student.studentEmail,
+            studentEmailOrMobileNo: student.studentEmail,
           },
         };
       }
@@ -942,7 +942,7 @@ exports.changeStudentEmailOrMobile = async (updateData, studentId) => {
           message: "The provided mobile number is already registered with another account",
           jsonData: {
             studentId: student._id,
-            studentMobileNo: student.studentMobileNo,
+            studentEmailOrMobileNo: student.studentMobileNo,
           },
         };
       } else {
@@ -953,7 +953,7 @@ exports.changeStudentEmailOrMobile = async (updateData, studentId) => {
           message: "Mobile number changed successfully",
           jsonData: {
             studentId: student._id,
-            studentMobileNo: student.studentMobileNo,
+            studentEmailOrMobileNo: student.studentMobileNo,
           },
         };
       }
