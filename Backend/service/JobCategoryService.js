@@ -11,6 +11,7 @@ const moment = require("moment");
 const { saveBase64File } = require("../middleware/base64FileUpload");
 const DocumentModel = require("../models/DocumentModel");
 const stateModel = require("../models/stateModel");
+const cityModel = require("../models/cityModel");
 
 // Job Category List Service with Filters and Pagination
 exports.getJobCategoryList = async (query) => {
@@ -861,9 +862,7 @@ exports.jobListSectorWise = async (studentId) => {
     return {
       status: 200,
       message: "Jobs fetched successfully",
-      jsonData: {
-        fetchJobSectorWise: formattedJobs,
-      }
+      jsonData: formattedJobs
     };
   } catch (error) {
     console.error("Error in jobListSectorWise Service:", error);
@@ -2675,6 +2674,30 @@ exports.getStateData = async () => {
     };
   } catch (error) {
     console.error("Error in getStateData Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+      jsonData: [],
+    };
+  }
+};
+
+// GET CITY DATA BY STATE ID
+exports.getCityDataByStateId = async (stateId) => {
+  try {
+    const fetchCity = await cityModel.find({ city_state: stateId })
+    .select("city_name city_status")
+    .lean();
+
+    return {
+      status: 200,
+      message: "City data fetched successfully",
+      jsonData: {
+        cities: fetchCity,
+      },
+    };
+  } catch (error) {
+    console.error("Error in getCityDataByStateId Service:", error);
     return {
       status: 500,
       message: "Server error",

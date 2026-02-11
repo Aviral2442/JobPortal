@@ -846,3 +846,28 @@ exports.getStateData = async (req, res) => {
         });
     }
 };
+
+// GET CITY DATA BY STATE ID
+exports.getCityDataByStateId = async (req, res) => {
+    try {
+        const stateId = req.params.stateId;
+        if (!stateId) {
+            return res.status(400).json({
+                status: 400,
+                message: 'State ID is required',
+            });
+        }
+        const cityData = await JobCategoryService.getCityDataByStateId(stateId);
+        return res.status(cityData.status).json({
+            status: cityData.status,
+            message: cityData.message,
+            jsonData: cityData.jsonData || null,
+        });
+    } catch (error) {
+        console.error("Get City Data By State Id Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
+};

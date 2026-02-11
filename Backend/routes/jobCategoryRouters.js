@@ -79,5 +79,6 @@ router.put('/update_document/:documentId', JobCategoryController.updateDocument)
 router.get('/get_document_by_id/:documentId', JobCategoryController.getDocumentListById);
 
 router.get('/get_state', JobCategoryController.getStateData);
+router.get('/get_city/:stateId', JobCategoryController.getCityDataByStateId);
 
 module.exports = router;
