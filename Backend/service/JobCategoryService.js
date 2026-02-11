@@ -10,6 +10,7 @@ const ResultModel = require("../models/ResultModel");
 const moment = require("moment");
 const { saveBase64File } = require("../middleware/base64FileUpload");
 const DocumentModel = require("../models/DocumentModel");
+const stateModel = require("../models/stateModel");
 
 // Job Category List Service with Filters and Pagination
 exports.getJobCategoryList = async (query) => {
@@ -2653,6 +2654,31 @@ exports.getDocumentListById = async (documentId) => {
       status: 500,
       message: "Server error",
       jsonData: {},
+    };
+  }
+};
+
+// GET STATE DATA
+exports.getStateData = async () => {
+  try {
+
+    const fetchAllState = await stateModel.find()
+    .select("state_name state_status")
+    .lean();
+
+    return {
+      status: 200,
+      message: "State data fetched successfully",
+      jsonData: {
+        states: fetchAllState,
+      },
+    };
+  } catch (error) {
+    console.error("Error in getStateData Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+      jsonData: [],
     };
   }
 };

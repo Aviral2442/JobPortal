@@ -828,3 +828,21 @@ exports.getDocumentListById = async (req, res) => {
         });
     }
 };
+
+// GET STATE DATA
+exports.getStateData = async (req, res) => {
+    try {
+        const stateData = await JobCategoryService.getStateData();
+        return res.status(stateData.status).json({
+            status: stateData.status,
+            message: stateData.message,
+            jsonData: stateData.jsonData || null,
+        });
+    } catch (error) {
+        console.error("Get State Data Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
+};
