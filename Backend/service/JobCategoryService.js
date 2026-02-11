@@ -623,12 +623,17 @@ exports.upcommingJobForStudents = async (studentId) => {
       .sort({ job_start_date: 1 })
       .lean();
 
+      const formattedJobs = upcommingJobSectorWise.map(job => ({
+        ...job,
+        job_logo: job.job_logo || "" 
+      }));
+
     return {
       status: 200,
       message: "Upcomming jobs fetched successfully",
       jsonData: {
         upcommingJobSectorWiseCount: upcommingJobSectorWise.length,
-        upcommingJobSectorWise,
+        upcommingJobSectorWise: formattedJobs,
       },
     };
   } catch (error) {
@@ -727,12 +732,17 @@ exports.recommendJobsForStudent = async (studentId) => {
       .sort({ job_posted_date: -1 })
       .lean(); // faster
 
+    const formattedJobs = recommendedJobs.map(job => ({
+        ...job,
+        job_logo: job.job_logo || "" 
+    }));
+
     return {
       status: 200,
       message: "Recommended jobs fetched successfully",
       jsonData: {
         recommendedJobsCount: recommendedJobs.length,
-        recommendedJobs,
+        recommendedJobs: formattedJobs,
       },
     };
   } catch (error) {
@@ -786,7 +796,13 @@ exports.featuredJobsForStudent = async (studentId) => {
       .populate("job_sector", "job_sector_name")
       .populate("job_type", "job_type_name")
       .limit(5)
-      .sort({ job_posted_date: -1 });
+      .sort({ job_posted_date: -1 })
+      .lean();
+
+      const formattedJobs = featuredJobs.map(job => ({
+        ...job,
+        job_logo: job.job_logo || "" 
+      }));
 
 
     return {
@@ -794,7 +810,7 @@ exports.featuredJobsForStudent = async (studentId) => {
       message: "Featured jobs fetched successfully",
       jsonData: {
         featuredJobsCount: featuredJobs.length,
-        featuredJobs,
+        featuredJobs: formattedJobs,
       },
     };
   } catch (error) {
@@ -834,12 +850,19 @@ exports.jobListSectorWise = async (studentId) => {
         path: "job_type",
         model: "JobType",
         select: "job_type_name",
-      });
+      }).lean();
+
+      const formattedJobs = fetchJobSectorWise.map(job => ({
+        ...job,
+        job_logo: job.job_logo || "" 
+      }));
 
     return {
       status: 200,
       message: "Jobs fetched successfully",
-      jsonData: fetchJobSectorWise,
+      jsonData: {
+        fetchJobSectorWise: formattedJobs,
+      }
     };
   } catch (error) {
     console.error("Error in jobListSectorWise Service:", error);
