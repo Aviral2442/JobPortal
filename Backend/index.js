@@ -37,7 +37,7 @@ app.use("/api/student", studentRoutes);
 
 // Test route
 app.get("/", (req, res) => {
-  res.send("API is running...");
+  res.send("Job Portal API is running...");
 });
 
 // Start server
