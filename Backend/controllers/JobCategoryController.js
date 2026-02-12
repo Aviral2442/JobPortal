@@ -851,16 +851,8 @@ exports.getStateData = async (req, res) => {
 exports.getCityDataByStateId = async (req, res) => {
     try {
         const stateId = req.params.stateId;
-        const search = req.query.search || "";
 
-        if (!stateId) {
-            return res.status(400).json({
-                status: 400,
-                message: "State ID is required",
-            });
-        }
-
-        const cityData = await JobCategoryService.getCityDataByStateId(stateId, search);
+        const cityData = await JobCategoryService.getCityDataByStateId(stateId);
 
         return res.status(cityData.status).json({
             status: cityData.status,
@@ -869,7 +861,7 @@ exports.getCityDataByStateId = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Search City Controller Error:", error);
+        console.error("get City Controller Error:", error);
         return res.status(500).json({
             status: 500,
             message: "Internal server error",

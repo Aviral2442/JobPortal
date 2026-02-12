@@ -30,7 +30,7 @@ const sendMobileOtp = async (mobileNo, otp) => {
             timeout: 10000
         });
 
-        console.log(response.data, 'MSG91 Send OTP Response');
+        // console.log(response.data, 'MSG91 Send OTP Response');
 
         if (!response.data || response.data.toString().includes('error')) {
             return {

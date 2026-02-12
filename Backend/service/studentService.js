@@ -849,7 +849,7 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
     await student.save();
 
     if (isEmail) {
-      const lowercaseEmail = student.studentEmail.toLowerCase();
+      const lowercaseEmail = formattedInput.toLowerCase();
     
       const emailResponse = await sendEmailOtp(lowercaseEmail, otp);
     
@@ -866,12 +866,11 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
         message: "OTP sent to registered email successfully",
         jsonData: {
           studentId: student._id,
-          studentEmailOrMobileNo: student.studentEmail,
         },
       };
     }
 
-    const lowerCaseMobileNO = student.studentMobileNo;
+    const lowerCaseMobileNO = formattedInput;
 
     const mobileResponse = await sendMobileOtp(lowerCaseMobileNO, otp);
 
@@ -888,7 +887,6 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
       message: "OTP sent to mobile number successfully",
       jsonData: {
         studentId: student._id,
-        studentEmailOrMobileNo: student.studentMobileNo,
       },
     };
 

@@ -2689,20 +2689,12 @@ exports.getStateData = async () => {
 };
 
 // GET CITY DATA BY STATE ID
-exports.getCityDataByStateId = async (stateId, search) => {
+exports.getCityDataByStateId = async (stateId) => {
     try {
 
         const query = {
             city_state: stateId
         };
-
-        // If search text is provided
-        if (search) {
-            query.city_name = { 
-                $regex: search, 
-                $options: "i"   // Case insensitive
-            };
-        }
 
         const cities = await cityModel.find(query)
             .select("city_name city_status")
