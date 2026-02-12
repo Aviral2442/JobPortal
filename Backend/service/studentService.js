@@ -850,9 +850,17 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
 
     if (isEmail) {
       const lowercaseEmail = student.studentEmail.toLowerCase();
-
-      await sendEmailOtp(lowercaseEmail, otp);
-
+    
+      const emailResponse = await sendEmailOtp(lowercaseEmail, otp);
+    
+      if (!emailResponse || emailResponse.success === false) {
+        return {
+          status: 500,
+          message: "Failed to send OTP to email",
+          jsonData: {},
+        };
+      }
+    
       return {
         status: 200,
         message: "OTP sent to registered email successfully",
@@ -865,9 +873,9 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
 
     const lowerCaseMobileNO = student.studentMobileNo;
 
-    sendMobileOtp(lowerCaseMobileNO, otp);
+    const mobileResponse = await sendMobileOtp(lowerCaseMobileNO, otp);
 
-    if (sendMobileOtp.success === false) {
+    if (!mobileResponse || mobileResponse.success === false) {
       return {
         status: 500,
         message: "Failed to send OTP to mobile number",
