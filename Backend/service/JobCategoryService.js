@@ -2688,6 +2688,8 @@ exports.getCityDataByStateId = async (stateId) => {
     const fetchCity = await cityModel.find({ city_state: stateId })
     .select("city_name city_status")
     .lean();
+    
+    console.log("Fetched cities for state ID", stateId, ":", fetchCity);
 
     return {
       status: 200,

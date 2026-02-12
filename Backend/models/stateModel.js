@@ -5,4 +5,4 @@ const stateSchema = new mongoose.Schema({
     state_status: { type: String, default: "0" },
 });
 
-module.exports = mongoose.model("state", stateSchema);
+module.exports = mongoose.model("states", stateSchema);
