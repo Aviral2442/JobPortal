@@ -12,6 +12,7 @@ const { saveBase64File } = require("../middleware/base64FileUpload");
 const DocumentModel = require("../models/DocumentModel");
 const stateModel = require("../models/stateModel");
 const cityModel = require("../models/cityModel");
+const JobStudyMaterialModel = require("../models/JobStudyMaterialModel");
 
 // Job Category List Service with Filters and Pagination
 exports.getJobCategoryList = async (query) => {
@@ -603,7 +604,7 @@ exports.upcommingJobForStudents = async (studentId) => {
       (
         Array.isArray(studentSector)
           ? studentSector.length > 0 &&
-            !studentSector.map(id => id.toString()).includes(notSpecifiedId)
+          !studentSector.map(id => id.toString()).includes(notSpecifiedId)
           : studentSector.toString() !== notSpecifiedId
       );
 
@@ -625,10 +626,10 @@ exports.upcommingJobForStudents = async (studentId) => {
       .sort({ job_start_date: 1 })
       .lean();
 
-      const formattedJobs = upcommingJobSectorWise.map(job => ({
-        ...job,
-        job_logo: job.job_logo || "" 
-      }));
+    const formattedJobs = upcommingJobSectorWise.map(job => ({
+      ...job,
+      job_logo: job.job_logo || ""
+    }));
 
     return {
       status: 200,
@@ -712,7 +713,7 @@ exports.recommendJobsForStudent = async (studentId) => {
       (
         Array.isArray(studentSector)
           ? studentSector.length > 0 &&
-            !studentSector.map(id => id.toString()).includes(notSpecifiedId)
+          !studentSector.map(id => id.toString()).includes(notSpecifiedId)
           : studentSector.toString() !== notSpecifiedId
       );
 
@@ -735,8 +736,8 @@ exports.recommendJobsForStudent = async (studentId) => {
       .lean(); // faster
 
     const formattedJobs = recommendedJobs.map(job => ({
-        ...job,
-        job_logo: job.job_logo || "" 
+      ...job,
+      job_logo: job.job_logo || ""
     }));
 
     return {
@@ -801,10 +802,10 @@ exports.featuredJobsForStudent = async (studentId) => {
       .sort({ job_posted_date: -1 })
       .lean();
 
-      const formattedJobs = featuredJobs.map(job => ({
-        ...job,
-        job_logo: job.job_logo || "" 
-      }));
+    const formattedJobs = featuredJobs.map(job => ({
+      ...job,
+      job_logo: job.job_logo || ""
+    }));
 
 
     return {
@@ -854,10 +855,10 @@ exports.jobListSectorWise = async (studentId) => {
         select: "job_type_name",
       }).lean();
 
-      const formattedJobs = fetchJobSectorWise.map(job => ({
-        ...job,
-        job_logo: job.job_logo || "" 
-      }));
+    const formattedJobs = fetchJobSectorWise.map(job => ({
+      ...job,
+      job_logo: job.job_logo || ""
+    }));
 
     return {
       status: 200,
@@ -1230,6 +1231,10 @@ exports.jobFullDetailsById = async (jobId) => {
 
     const resultData = await ResultModel.findOne({ result_JobId: jobId });
 
+    const jobStudyMaterialData = await JobStudyMaterialModel.findOne({
+      studyMaterial_jobId: jobId,
+    });
+
     return {
       status: 200,
       message: "Job details fetched successfully",
@@ -1238,6 +1243,7 @@ exports.jobFullDetailsById = async (jobId) => {
         admit_card_details: admitCardData || null,
         answer_key_details: answerKeyData || null,
         result_details: resultData || null,
+        job_study_material_details: jobStudyMaterialData || null,
       },
     };
   } catch (error) {
