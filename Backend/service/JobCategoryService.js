@@ -2717,3 +2717,32 @@ exports.getCityDataByStateId = async (stateId) => {
         };
     }
 };
+
+
+// SEARCH CITY BY NAME 
+exports.searchCityByName = async (cityName) => {
+  try {
+    const query = {
+      city_name: { $regex: cityName, $options: "i" },
+    };
+
+    const cities = await cityModel.find(query)
+      .select("city_name")
+      .lean();
+
+    return {
+      status: 200,
+      message: "City search fetched successfully",
+      jsonData: {
+        cities: cities,
+      },
+    };
+  } catch (error) {
+    console.error("Error in searchCityByName Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+      jsonData: [],
+    };
+  }
+};

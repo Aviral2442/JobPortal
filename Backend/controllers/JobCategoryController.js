@@ -868,3 +868,22 @@ exports.getCityDataByStateId = async (req, res) => {
         });
     }
 };
+
+// GET SEARCH CITY DATA BY NAME
+exports.searchCityByName = async (req, res) => {
+    try {
+        const cityName = req.query.search;
+        const cityData = await JobCategoryService.searchCityByName(cityName);
+        return res.status(cityData.status).json({
+            status: cityData.status,
+            message: cityData.message,
+            jsonData: cityData.jsonData || null,
+        });
+    } catch (error) {
+        console.error("Search City By Name Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
+};
