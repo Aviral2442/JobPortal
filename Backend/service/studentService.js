@@ -850,6 +850,7 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
 
     if (isEmail) {
       const lowercaseEmail = formattedInput.toLowerCase();
+      console.log(`Sending OTP to email: ${lowercaseEmail}`, otp); // For testing purposesw
     
       const emailResponse = await sendEmailOtp(lowercaseEmail, otp);
     
