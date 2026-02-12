@@ -2662,7 +2662,7 @@ exports.getStateData = async () => {
   try {
 
     const fetchAllState = await stateModel.find()
-    .select("state_name state_status")
+    .select("state_name state_id")
     .lean();
 
     return {
@@ -2683,27 +2683,39 @@ exports.getStateData = async () => {
 };
 
 // GET CITY DATA BY STATE ID
-exports.getCityDataByStateId = async (stateId) => {
-  try {
-    const fetchCity = await cityModel.find({ city_state: stateId })
-    .select("city_name city_status")
-    .lean();
-    
-    console.log("Fetched cities for state ID", stateId, ":", fetchCity);
+exports.getCityDataByStateId = async (stateId, search) => {
+    try {
 
-    return {
-      status: 200,
-      message: "City data fetched successfully",
-      jsonData: {
-        cities: fetchCity,
-      },
-    };
-  } catch (error) {
-    console.error("Error in getCityDataByStateId Service:", error);
-    return {
-      status: 500,
-      message: "Server error",
-      jsonData: [],
-    };
-  }
+        const query = {
+            city_state: stateId
+        };
+
+        // If search text is provided
+        if (search) {
+            query.city_name = { 
+                $regex: search, 
+                $options: "i"   // Case insensitive
+            };
+        }
+
+        const cities = await cityModel.find(query)
+            .select("city_name city_status")
+            .lean();
+
+        return {
+            status: 200,
+            message: "City search fetched successfully",
+            jsonData: {
+                cities: cities,
+            },
+        };
+
+    } catch (error) {
+        console.error("Error in searchCityByStateId Service:", error);
+        return {
+            status: 500,
+            message: "Server error",
+            jsonData: [],
+        };
+    }
 };
