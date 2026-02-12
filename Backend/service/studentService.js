@@ -853,7 +853,7 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
       console.log(`Sending OTP to email: ${lowercaseEmail}`, otp); // For testing purposesw
     
       const emailResponse = await sendEmailOtp(lowercaseEmail, otp);
-    
+     console.log("Email OTP Response:", emailResponse); // For testing purposes
       if (!emailResponse || emailResponse.success === false) {
         return {
           status: 500,
@@ -874,7 +874,7 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
     const lowerCaseMobileNO = formattedInput;
 
     const mobileResponse = await sendMobileOtp(lowerCaseMobileNO, otp);
-
+    console.log("Mobile OTP Response:", mobileResponse); // For testing purposes
     if (!mobileResponse || mobileResponse.success === false) {
       return {
         status: 500,
