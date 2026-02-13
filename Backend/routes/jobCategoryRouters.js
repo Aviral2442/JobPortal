@@ -80,6 +80,7 @@ router.get('/get_document_by_id/:documentId', JobCategoryController.getDocumentL
 
 router.get('/get_state', JobCategoryController.getStateData);
 router.get('/get_city/:stateId', JobCategoryController.getCityDataByStateId);
+router.get('/search_city', JobCategoryController.searchCityByName);
 
 // JOB STUDY MATERIAL ROUTES
 router.get('/get_job_study_material_list', JobCategoryController.jobStudyMaterialListService);

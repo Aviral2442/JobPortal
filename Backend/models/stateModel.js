@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 
 const stateSchema = new mongoose.Schema({
-    state_name: { type: String, required: true },
-    state_status: { type: String, default: "0" },
+    state_id: { type: String},
+    state_name: { type: String },
 });
 
 module.exports = mongoose.model("states", stateSchema);

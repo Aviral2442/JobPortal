@@ -849,25 +849,33 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
     await student.save();
 
     if (isEmail) {
-      const lowercaseEmail = student.studentEmail.toLowerCase();
-
-      await sendEmailOtp(lowercaseEmail, otp);
-
+      const lowercaseEmail = formattedInput.toLowerCase();
+      console.log(`Sending OTP to email: ${lowercaseEmail}`, otp); // For testing purposesw
+    
+      const emailResponse = await sendEmailOtp(lowercaseEmail, otp);
+     console.log("Email OTP Response:", emailResponse); // For testing purposes
+      if (!emailResponse || emailResponse.success === false) {
+        return {
+          status: 500,
+          message: "Failed to send OTP to email",
+          jsonData: {},
+        };
+      }
+    
       return {
         status: 200,
         message: "OTP sent to registered email successfully",
         jsonData: {
           studentId: student._id,
-          studentEmailOrMobileNo: student.studentEmail,
         },
       };
     }
 
-    const lowerCaseMobileNO = student.studentMobileNo;
+    const lowerCaseMobileNO = formattedInput;
 
-    sendMobileOtp(lowerCaseMobileNO, otp);
-
-    if (sendMobileOtp.success === false) {
+    const mobileResponse = await sendMobileOtp(lowerCaseMobileNO, otp);
+    console.log("Mobile OTP Response:", mobileResponse); // For testing purposes
+    if (!mobileResponse || mobileResponse.success === false) {
       return {
         status: 500,
         message: "Failed to send OTP to mobile number",
@@ -880,7 +888,6 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
       message: "OTP sent to mobile number successfully",
       jsonData: {
         studentId: student._id,
-        studentEmailOrMobileNo: student.studentMobileNo,
       },
     };
 

@@ -42,15 +42,15 @@ const sendEmailOtp = async (toEmail, otp) => {
             `
         };
 
-        // await transporter.sendMail(mailOptions);
+        // ✅ Await email sending
+        const info = await transporter.sendMail(mailOptions);
 
-        transporter.sendMail(mailOptions)
-            .then(() => console.log("OTP email sent"))
-            .catch(err => console.error("Email error:", err));
+        return { success: true };
 
     } catch (error) {
-        console.error('Error sending OTP email:', error);
-        throw error;
+        console.error("Email sending failed:", error);
+
+        return { success: false, error: error.message };
     }
 };
 
