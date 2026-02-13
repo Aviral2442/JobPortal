@@ -900,3 +900,18 @@ exports.jobStudyMaterialListService = async (req, res) => {
             .json({ status: 500, message: "Internal server error" });
     }
 };
+
+// ADD JOB STUDY MATERIAL CONTROLLER
+exports.createJobStudyMaterial = async (req, res) => {
+    try {
+
+        const studyMaterialData = req.body;
+        const result = await JobCategoryService.createJobStudyMaterial(studyMaterialData);
+        return res.status(result.status).json(result);
+
+    } catch (error) {
+        return res
+            .status(500)
+            .json({ status: 500, message: "Internal server error" });
+    }
+};

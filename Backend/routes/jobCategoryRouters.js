@@ -84,5 +84,6 @@ router.get('/search_city', JobCategoryController.searchCityByName);
 
 // JOB STUDY MATERIAL ROUTES
 router.get('/get_job_study_material_list', JobCategoryController.jobStudyMaterialListService);
+router.post('/add_job_study_material', JobCategoryController.createJobStudyMaterial);
 
 module.exports = router;
