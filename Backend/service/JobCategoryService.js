@@ -13,6 +13,8 @@ const DocumentModel = require("../models/DocumentModel");
 const stateModel = require("../models/stateModel");
 const cityModel = require("../models/cityModel");
 const JobStudyMaterialModel = require("../models/JobStudyMaterialModel");
+const { buildDateFilter } = require("../utils/dateFilters");
+const { buildPagination } = require("../utils/paginationFilters");
 
 // Job Category List Service with Filters and Pagination
 exports.getJobCategoryList = async (query) => {
@@ -2710,6 +2712,71 @@ exports.getCityDataByStateId = async (stateId) => {
       status: 500,
       message: "Server error",
       jsonData: [],
+    };
+  }
+};
+
+// JOB STUDY MATERIAL LIST SERVICE WITH FILTERS AND PAGINATION
+exports.jobStudyMaterialListService = async (query) => {
+  try {
+    const { dateFilter, fromDate, toDate, searchFilter, page, limit } = query;
+
+    let filter = {};
+
+    if (searchFilter) {
+      filter.studyMaterial_title = { $regex: searchFilter, $options: "i" };
+      filter.job_title = { $regex: searchFilter, $options: "i" };
+    }
+
+    const dateQuery = buildDateFilter({
+      dateFilter,
+      fromDate,
+      toDate,
+      dateField: "studyMaterial_releaseDate",
+    });
+
+    filter = { ...filter, ...dateQuery };
+
+    const {
+      skip,
+      limit: finalLimit,
+      currentPage,
+    } = buildPagination({
+      dateFilter,
+      fromDate,
+      toDate,
+      searchFilter,
+      page,
+      limit,
+    });
+
+    const totalCount = await JobStudyMaterialModel.countDocuments(filter);
+    const studyMaterials = await JobStudyMaterialModel
+      .find(filter)
+      .populate({
+        path: "studyMaterial_jobId",
+        model: "Jobs",
+        select: "job_title job_sector_name",
+      })
+      .sort({ studyMaterial_releaseDate: -1 })
+      .skip(skip)
+      .limit(finalLimit);
+
+    return {
+      result: 200,
+      message: "Study material list fetched successfully",
+      totalCount,
+      currentPage,
+      totalPages: Math.ceil(totalCount / finalLimit),
+      jsonData: {
+        studyMaterials: studyMaterials,
+      },
+    };
+  } catch (error) {
+    return {
+      result: 500,
+      message: "Internal server error, " + error.message,
+      jsonData: {},
     };
   }
 };
