@@ -64,14 +64,27 @@ exports.getCareerPreferencesList = async (req, res) => {
     }
 };
 
+exports.getCareerPreferencesListForStudent = async (req, res) => {
+    try {
+        const result = await JobSectorService.getCareerPreferencesList();
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error in getJobPreferencesList Controller:', error);
+        res.status(500).json({ status: 500, message: 'Internal server error', error: error.message });
+    }
+};
+
 // ADD CAREER PREFERENCE CONTROLLER
 exports.addCareerPreference = async (req, res) => {
     try {
-        const { careerPreferenceName, careerPreferenceDescription } = req.body;
+        const { careerPreferenceName, careerPreferenceDescription, careerPreferenceSectorId } = req.body;
         if (!careerPreferenceName) {
             return res.status(400).json({ status: false, message: 'Career preference name is required' });
         }
-        const result = await JobSectorService.addCareerPreference({ careerPreferenceName, careerPreferenceDescription });
+        if (!careerPreferenceSectorId) {
+            return res.status(400).json({ status: false, message: 'Career preference sector id is required' });
+        }
+        const result = await JobSectorService.addCareerPreference({ careerPreferenceName, careerPreferenceDescription, careerPreferenceSectorId });
         res.status(200).json(result);
     } catch (error) {
         console.error('Error in addCareerPreference Controller:', error);
@@ -83,14 +96,14 @@ exports.addCareerPreference = async (req, res) => {
 exports.updateCareerPreference = async (req, res) => {
     try {
         const { id } = req.params;  
-        const { careerPreferenceName, careerPreferenceDescription } = req.body;
+        const { careerPreferenceName, careerPreferenceDescription, careerPreferenceSectorId } = req.body;
         if (!id) {
             return res.status(400).json({ status: false, message: 'Career Preference ID are required' });
         }
         if (!careerPreferenceName) {
             return res.status(400).json({ status: false, message: 'Career Preference Name are required' });
         }
-        const result = await JobSectorService.updateCareerPreference({ id, careerPreferenceName, careerPreferenceDescription });
+        const result = await JobSectorService.updateCareerPreference({ id, careerPreferenceName, careerPreferenceDescription, careerPreferenceSectorId });
 
         res.status(200).json(result);
     } catch (error) {

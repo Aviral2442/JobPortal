@@ -1,162 +1,207 @@
-const JobSectorModel = require('../models/JobSectorModel');
-const CareerPreferencesModel = require('../models/CareerPreferencesModel');
-const moment = require('moment');
+const JobSectorModel = require("../models/JobSectorModel");
+const CareerPreferencesModel = require("../models/CareerPreferencesModel");
+const moment = require("moment");
 
 // JOB SECTOR LIST SERVICE
 exports.getJobSectorList = async (query) => {
-    const { dateFilter, fromDate, toDate, searchFilter, page = 1, limit = 10 } = query;
+  const {
+    dateFilter,
+    fromDate,
+    toDate,
+    searchFilter,
+    page = 1,
+    limit = 10,
+  } = query;
 
-    const skip = (page - 1) * limit;
-    const filter = {};
+  const skip = (page - 1) * limit;
+  const filter = {};
 
-    // 🔍 Search Filter
-    if (searchFilter) {
-        filter.job_sector_name = { $regex: searchFilter, $options: 'i' };
+  // 🔍 Search Filter
+  if (searchFilter) {
+    filter.job_sector_name = { $regex: searchFilter, $options: "i" };
+  }
+
+  // 📅 Date Filter
+  if (dateFilter) {
+    const today = moment().startOf("day");
+    const now = moment().endOf("day");
+    let startDate, endDate;
+
+    switch (dateFilter) {
+      case "today":
+        startDate = today.unix();
+        endDate = now.unix();
+        break;
+      case "yesterday":
+        startDate = today.subtract(1, "days").unix();
+        endDate = now.subtract(1, "days").unix();
+        break;
+      case "this_week":
+        startDate = moment().startOf("week").unix();
+        endDate = moment().endOf("week").unix();
+        break;
+      case "this_month":
+        startDate = moment().startOf("month").unix();
+        endDate = moment().endOf("month").unix();
+        break;
+      case "custom":
+        if (fromDate && toDate) {
+          startDate = moment(fromDate, "YYYY-MM-DD").startOf("day").unix();
+          endDate = moment(toDate, "YYYY-MM-DD").endOf("day").unix();
+        }
+        break;
     }
 
-    // 📅 Date Filter
-    if (dateFilter) {
-        const today = moment().startOf('day');
-        const now = moment().endOf('day');
-        let startDate, endDate;
-
-        switch (dateFilter) {
-            case 'today':
-                startDate = today.unix();
-                endDate = now.unix();
-                break;
-            case 'yesterday':
-                startDate = today.subtract(1, 'days').unix();
-                endDate = now.subtract(1, 'days').unix();
-                break;
-            case 'this_week':
-                startDate = moment().startOf('week').unix();
-                endDate = moment().endOf('week').unix();
-                break;
-            case 'this_month':
-                startDate = moment().startOf('month').unix();
-                endDate = moment().endOf('month').unix();
-                break;
-            case 'custom':
-                if (fromDate && toDate) {
-                    startDate = moment(fromDate, 'YYYY-MM-DD').startOf('day').unix();
-                    endDate = moment(toDate, 'YYYY-MM-DD').endOf('day').unix();
-                }
-                break;
-        }
-
-        if (startDate && endDate) {
-            filter.job_sector_created_at = { $gte: startDate, $lte: endDate };
-        }
+    if (startDate && endDate) {
+      filter.job_sector_created_at = { $gte: startDate, $lte: endDate };
     }
+  }
 
-    // 📄 Pagination and Data Retrieval
-    const total = await JobSectorModel.countDocuments(filter);
-    const data = await JobSectorModel.find(filter)
-        .skip(skip)
-        .limit(limit)
-        .sort({ job_sector_created_at: -1 });
+  // 📄 Pagination and Data Retrieval
+  const total = await JobSectorModel.countDocuments(filter);
+  const data = await JobSectorModel.find(filter)
+    .skip(skip)
+    .limit(limit)
+    .sort({ job_sector_created_at: -1 });
 
-    return {
-        total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(total / limit),
-        data,
-    };
+  return {
+    total,
+    page: parseInt(page),
+    limit: parseInt(limit),
+    totalPages: Math.ceil(total / limit),
+    data,
+  };
 };
 
 // JOB SECTOR CREATE SERVICE
 exports.createJobSector = async (data) => {
-    const existingSector = await JobSectorModel.findOne({ job_sector_name: data.job_sector_name });
+  const existingSector = await JobSectorModel.findOne({
+    job_sector_name: data.job_sector_name,
+  });
 
-    if (existingSector) {
-        return { status: false, message: 'Job sector name already exists' };
-    }
+  if (existingSector) {
+    return { status: false, message: "Job sector name already exists" };
+  }
 
-    const newSector = new JobSectorModel({
-        job_sector_name: data.job_sector_name,
-        job_sector_status: data.job_sector_status || 0,
-    });
+  const newSector = new JobSectorModel({
+    job_sector_name: data.job_sector_name,
+    job_sector_status: data.job_sector_status || 0,
+  });
 
-    await newSector.save();
+  await newSector.save();
 
-    return {
-        status: 200,
-        message: 'Job sector created successfully',
-        jsonData: newSector,
-    };
+  return {
+    status: 200,
+    message: "Job sector created successfully",
+    jsonData: newSector,
+  };
 };
 
 // JOB SECTOR UPDATE SERVICE
 exports.updateJobSector = async (id, data) => {
-    const allowedFields = ['job_sector_name', 'job_sector_status'];
-    const updateData = {};
+  const allowedFields = ["job_sector_name", "job_sector_status"];
+  const updateData = {};
 
-    allowedFields.forEach(field => {
-        if (data[field] !== undefined) updateData[field] = data[field];
-    });
+  allowedFields.forEach((field) => {
+    if (data[field] !== undefined) updateData[field] = data[field];
+  });
 
-    const updatedSector = await JobSectorModel.findByIdAndUpdate(id, updateData, { new: true });
+  const updatedSector = await JobSectorModel.findByIdAndUpdate(id, updateData, {
+    new: true,
+  });
 
-    if (!updatedSector) {
-        return { status: 404, message: 'Job sector not found' };
-    }
+  if (!updatedSector) {
+    return { status: 404, message: "Job sector not found" };
+  }
 
-    return { updatedSector };
+  return { updatedSector };
 };
 
 // JOB PREFERENCES LIST SERVICE
 exports.getCareerPreferencesList = async () => {
-
-    const data = await CareerPreferencesModel.find();
+  try {
+    const data = await CareerPreferencesModel.find({})
+      .populate({
+        path: "careerPreferenceSectorId",
+        model: "JobSector",
+        select: "job_sector_name",
+      })
+      .select("-__v") // remove unnecessary fields
+      .sort({ createdAt: -1 }) // optional sorting
+      .lean(); // improves performance
 
     return {
-        status: 200,
-        message: 'Career preferences fetched successfully',
-        jsonData: {
-            data: data
-        },
+      status: 200,
+      message: "Career preferences fetched successfully",
+      jsonData: {
+        data,
+      },
     };
+  } catch (error) {
+    console.error("Error fetching career preferences:", error);
+    return {
+      status: 500,
+      message: "Failed to fetch career preferences",
+    };
+  }
 };
+
 
 // ADD CAREER PREFERENCE SERVICE
 exports.addCareerPreference = async (data) => {
-    try {
-        const newPreference = new CareerPreferencesModel({
-            careerPreferenceName: data.careerPreferenceName,
-            careerPreferenceDescription: data.careerPreferenceDescription,
-        });
+  try {
+    const newPreference = new CareerPreferencesModel({
+      careerPreferenceName: data.careerPreferenceName,
+      careerPreferenceDescription: data.careerPreferenceDescription,
+      careerPreferenceSectorId: data.careerPreferenceSectorId,
+    });
 
-        await newPreference.save();
+    const checkSector = await JobSectorModel.findById(
+      data.careerPreferenceSectorId,
+    );
 
-        return {
-            status: 200,
-            message: 'Career preference added successfully',
-        };
-    } catch (error) {
-        console.error('Error in addCareerPreference Service:', error);
-        throw error;
+    if (!checkSector) {
+      return { status: 404, message: "Job sector Invalid", jsonData: {} };
     }
+
+    await newPreference.save();
+
+    return {
+      status: 200,
+      message: "Career preference added successfully",
+      jsonData: { newPreference },
+    };
+  } catch (error) {
+    console.error("Error in addCareerPreference Service:", error);
+    throw error;
+  }
 };
 
 // UPDATE CAREER PREFERENCE SERVICE
 exports.updateCareerPreference = async (data) => {
-    try {
-        const careerPreference = await CareerPreferencesModel.findById(data.id);
-        if (!careerPreference) {
-            return { status: 404, message: 'Career Preference not found' };
-        }
-        careerPreference.careerPreferenceName = data.careerPreferenceName || careerPreference.careerPreferenceName;
-        careerPreference.careerPreferenceDescription = data.careerPreferenceDescription || careerPreference.careerPreferenceDescription;
+  try {
+    const careerPreference = await CareerPreferencesModel.findById(data.id);
 
-        const updatedCareerPreference = await careerPreference.save();
-        return {
-            status: 200,
-            message: 'Career Preference updated successfully',
-            jsonData: updatedCareerPreference
-        };
-    } catch (error) {
-        return { status: 500, message: 'Internal server error', error: error.message };
+    if (!careerPreference) {
+      return { status: 404, message: "Career Preference not found" };
     }
+
+    careerPreference.careerPreferenceName = data.careerPreferenceName || careerPreference.careerPreferenceName;
+    careerPreference.careerPreferenceDescription = data.careerPreferenceDescription || careerPreference.careerPreferenceDescription;
+    careerPreference.careerPreferenceSectorId = data.careerPreferenceSectorId || careerPreference.careerPreferenceSectorId;
+
+    const updatedCareerPreference = await careerPreference.save();
+
+    return {
+      status: 200,
+      message: "Career Preference updated successfully",
+      jsonData: updatedCareerPreference,
+    };
+  } catch (error) {
+    return {
+      status: 500,
+      message: "Internal server error",
+      error: error.message,
+    };
+  }
 };
