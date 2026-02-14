@@ -218,7 +218,7 @@ exports.studentAllDetails = async (studentId) => {
       studentId,
     }).populate({
       path: "preferredJobCategory",
-      model: "CareerPreferences",
+      model: "careerPreferences",
       select: "careerPreferenceName",
     });
     const studentCertificatesData = await StudentCertifications.findOne({
