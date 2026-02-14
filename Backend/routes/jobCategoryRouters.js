@@ -29,7 +29,7 @@ router.put('/update_job_type/:id', JobTypeController.updateJobType);
 
 // CAREER PREFERENCES ROUTE
 router.get('/get_career_preferences_list', JobSectorController.getCareerPreferencesList);
-router.get('/get_career_preferences_list/studentId', JobSectorController.getCareerPreferencesListForStudent);
+router.get('/get_career_preferences_list/:studentId', JobSectorController.getCareerPreferencesListForStudent);
 router.post('/add_career_preference', JobSectorController.addCareerPreference);
 router.put('/update_career_preference/:id', JobSectorController.updateCareerPreference);
 

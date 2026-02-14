@@ -66,7 +66,9 @@ exports.getCareerPreferencesList = async (req, res) => {
 
 exports.getCareerPreferencesListForStudent = async (req, res) => {
     try {
-        const result = await JobSectorService.getCareerPreferencesList();
+        const studentId = req.params.studentId;
+        console.log("Received studentId:", studentId);
+        const result = await JobSectorService.getCareerPreferencesListForStudent(studentId);
         res.status(200).json(result);
     } catch (error) {
         console.error('Error in getJobPreferencesList Controller:', error);

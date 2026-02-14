@@ -1,6 +1,7 @@
 const JobSectorModel = require("../models/JobSectorModel");
 const CareerPreferencesModel = require("../models/CareerPreferencesModel");
 const moment = require("moment");
+const StudentModel = require("../models/studentModel");
 
 // JOB SECTOR LIST SERVICE
 exports.getJobSectorList = async (query) => {
@@ -135,6 +136,45 @@ exports.getCareerPreferencesList = async () => {
       message: "Career preferences fetched successfully",
       jsonData: {
         data,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching career preferences:", error);
+    return {
+      status: 500,
+      message: "Failed to fetch career preferences",
+    };
+  }
+};
+
+// FOR STUDENT CAREER PREFERENCES LIST SERVICE
+exports.getCareerPreferencesListForStudent = async (studentId) => {
+  try {
+
+    const studentExists = await StudentModel.findById(studentId);
+    if (!studentExists) {
+      return { status: 404, message: "Student not found" };
+    }
+
+    const studentSector = studentExists.studentJobSector;
+
+    const data = await CareerPreferencesModel.find({
+      careerPreferenceSectorId: studentSector,
+    })
+      .populate({
+        path: "careerPreferenceSectorId",
+        model: "JobSector",
+        select: "job_sector_name",
+      })
+      .select("-__v") // remove unnecessary fields
+      .sort({ createdAt: -1 }) // optional sorting
+      .lean(); // improves performance
+
+    return {
+      status: 200,
+      message: "Career preferences fetched successfully",
+      jsonData: {
+        data
       },
     };
   } catch (error) {
