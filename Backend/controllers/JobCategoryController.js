@@ -98,7 +98,8 @@ exports.getJobCategoryListUsingSectorId = async (req, res) => {
         res.status(200).json({
             status: 200,
             message: 'Job category list fetched successfully',
-            jsonData: result.jsonData,});
+            jsonData: result.jsonData,
+        });
     } catch (error) {
         console.error('Error in getJobCategoryListUsingSectorId Controller:', error);
         res.status(500).json({
@@ -663,7 +664,7 @@ exports.updateAnswerKey = async (req, res) => {
         const updateData = req.body;
         const result = await JobCategoryService.updateAnswerKey(answerKeyId, updateData);
         return res.status(result.status).json(result);
-} catch (error) {
+    } catch (error) {
         res.status(500).json({
             status: 500,
             message: 'Internal server error',
@@ -885,5 +886,32 @@ exports.searchCityByName = async (req, res) => {
             status: 500,
             message: "Internal server error",
         });
+    }
+};
+
+// JOB STUDY MATERIAL LIST CONTROLLER
+exports.jobStudyMaterialListService = async (req, res) => {
+    try {
+        const result = await JobCategoryService.jobStudyMaterialListService(req.query);
+        return res.status(200).json(result);
+    } catch (error) {
+        return res
+            .status(500)
+            .json({ status: 500, message: "Internal server error" });
+    }
+};
+
+// ADD JOB STUDY MATERIAL CONTROLLER
+exports.createJobStudyMaterial = async (req, res) => {
+    try {
+
+        const studyMaterialData = req.body;
+        const result = await JobCategoryService.createJobStudyMaterial(studyMaterialData);
+        return res.status(result.status).json(result);
+
+    } catch (error) {
+        return res
+            .status(500)
+            .json({ status: 500, message: "Internal server error" });
     }
 };

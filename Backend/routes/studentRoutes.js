@@ -38,4 +38,6 @@ router.get('/student_job_admit_card_list/:studentId', studentController.studentJ
 router.get('/student_job_answer_key_list/:studentId', studentController.studentJobAnswerKeyListWithFilter);
 router.get('/student_job_result_list/:studentId', studentController.studentJobResultListWithFilter);
 
+router.get('/student_study_material_list/:studentId', studentController.studentStudyMaterial);
+
 module.exports = router;

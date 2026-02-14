@@ -13,6 +13,9 @@ const DocumentModel = require("../models/DocumentModel");
 const stateModel = require("../models/stateModel");
 const cityModel = require("../models/cityModel");
 const JobStudyMaterialModel = require("../models/JobStudyMaterialModel");
+const { buildDateFilter } = require("../utils/dateFilters");
+const { buildPagination } = require("../utils/paginationFilters");
+const { convertIntoUnixTimeStamp } = require("../utils/convertIntoUnixTimeStamp");
 
 // Job Category List Service with Filters and Pagination
 exports.getJobCategoryList = async (query) => {
@@ -2668,8 +2671,8 @@ exports.getStateData = async () => {
   try {
 
     const fetchAllState = await stateModel.find()
-    .select("state_name state_id")
-    .lean();
+      .select("state_name state_id")
+      .lean();
 
     return {
       status: 200,
@@ -2690,32 +2693,32 @@ exports.getStateData = async () => {
 
 // GET CITY DATA BY STATE ID
 exports.getCityDataByStateId = async (stateId) => {
-    try {
+  try {
 
-        const query = {
-            city_state: stateId
-        };
+    const query = {
+      city_state: stateId
+    };
 
-        const cities = await cityModel.find(query)
-            .select("city_name city_status")
-            .lean();
+    const cities = await cityModel.find(query)
+      .select("city_name city_status")
+      .lean();
 
-        return {
-            status: 200,
-            message: "City search fetched successfully",
-            jsonData: {
-                cities: cities,
-            },
-        };
+    return {
+      status: 200,
+      message: "City search fetched successfully",
+      jsonData: {
+        cities: cities,
+      },
+    };
 
-    } catch (error) {
-        console.error("Error in searchCityByStateId Service:", error);
-        return {
-            status: 500,
-            message: "Server error",
-            jsonData: [],
-        };
-    }
+  } catch (error) {
+    console.error("Error in searchCityByStateId Service:", error);
+    return {
+      status: 500,
+      message: "Server error",
+      jsonData: [],
+    };
+  }
 };
 
 
@@ -2746,3 +2749,128 @@ exports.searchCityByName = async (cityName) => {
     };
   }
 };
+
+// JOB STUDY MATERIAL LIST SERVICE WITH FILTERS AND PAGINATION
+exports.jobStudyMaterialListService = async (query) => {
+  try {
+    const { dateFilter, fromDate, toDate, searchFilter, page, limit } = query;
+
+    let filter = {};
+
+    if (searchFilter) {
+      filter.studyMaterial_title = { $regex: searchFilter, $options: "i" };
+      filter.job_title = { $regex: searchFilter, $options: "i" };
+    }
+
+    const dateQuery = buildDateFilter({
+      dateFilter,
+      fromDate,
+      toDate,
+      dateField: "studyMaterial_releaseDate",
+    });
+
+    filter = { ...filter, ...dateQuery };
+
+    const {
+      skip,
+      limit: finalLimit,
+      currentPage,
+    } = buildPagination({
+      dateFilter,
+      fromDate,
+      toDate,
+      searchFilter,
+      page,
+      limit,
+    });
+
+    const totalCount = await JobStudyMaterialModel.countDocuments(filter);
+    const studyMaterials = await JobStudyMaterialModel
+      .find(filter)
+      .populate({
+        path: "studyMaterial_jobId",
+        model: "Jobs",
+        select: "job_title job_sector_name",
+      })
+      .sort({ studyMaterial_releaseDate: -1 })
+      .skip(skip)
+      .limit(finalLimit);
+
+    return {
+      result: 200,
+      message: "Study material list fetched successfully",
+      totalCount,
+      currentPage,
+      totalPages: Math.ceil(totalCount / finalLimit),
+      jsonData: {
+        studyMaterials: studyMaterials,
+      },
+    };
+  } catch (error) {
+    return {
+      result: 500,
+      message: "Internal server error, " + error.message,
+      jsonData: {},
+    };
+  }
+};
+
+// ADD JOB STUDY MATERIAL SERVICE
+exports.createJobStudyMaterial = async (studyMaterialData) => {
+  try {
+
+    const studyMaterial_jobId = studyMaterialData.studyMaterial_jobId;
+    const studyMaterial_title = studyMaterialData.studyMaterial_title;
+    const studyMaterial_description = studyMaterialData.studyMaterial_description;
+    const studyMaterial_link = studyMaterialData.studyMaterial_link;
+    const studyMaterial_releaseDate = convertIntoUnixTimeStamp(studyMaterialData.studyMaterial_releaseDate);
+
+    let studyMaterial_files = [];
+    if (
+      studyMaterialData.studyMaterial_files &&
+      Array.isArray(studyMaterialData.studyMaterial_files) &&
+      studyMaterialData.studyMaterial_files.length > 0
+    ) {
+      for (let i = 0; i < studyMaterialData.studyMaterial_files.length; i++) {
+        const file_path = await saveBase64File(
+          studyMaterialData.studyMaterial_files[i].file_path,
+          "studyMaterial",
+          `file_${i + 1}`,
+          'png',
+        );
+
+        studyMaterial_files.push({
+          file_name: studyMaterialData.studyMaterial_files[i].file_name || `File ${i + 1}`,
+          file_path: file_path,
+          file_downloadable: studyMaterialData.studyMaterial_files[i].file_downloadable !== false,
+        });
+      }
+    }
+
+    const newStudyMaterial = new JobStudyMaterialModel({
+      studyMaterial_jobId,
+      studyMaterial_title,
+      studyMaterial_description,
+      studyMaterial_link,
+      studyMaterial_releaseDate,
+      studyMaterial_files,
+    });
+
+    await newStudyMaterial.save();
+
+    return {
+      status: 200,
+      message: "Study material created successfully",
+      jsonData: newStudyMaterial,
+    };
+
+  } catch (error) {
+    console.error("Error in createJobStudyMaterial Service:", error);
+    return {
+      result: 500,
+      message: "Internal server error, " + error.message,
+      jsonData: {},
+    };
+  }
+};
+

@@ -29,6 +29,8 @@ const JobResultModel = require("../models/ResultModel");
 const AdmitCardModel = require("../models/AdmitCardModel");
 const JobAnswerKeyModel = require("../models/AnswerKeyModel");
 const moment = require('moment');
+const JobStudyMaterialModel = require("../models/JobStudyMaterialModel");
+const { default: mongoose } = require("mongoose");
 
 // STUDENT LIST SERVICE
 exports.studentListService = async (query) => {
@@ -851,9 +853,9 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
     if (isEmail) {
       const lowercaseEmail = formattedInput.toLowerCase();
       console.log(`Sending OTP to email: ${lowercaseEmail}`, otp); // For testing purposesw
-    
+
       const emailResponse = await sendEmailOtp(lowercaseEmail, otp);
-     console.log("Email OTP Response:", emailResponse); // For testing purposes
+      console.log("Email OTP Response:", emailResponse); // For testing purposes
       if (!emailResponse || emailResponse.success === false) {
         return {
           status: 500,
@@ -861,7 +863,7 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
           jsonData: {},
         };
       }
-    
+
       return {
         status: 200,
         message: "OTP sent to registered email successfully",
@@ -2392,6 +2394,137 @@ exports.studentJobResultListWithFilter = async (studentId, query) => {
     return {
       status: 500,
       message: "An error occurred while fetching student job result list with filter, " + error.message,
+      jsonData: {},
+    };
+  }
+};
+
+// STUDENT STUDY MATERIAL LIST WITH FILTER SERVICE
+exports.studentStudyMaterial = async (query, studentId) => {
+
+  try {
+
+    //--------------------------------------------------
+    // ✅ Validate ObjectId
+    //--------------------------------------------------
+
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return {
+        status: 400,
+        message: "Invalid student ID",
+        jsonData: {},
+      };
+    }
+
+    //--------------------------------------------------
+
+    const { dateFilter, fromDate, toDate, searchFilter, page, limit } = query;
+
+    let filter = {};
+
+    //--------------------------------------------------
+    // ✅ Search Filter
+    //--------------------------------------------------
+
+    if (searchFilter) {
+      filter.studyMaterial_title = {
+        $regex: searchFilter,
+        $options: "i",
+      };
+    }
+
+    //--------------------------------------------------
+    // ✅ Date Filter
+    //--------------------------------------------------
+
+    const dateQuery = buildDateFilter({
+      dateFilter,
+      fromDate,
+      toDate,
+      dateField: "studyMaterial_releaseDate",
+    });
+
+    filter = { ...filter, ...dateQuery };
+
+    //--------------------------------------------------
+    // ✅ Pagination
+    //--------------------------------------------------
+
+    const {
+      skip,
+      limit: finalLimit,
+      currentPage,
+    } = buildPagination({
+      page,
+      limit,
+    });
+
+    //--------------------------------------------------
+    // ✅ Get Student Sector
+    //--------------------------------------------------
+
+    const student = await studentModel
+      .findById(studentId)
+      .select("studentJobSector");
+
+    if (!student) {
+      return {
+        status: 404,
+        message: "Student not found",
+        jsonData: {},
+      };
+    }
+
+    //--------------------------------------------------
+    // ✅ Query Study Material
+    //--------------------------------------------------
+
+    const studyMaterial = await JobStudyMaterialModel.find(filter)
+      .populate({
+        path: "studyMaterial_jobId",
+        model: "Jobs",
+        select: "job_title job_sector",
+        match: { job_sector: student.studentJobSector },
+      })
+      .sort({ studyMaterial_releaseDate: -1 })
+      .skip(skip)
+      .limit(finalLimit)
+      .lean();
+
+    //--------------------------------------------------
+    // ✅ Remove unmatched populated docs
+    //--------------------------------------------------
+
+    const filteredStudyMaterial = studyMaterial.filter(
+      item => item.studyMaterial_jobId !== null
+    );
+
+    //--------------------------------------------------
+    // ✅ Correct Count (VERY IMPORTANT)
+    //--------------------------------------------------
+
+    const totalCount = await JobStudyMaterialModel.countDocuments(filter);
+
+    //--------------------------------------------------
+
+    return {
+      status: 200,
+      message: "Student study material fetched successfully",
+      totalCount,
+      currentPage,
+      totalPages: Math.ceil(totalCount / finalLimit),
+      jsonData: {
+        studyMaterial: filteredStudyMaterial,
+      },
+    };
+
+  } catch (error) {
+
+    console.error("Service Error:", error);
+
+    return {
+      status: 500,
+      message: "Internal server error, " + error.message,
       jsonData: {},
     };
   }

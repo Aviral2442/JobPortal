@@ -11,6 +11,7 @@ const JobStudyMaterialSchema = new mongoose.Schema({
         file_downloadable: { type: Boolean, default: true },
     }],
     studyMaterial_status: { type: Number, default: 0 }, // 0 = Active, 1 = Inactive
+    studyMaterial_releaseDate: { type: Number, required: false },
     studyMaterial_createdAt: { type: Number, default: () => Math.floor(Date.now() / 1000) },
     studyMaterial_updatedAt: { type: Number, required: false, default: 0 },
 });

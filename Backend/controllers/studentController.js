@@ -671,3 +671,24 @@ exports.studentJobResultListWithFilter = async (req, res) => {
     });
   }
 };
+
+// STUDENT STUDY MATERIAL LIST WITH FILTER CONTROLLER
+exports.studentStudyMaterial = async (req, res) => {
+  try {
+
+    const studentId = req.params.studentId;
+    const filter = req.query;
+
+    const result = await studentService.studentStudyMaterial(filter, studentId);
+
+    return res.status(result.status).json(result);
+
+  } catch (error) {
+
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
