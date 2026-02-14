@@ -55,7 +55,7 @@ export const subCategoryColumns = [
 
 export const careerPreference = [
   { data: "careerPreferenceName", title: "Name" },
-  { data: "careerPreferenceDescription", title: "Description" },
+  { data: "careerPreferenceSectorId.job_sector_name", title: "Sector", defaultContent: "N/A" },
     {
     data: "careerPreferenceStatus",
     title: "Status",

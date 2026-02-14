@@ -15,14 +15,38 @@ const AddCareerPreference = ({ mode, data, onCancel, onDataChanged }) => {
   const [variant, setVariant] = React.useState('success');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [sectors, setSectors] = React.useState([]);
+  const [selectedSector, setSelectedSector] = React.useState('');
+
+
 
   useEffect(() => {
     if (isEditMode) {
       setCareerPreferenceName(data.careerPreferenceName || '');
       setCareerPreferenceDescription(data.careerPreferenceDescription || '');
+      setSelectedSector(data.careerPreferenceSectorId._id || '');
     }
   }, [isEditMode, data]);
 
+  const fetchSectorDetails = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`/job-categories/get_job_sector_list`);
+      // console.log('Sector details fetched:', response.data);
+      // Handle different response structures
+      const sectorData = response.data?.jsonData?.data || response.data || [];
+      setSectors(Array.isArray(sectorData) ? sectorData : []);
+    } catch (error) {
+      console.error('Error fetching sector details:', error);
+      setSectors([]); // Set empty array on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSectorDetails();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,6 +60,7 @@ const AddCareerPreference = ({ mode, data, onCancel, onDataChanged }) => {
       const payload = {
         careerPreferenceName: careerPreferenceName.trim(),
         careerPreferenceDescription: careerPreferenceDescription.trim(),
+        careerPreferenceSectorId: selectedSector,
       };
       let response;
       if (isEditMode) {
@@ -51,6 +76,7 @@ const AddCareerPreference = ({ mode, data, onCancel, onDataChanged }) => {
       if (!isEditMode) {
         setCareerPreferenceName('');
         setCareerPreferenceDescription('');
+        setSelectedSector('');
       }
       setTimeout(() => {
         onDataChanged();
@@ -78,12 +104,31 @@ const AddCareerPreference = ({ mode, data, onCancel, onDataChanged }) => {
   return (
     <Container fluid className='pt-4'>
       <ComponentCard
-        title={isEditMode ? 'Edit Category' : 'Add Category'}
+        title={isEditMode ? 'Edit Career Preference' : 'Add Career Preference'}
         isCollapsible
         defaultOpen={false}
       >
         {message && <Alert variant={variant} dismissible onClose={() => setMessage('')}>{message}</Alert>}
         <Form onSubmit={handleSubmit} className='py-2'>
+          <Form.Group className="mb-3" controlId="categoryName">
+            <Form.Label>
+              Select Sector <span className="text-danger">*</span>
+            </Form.Label>
+            <Form.Control
+              as="select"
+              value={selectedSector}
+              onChange={(e) => setSelectedSector(e.target.value)}
+              required
+            >
+              <option value="">Select a sector</option>
+              {sectors.map((sector) => (
+                <option key={sector._id} value={sector._id}>
+                  {sector.job_sector_name}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+
           <Form.Group className='mb-3' controlId='categoryName'>
             <Form.Label>
               Career Preference Name <span className='text-danger'>*</span>
