@@ -604,6 +604,23 @@ exports.notificationListForStudent = async (req, res) => {
   }
 };
 
+// DELETE ALL STUDENT NOTIFICATIONS CONTROLLER
+exports.deleteAllNotificationsForStudent = async (req, res) => {
+  try {
+    const studentId = req.params.studentId;
+    const result = await studentService.deleteAllNotificationsForStudent(studentId);
+    return res.status(result.status).json(result);
+  } catch (error) {
+    return res
+      .status(500)
+      .json({
+        status: 500,
+        message: "Internal server error",
+        error: error.message,
+      });
+  }
+};
+
 // STUDENT DASHBOARD DATA CONTROLLER
 exports.studentDashboardData = async (req, res) => {
   try {

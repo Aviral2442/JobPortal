@@ -32,6 +32,7 @@ router.put('/updateStudentWorkExperience/:studentId', studentController.updateSt
 router.put('/uploadStudentResume/:studentId', studentController.uploadStudentResume);
 router.put('/removeNotification', studentController.studentRemoveNotification);
 router.get('/studentNotifications/:studentId', studentController.notificationListForStudent);
+router.put('/clearAllStudentNotification/:studentId', studentController.deleteAllNotificationsForStudent);
 
 router.get('/student_dashboard_data/:studentId', studentController.studentDashboardData);
 router.get('/student_job_admit_card_list/:studentId', studentController.studentJobAdmitCardListWithFilter);

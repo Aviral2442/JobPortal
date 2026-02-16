@@ -7,6 +7,7 @@ const NotificationSchema = new mongoose.Schema({
     notifyDesc: { type: String, required: true },
     notifyStatus: { type: String, enum: ['unread', 'read'], default: 'unread' },
     notifyNotToStudents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'student' }],
+    notifyClearAll: [{ type: mongoose.Schema.Types.ObjectId, ref: 'student' }],
     notifyCreateAt: { type: Number, default: () => currentUnixTime.currentUnixTimeStamp() },
 });
 

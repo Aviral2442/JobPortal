@@ -2025,16 +2025,21 @@ exports.studentRemoveNotification = async (data) => {
       };
     }
 
-    const removeNotification = await NotificationModel.findByIdAndUpdate(
-      notificationId,
-      { $pull: { notifyNotToStudents: studentId } },
-      { new: true },
-    );
+    if (notification.notifyNotToStudents.includes(studentId)) {
+      return {
+        status: 400,
+        message: "Notification already removed for this student",
+        jsonData: {},
+      };
+    }
+
+    notification.notifyNotToStudents.push(studentId);
+    await notification.save();
 
     return {
       status: 200,
       message: "Student notification removed successfully",
-      jsonData: null,
+      jsonData: {},
     };
   } catch (error) {
     return {
@@ -2061,6 +2066,7 @@ exports.notificationListForStudent = async (studentId) => {
 
     const getNotificationsList = await NotificationModel.find({
       notifyNotToStudents: { $nin: [studentId] },
+      notifyClearAll: { $nin: [studentId] },
       // notifyJobSector: studentSector
     }).sort({ notifyCreateAt: -1 });
 
@@ -2079,6 +2085,38 @@ exports.notificationListForStudent = async (studentId) => {
       jsonData: {},
     };
   }
+};
+
+// DELETE ALL NOTIFICATIONS FOR STUDENT SERVICE
+exports.deleteAllNotificationsForStudent = async (studentId) => {
+    try {
+      const student = await studentModel.findById(studentId);
+      if (!student) {
+        return {
+          status: 404,
+          message: "Student not found with the provided ID",
+          jsonData: {},
+        };
+      }
+
+      await NotificationModel.updateMany(
+        { notifyClearAll: { $nin: [studentId] } },
+        { $addToSet: { notifyClearAll: studentId } }
+      );
+
+
+      return {
+        status: 200,
+        message: "All notifications for student deleted successfully",
+        jsonData: null,
+      };
+    } catch (error) {
+      return {
+        status: 500,
+        message: "An error occurred while deleting all notifications for student, " + error.message,
+        jsonData: {},
+      };
+    }
 };
 
 // STUDENT DASHBOARD DATA SERVICE
