@@ -2108,7 +2108,7 @@ exports.deleteAllNotificationsForStudent = async (studentId) => {
       return {
         status: 200,
         message: "All notifications for student deleted successfully",
-        jsonData: null,
+        jsonData: {},
       };
     } catch (error) {
       return {
