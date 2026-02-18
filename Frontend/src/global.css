@@ -29,3 +29,7 @@
     border: none;
     border-radius: 20%;
 }
+
+.borderBottom {
+    border-bottom: 1px dashed #dee2e6;
+}

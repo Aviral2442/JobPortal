@@ -1,24 +1,6 @@
 import { InputPicker, DateRangePicker } from "rsuite";
-import type { DateRange } from "rsuite/esm/DateRangePicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "rsuite/dist/rsuite.min.css";
-
-interface TableFiltersProps {
-  dateFilter: string | null;
-  statusFilter: string | null;
-  dateRange: [Date | null, Date | null];
-  onDateFilterChange: (value: string | null) => void;
-  onStatusFilterChange: (value: string | null) => void;
-  onDateRangeChange: (update: [Date | null, Date | null]) => void;
-  statusOptions: Array<{ label: any; value: any }>;
-  showDateRange?: boolean;
-  showDateFilter?: boolean;
-  showStatusFilter?: boolean;
-  dateFilterPlaceholder?: string;
-  statusFilterPlaceholder?: string;
-  dateRangePlaceholder?: string;
-  className?: string;
-}
 
 const TableFilters = ({
   dateFilter,
@@ -35,10 +17,10 @@ const TableFilters = ({
   statusFilterPlaceholder = "Status",
   dateRangePlaceholder = "Custom date range",
   className = "",
-}: TableFiltersProps) => {
+}) => {
   const [startDate, endDate] = dateRange;
 
-  const handleDateRangeChange = (value: DateRange | null) => {
+  const handleDateRangeChange = (value) => {
     if (value && value[0] && value[1]) {
       onDateRangeChange([value[0], value[1]]);
     } else {
@@ -46,7 +28,7 @@ const TableFilters = ({
     }
   };
 
-  const handleDateFilterChange = (value: string | null) => {
+  const handleDateFilterChange = (value) => {
     onDateFilterChange(value);
     // Clear date range when switching away from custom
     if (value !== "custom") {
@@ -81,8 +63,8 @@ const TableFilters = ({
             data={[
               { label: "Today", value: "today" },
               { label: "Yesterday", value: "yesterday" },
-              { label: "This Week", value: "thisWeek" },
-              { label: "This Month", value: "thisMonth" },
+              { label: "This Week", value: "this_week" },
+              { label: "This Month", value: "this_month" },
               { label: "Custom", value: "custom" },
             ]}
             value={dateFilter}

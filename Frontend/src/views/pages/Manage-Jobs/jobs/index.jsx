@@ -69,17 +69,17 @@ const Page = () => {
         <Nav className="nav-tabs nav-bordered mb-3">
           <NavItem className="nav-tabs-nav d-flex">
             <NavLink eventKey="Private" id="0">Private Sector</NavLink>
-            <NavLink eventKey="GovernMent" id="2">Government Sector</NavLink>
+            <NavLink eventKey="Government" id="2">Government Sector</NavLink>
             <NavLink eventKey="PSU" id="3">PSU Sector</NavLink>
           </NavItem>
         </Nav>
         <ComponentCard
           title={
             <div className="d-flex align-items-center justify-content-between">
-              <h4 className="mb-0 ">{activeTab} Jobs</h4>
+              <h4 className="my-0 py-0 fs-4 fw-light">{activeTab} Jobs</h4>
             </div>
           }
-          className="py-2"
+          className="py-0"
           isLink={
             <div className="d-flex align-items-center gap-2">
               <Link to="/admin/jobs/add" className="btn btn-sm btn-primary">+ Add Job</Link>
@@ -106,13 +106,13 @@ const Page = () => {
             </div>
           }
         >
-        <TabContent className="pt-2">
+        <TabContent className="pt-0 mt-0">
           <TabPane eventKey="Private">
             <Private isActive={activeTab === "Private"} />
           </TabPane>
 
-          <TabPane eventKey="GovernMent">
-            <Government isActive={activeTab === "GovernMent"} />
+          <TabPane eventKey="Government">
+            <Government isActive={activeTab === "Government"} />
           </TabPane>
 
           <TabPane eventKey="PSU">

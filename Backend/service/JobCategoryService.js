@@ -953,13 +953,23 @@ exports.privateSectorJobList = async (query) => {
     }
   }
 
+  // Status Filter
+  if (query.status) {
+    filter.job_status = parseInt(query.status);
+  }
+
   // Pagination and Data Retrieval
   const total = await Job.countDocuments(filter);
   const data = await Job.find(filter)
     .populate({
-      path: ["job_sector", "job_category"],
-      model: ["JobSector", "JobCategory"],
-      select: ["job_sector_name", "category_name"],
+      path: "job_sector",
+      model: "JobSector",
+      select: "job_sector_name",
+    })
+    .populate({
+      path: "job_category",
+      model: "JobCategory",
+      select: "category_name",
     })
     .skip(skip)
     .limit(limit)
@@ -1050,13 +1060,23 @@ exports.governmentSectorJobList = async (query) => {
     }
   }
 
+  // Status Filter
+  if (query.status) {
+    filter.job_status = parseInt(query.status);
+  }
+
   // Pagination and Data Retrieval
   const total = await Job.countDocuments(filter);
   const data = await Job.find(filter)
     .populate({
-      path: ["job_sector", "job_category"],
-      model: ["JobSector", "JobCategory"],
-      select: ["job_sector_name", "category_name"],
+      path: "job_sector",
+      model: "JobSector",
+      select: "job_sector_name",
+    })
+    .populate({
+      path: "job_category",
+      model: "JobCategory",
+      select: "category_name",
     })
     .skip(skip)
     .limit(limit)
@@ -1147,13 +1167,23 @@ exports.psuSectorJobList = async (query) => {
     }
   }
 
+  // Status Filter
+  if (query.status) {
+    filter.job_status = parseInt(query.status);
+  }
+
   // Pagination and Data Retrieval
   const total = await Job.countDocuments(filter);
   const data = await Job.find(filter)
     .populate({
-      path: ["job_sector", "job_category"],
-      model: ["JobSector", "JobCategory"],
-      select: ["job_sector_name", "category_name"],
+      path: "job_sector",
+      model: "JobSector",
+      select: "job_sector_name",
+    })
+    .populate({
+      path: "job_category",
+      model: "JobCategory",
+      select: "category_name",
     })
     .skip(skip)
     .limit(limit)
