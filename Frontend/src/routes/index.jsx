@@ -32,8 +32,8 @@ const Students = lazy(() => import('@/views/pages/student'));
 const StudentDetail = lazy(() => import('@/views/pages/student/components/StudentDetail'));
 const AppliedJobs = lazy(() => import('@/views/pages/student/AppliedOn'));
 const Douments = lazy(() => import('@/views/pages/Manage-Jobs/documents'));
-const AddDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/components/AddDocument'));
-const EditDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/components/AddDocument'));
+const AddDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/Components/AddDocument'));
+const EditDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/Components/AddDocument'));
 
 
 
