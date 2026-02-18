@@ -150,6 +150,7 @@ const saveJobSection = async (req, res) => {
           job_fees_ews: data.job_fees_ews ?? 0,
           job_fees_pwd: data.job_fees_pwd ?? 0,
           job_fees_ex_serviceman: data.job_fees_ex_serviceman ?? 0,
+          job_fees_women: data.job_fees_women ?? 0,
           job_last_updated_date: Math.floor(Date.now() / 1000),
         };
         break;
@@ -164,6 +165,7 @@ const saveJobSection = async (req, res) => {
           job_vacancy_for_pwd: data.job_vacancy_for_pwd ?? 0,
           job_vacancy_for_ews: data.job_vacancy_for_ews ?? 0,
           job_vacancy_for_ex_serviceman: data.job_vacancy_for_ex_serviceman ?? 0,
+          job_vacancy_for_women: data.job_vacancy_for_women ?? 0,
           job_last_updated_date: Math.floor(Date.now() / 1000),
         };
         break;
@@ -184,7 +186,7 @@ const saveJobSection = async (req, res) => {
           job_salary_min: data.job_salary_min ?? 0,
           job_salary_max: data.job_salary_max ?? 0,
           job_salary_inhand: data.job_salary_inhand ?? 0,
-          job_salary_allowance: data.job_salary_allowance ?? 0,
+          job_salary_allowance: data.job_salary_allowance ?? "",
           job_salary_bond_condition: data.job_salary_bond_condition ?? "",
           job_last_updated_date: Math.floor(Date.now() / 1000),
         };
