@@ -36,6 +36,7 @@ const AddDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/compo
 const EditDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/components/AddDocument'));
 
 
+
 // login
 const authRoutes = [
   {
