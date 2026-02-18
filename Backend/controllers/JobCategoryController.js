@@ -326,6 +326,44 @@ exports.updateJobStatus = async (req, res) => {
     }
 };
 
+// BULK UPDATE JOB STATUS CONTROLLER
+exports.bulkUpdateJobStatus = async (req, res) => {
+    try {
+        const { jobIds, updateColumnName, updateValue } = req.body;
+        const response = await JobCategoryService.bulkUpdateJobStatus(jobIds, updateColumnName, updateValue);
+        return res.status(response.status).json({
+            status: response.status,
+            message: response.message,
+            jsonData: response.jsonData || null,
+        });
+    } catch (error) {
+        console.error("Bulk Update Job Status Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
+};
+
+// BULK DELETE JOBS CONTROLLER
+exports.bulkDeleteJobs = async (req, res) => {
+    try {
+        const { jobIds } = req.body;
+        const response = await JobCategoryService.bulkDeleteJobs(jobIds);
+        return res.status(response.status).json({
+            status: response.status,
+            message: response.message,
+            jsonData: response.jsonData || null,
+        });
+    } catch (error) {
+        console.error("Bulk Delete Jobs Controller Error:", error);
+        return res.status(500).json({
+            status: 500,
+            message: "Internal server error",
+        });
+    }
+};
+
 // RECOMMEND JOBS FOR STUDENT CONTROLLER
 exports.recommendJobsForStudent = async (req, res) => {
     try {

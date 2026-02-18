@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Formik, FieldArray } from "formik";
 import * as Yup from "yup";
 import { Form, Button, Row, Col, Card, Table, Alert, Image } from "react-bootstrap";
@@ -134,6 +134,11 @@ export default function AddJob() {
   const [selectedImage, setSelectedImage] = useState("");
   const [selectedImageTitle, setSelectedImageTitle] = useState("");
 
+  // Refs to track initial edit values — prevents sector/category watchers from clearing
+  // selections during initial edit data population
+  const editSectorRef = useRef(null);
+  const editCategoryRef = useRef(null);
+
   const requiredSections = [
     "basicDetails", "dates", "fees", "vacancies",
     "eligibility", "salary", "paymentOptions", "selection", "links",
@@ -152,8 +157,8 @@ export default function AddJob() {
         axios.get('/job-categories/get_job_type_list')
       ]);
       
-      const sectorData = sector.data?.jsonData?.data || sector.data?.jsonData || sector.data || [];
-      const jobTypeData = jobType.data?.jsonData?.jobTypes || jobType.data?.jsonData || jobType.data || [];
+      const sectorData = sector.data?.jsonData?.data || [];
+      const jobTypeData = jobType.data?.jsonData?.jobTypes || [];
       
       setSectorList(Array.isArray(sectorData) ? sectorData : []);
       setJobTypeList(Array.isArray(jobTypeData) ? jobTypeData : []);
@@ -484,7 +489,7 @@ export default function AddJob() {
       }, {
         headers: { "Content-Type": "application/json" }
       });
-      
+      toast.success("Logo uploaded successfully.");
       setFieldValue("job_logo", base64);
       setLogoFile(null);
       setLogoPreview("");
@@ -643,7 +648,7 @@ export default function AddJob() {
         job_salary_min: Number(values.salary.min) || 0,
         job_salary_max: Number(values.salary.max) || 0,
         job_salary_inhand: Number(values.salary.inHand) || 0,
-        job_salary_allowance: Number(values.salary.allowances) || 0,
+        job_salary_allowance: values.salary.allowances?.trim() || "",
         job_salary_bond_condition: values.salary.salaryBondConditions?.trim() || "",
       };
 
@@ -843,11 +848,16 @@ export default function AddJob() {
               if (isEditMode && id && !values._id) {
                 fetchJobData(id).then((data) => {
                   if (data) {
+                    // Store expected edit values BEFORE setting fields
+                    // so sector/category watchers know not to clear them
+                    editSectorRef.current = data.job_sector;
+                    editCategoryRef.current = data.job_category;
+
                     Object.entries(data).forEach(([key, value]) => {
                       setFieldValue(key, value);
                     });
                     if (data.job_logo) {
-                      setLogoPreview(data.job_logo);
+                      setLogoPreview(`https://jobportal-84q1.onrender.com${data.job_logo}`);
                     }
                     // Fetch categories and subcategories for edit mode
                     if (data.job_sector) {
@@ -865,8 +875,10 @@ export default function AddJob() {
             useEffect(() => {
               if (values.job_sector) {
                 fetchCategoriesBySector(values.job_sector);
-                // Clear category and subcategory when sector changes
-                if (!isEditMode || values._id) {
+                // Skip clearing if this is the initial edit data population
+                if (editSectorRef.current === values.job_sector) {
+                  editSectorRef.current = null; // consumed — future changes will clear
+                } else {
                   setFieldValue('job_category', '');
                   setFieldValue('job_sub_category', '');
                   setSubcategoryList([]);
@@ -881,8 +893,10 @@ export default function AddJob() {
             useEffect(() => {
               if (values.job_category) {
                 fetchSubcategoriesByCategory(values.job_category);
-                // Clear subcategory when category changes
-                if (!isEditMode || values._id) {
+                // Skip clearing if this is the initial edit data population
+                if (editCategoryRef.current === values.job_category) {
+                  editCategoryRef.current = null; // consumed — future changes will clear
+                } else {
                   setFieldValue('job_sub_category', '');
                 }
               } else {
@@ -1385,7 +1399,7 @@ export default function AddJob() {
                         <FormInput
                           name="salary.allowances"
                           label="Allowances"
-                          type="number"
+                          type="text"
                           value={values.salary.allowances}
                           onChange={handleChange}
                         />
@@ -1603,7 +1617,7 @@ export default function AddJob() {
                               const fileName = file.split('/').pop();
                               const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file);
                               const isPdf = /\.pdf$/i.test(file);
-                              const fileUrl = `http://localhost:5000${file}`;
+                              const fileUrl = `https://jobportal-84q1.onrender.com${file}`;
                               
                               return (
                                 <tr key={idx}>

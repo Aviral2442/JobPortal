@@ -26,6 +26,7 @@ import { MdOutlineToggleOn, MdOutlineToggleOff } from "react-icons/md";
 import jszip from "jszip";
 import pdfmake from "pdfmake";
 import DatatableActionButton from "../../../../../components/DatatableActionButton";
+import BulkActionToolbar from "@/components/table/BulkActionToolbar";
 import "@/global.css";
 
 DT.Buttons.jszip(jszip);
@@ -44,6 +45,7 @@ const GovernmentList = ({ isActive }) => {
   const [loading, setLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
   const [message, setMessage] = useState("");
+  const [selectedRows, setSelectedRows] = useState([]);
   const [localSearchInput, setLocalSearchInput] = useState("");
   const [variant, setVariant] = useState("success");
   const navigate = useNavigate();
@@ -116,6 +118,11 @@ const GovernmentList = ({ isActive }) => {
     }
   }, [isActive, fetchJobs]);
 
+  // Clear selection when data changes
+  useEffect(() => {
+    setSelectedRows([]);
+  }, [jobs]);
+
   useEffect(() => {
     setLocalSearchInput(searchFilter ? String(searchFilter) : "");
   }, [searchFilter]);
@@ -126,7 +133,53 @@ const GovernmentList = ({ isActive }) => {
     handlePageChange(0);
   }
 
+  // Row selection helpers
+  const toggleRow = (id) => {
+    setSelectedRows((prev) =>
+      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]
+    );
+  };
+
+  const toggleAllRows = () => {
+    if (selectedRows.length === jobs.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(jobs.map((j) => j._id));
+    }
+  };
+
+  // Sync DOM checkboxes + row highlight whenever selectedRows changes
+  useEffect(() => {
+    const table = tableRef.current?.dt();
+    if (!table) return;
+    // Update row checkboxes
+    table.rows().every(function () {
+      const data = this.data();
+      const node = this.node();
+      if (!data || !node) return;
+      const cb = node.querySelector('.row-select-cb');
+      const isSelected = selectedRows.includes(data._id);
+      if (cb) cb.checked = isSelected;
+      if (isSelected) node.classList.add('selected-row');
+      else node.classList.remove('selected-row');
+    });
+    // Update header "select all" checkbox
+    const selectAll = document.getElementById('govt-select-all');
+    if (selectAll) {
+      selectAll.checked = jobs.length > 0 && selectedRows.length === jobs.length;
+    }
+  }, [selectedRows, jobs]);
+
   const columns = [
+    {
+      title: `<input type="checkbox" class="row-select-cb" id="govt-select-all" />`,
+      data: null,
+      orderable: false,
+      searchable: false,
+      className: "text-center",
+      width: "10px",
+      render: () => `<input type="checkbox" class="row-select-cb" />`,
+    },
     {
       title: "S.No",
       data: null,
@@ -332,7 +385,15 @@ const GovernmentList = ({ isActive }) => {
               />
             </div>
           </div>
-          <Col className="overflow-x-scroll">
+
+          {/* Bulk action toolbar */}
+          <BulkActionToolbar
+            selectedIds={selectedRows}
+            onActionComplete={fetchJobs}
+            onClearSelection={() => setSelectedRows([])}
+          />
+
+          <Col className="overflow-x-scroll fs-5">
             <DataTable
               ref={tableRef}
               data={jobs}
@@ -359,6 +420,27 @@ const GovernmentList = ({ isActive }) => {
                     next: ReactDOMServer.renderToStaticMarkup(<TbChevronRight />),
                     last: ReactDOMServer.renderToStaticMarkup(<TbChevronsRight />),
                   },
+                },
+                drawCallback: function () {
+                  const tableEl = tableRef.current?.dt()?.table().node();
+                  if (!tableEl) return;
+                  // Remove previous listener to avoid duplicates
+                  tableEl.removeEventListener("click", tableEl._govtCbHandler);
+                  tableEl._govtCbHandler = (e) => {
+                    const cb = e.target.closest('.row-select-cb');
+                    if (!cb) return;
+                    // Header select-all
+                    if (cb.id === 'govt-select-all') {
+                      toggleAllRows();
+                      return;
+                    }
+                    // Row checkbox: find row data
+                    const tr = cb.closest('tr');
+                    if (!tr) return;
+                    const rowData = tableRef.current?.dt()?.row(tr)?.data();
+                    if (rowData?._id) toggleRow(rowData._id);
+                  };
+                  tableEl.addEventListener("click", tableEl._govtCbHandler);
                 },
               }}
               className="table table-striped dt-responsive w-100"

@@ -39,6 +39,8 @@ router.get('/student_applied_jobs_list_and_counts/:studentId', JobCategoryContro
 router.get('/job_applied_list_of_students', JobCategoryController.jobAppliedListOfStudents);
 router.get('/upcomming_jobs_for_student/:studentId', JobCategoryController.upcommingJobForStudents);
 router.post('/update_jobs_status/:jobId', JobCategoryController.updateJobStatus);
+router.post('/bulk_update_jobs_status', JobCategoryController.bulkUpdateJobStatus);
+router.post('/bulk_delete_jobs', JobCategoryController.bulkDeleteJobs);
 router.get('/recommended_jobs_list_for_student/:studentId', JobCategoryController.recommendJobsForStudent);
 router.get('/featured_jobs_list_for_student/:studentId', JobCategoryController.featuredJobsForStudent);
 router.get('/job_list_sector_wise/:studentId', JobCategoryController.jobListSectorWise);

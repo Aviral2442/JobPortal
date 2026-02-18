@@ -26,6 +26,7 @@ import { MdOutlineToggleOn, MdOutlineToggleOff } from "react-icons/md";
 import jszip from "jszip";
 import pdfmake from "pdfmake";
 import DatatableActionButton from "@/components/DatatableActionButton";
+import BulkActionToolbar from "@/components/table/BulkActionToolbar";
 import "@/global.css";
 
 DT.Buttons.jszip(jszip);
@@ -43,6 +44,7 @@ const PrivateList = ({ isActive }) => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
+  const [selectedRows, setSelectedRows] = useState([]);
   const [localSearchInput, setLocalSearchInput] = useState("");
   const [message, setMessage] = useState("");
   const [variant, setVariant] = useState("success");
@@ -116,6 +118,11 @@ const PrivateList = ({ isActive }) => {
     }
   }, [isActive, fetchJobs]);
 
+  // Clear selection when data changes
+  useEffect(() => {
+    setSelectedRows([]);
+  }, [jobs]);
+
   useEffect(() => {
     setLocalSearchInput(searchFilter ? String(searchFilter) : "");
   }, [searchFilter]);
@@ -125,7 +132,51 @@ const PrivateList = ({ isActive }) => {
     handlePageChange(0);
   }
 
+  // Row selection helpers
+  const toggleRow = (id) => {
+    setSelectedRows((prev) =>
+      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]
+    );
+  };
+
+  const toggleAllRows = () => {
+    if (selectedRows.length === jobs.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(jobs.map((j) => j._id));
+    }
+  };
+
+  // Sync DOM checkboxes + row highlight whenever selectedRows changes
+  useEffect(() => {
+    const table = tableRef.current?.dt();
+    if (!table) return;
+    table.rows().every(function () {
+      const data = this.data();
+      const node = this.node();
+      if (!data || !node) return;
+      const cb = node.querySelector('.row-select-cb');
+      const isSelected = selectedRows.includes(data._id);
+      if (cb) cb.checked = isSelected;
+      if (isSelected) node.classList.add('selected-row');
+      else node.classList.remove('selected-row');
+    });
+    const selectAll = document.getElementById('private-select-all');
+    if (selectAll) {
+      selectAll.checked = jobs.length > 0 && selectedRows.length === jobs.length;
+    }
+  }, [selectedRows, jobs]);
+
   const columns = [
+    {
+      title: `<input type="checkbox" class="row-select-cb" id="private-select-all" />`,
+      data: null,
+      orderable: false,
+      searchable: false,
+      className: "text-center",
+      width: "40px",
+      render: () => `<input type="checkbox" class="row-select-cb" />`,
+    },
     {
       title: "S.No",
       data: null,
@@ -329,6 +380,14 @@ const PrivateList = ({ isActive }) => {
               />
             </div>
           </div>
+
+          {/* Bulk action toolbar */}
+          <BulkActionToolbar
+            selectedIds={selectedRows}
+            onActionComplete={fetchJobs}
+            onClearSelection={() => setSelectedRows([])}
+          />
+
           <Col className="overflow-x-scroll">
             <DataTable
               ref={tableRef}
@@ -356,6 +415,24 @@ const PrivateList = ({ isActive }) => {
                     next: ReactDOMServer.renderToStaticMarkup(<TbChevronRight />),
                     last: ReactDOMServer.renderToStaticMarkup(<TbChevronsRight />),
                   },
+                },
+                drawCallback: function () {
+                  const tableEl = tableRef.current?.dt()?.table().node();
+                  if (!tableEl) return;
+                  tableEl.removeEventListener("click", tableEl._privateCbHandler);
+                  tableEl._privateCbHandler = (e) => {
+                    const cb = e.target.closest('.row-select-cb');
+                    if (!cb) return;
+                    if (cb.id === 'private-select-all') {
+                      toggleAllRows();
+                      return;
+                    }
+                    const tr = cb.closest('tr');
+                    if (!tr) return;
+                    const rowData = tableRef.current?.dt()?.row(tr)?.data();
+                    if (rowData?._id) toggleRow(rowData._id);
+                  };
+                  tableEl.addEventListener("click", tableEl._privateCbHandler);
                 },
               }}
               className="table table-striped dt-responsive w-100"

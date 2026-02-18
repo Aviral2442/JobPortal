@@ -89,7 +89,7 @@ const JobSchema = new mongoose.Schema({
   // JOB SALARY DETAILS
   job_salary_min: { type: Number, default: 0 },
   job_salary_max: { type: Number, default: 0 },
-  job_salary_allowance: { type: Number, default: 0 },
+  job_salary_allowance: { type: String, default: "" },
   job_salary_inhand: { type: Number, default: 0 },
   job_salary_bond_condition: { type: String, required: false, default: "" },
 
