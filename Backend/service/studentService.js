@@ -846,16 +846,17 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
     const otp = generateRandomOTP();
     const expiry = Date.now() + 5 * 60 * 1000;
 
+
     student.studentOtp = otp;
     student.studentOtpExpiry = expiry;
     await student.save();
 
     if (isEmail) {
       const lowercaseEmail = formattedInput.toLowerCase();
-      console.log(`Sending OTP to email: ${lowercaseEmail}`, otp); // For testing purposesw
+      console.log(`Sending OTP to email: ${lowercaseEmail}`, otp);
 
       const emailResponse = await sendEmailOtp(lowercaseEmail, otp);
-      console.log("Email OTP Response:", emailResponse); // For testing purposes
+      console.log("Email OTP Response:", emailResponse);
       if (!emailResponse || emailResponse.success === false) {
         return {
           status: 500,
@@ -876,7 +877,7 @@ exports.sendOtpOnEmailOrMobile = async (OtpData, studentId) => {
     const lowerCaseMobileNO = formattedInput;
 
     const mobileResponse = await sendMobileOtp(lowerCaseMobileNO, otp);
-    console.log("Mobile OTP Response:", mobileResponse); // For testing purposes
+    console.log("Mobile OTP Response:", mobileResponse);
     if (!mobileResponse || mobileResponse.success === false) {
       return {
         status: 500,

@@ -3,7 +3,7 @@ import ComponentCard from '@/components/ComponentCard';
 import { Link } from "react-router-dom";
 
 import { Nav, NavItem, NavLink, TabContainer, TabPane } from 'react-bootstrap';
-import DocumentList from './components/DocumentList';
+import DocumentList from './Components/DocumentList';
 
 const Results = () => {
     return <>

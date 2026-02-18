@@ -27,13 +27,14 @@ const AddAnswerKey = lazy(() => import('@/views/pages/Manage-Jobs/answer-key/com
 const EditAnswerKey = lazy(() => import('@/views/pages/Manage-Jobs/answer-key/components/AddAnswerKey'));
 const Documents = lazy(() => import('@/views/pages/Manage-Jobs/documents'));
 const Admissions = lazy(() => import('@/views/pages/Manage-Jobs/admission'));
-const RegisterStudent = lazy(() => import('@/views/pages/Student/Register'));
-const Students = lazy(() => import('@/views/pages/Student'));
-const StudentDetail = lazy(() => import('@/views/pages/Student/components/StudentDetail'));
-const AppliedJobs = lazy(() => import('@/views/pages/Student/AppliedOn'));
+const RegisterStudent = lazy(() => import('@/views/pages/student/Register'));
+const Students = lazy(() => import('@/views/pages/student'));
+const StudentDetail = lazy(() => import('@/views/pages/student/components/StudentDetail'));
+const AppliedJobs = lazy(() => import('@/views/pages/student/AppliedOn'));
 const Douments = lazy(() => import('@/views/pages/Manage-Jobs/documents'));
-const AddDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/components/AddDocument'));
-const EditDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/components/AddDocument'));
+const AddDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/Components/AddDocument'));
+const EditDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/Components/AddDocument'));
+
 
 
 // login

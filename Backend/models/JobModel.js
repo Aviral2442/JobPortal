@@ -58,6 +58,7 @@ const JobSchema = new mongoose.Schema({
   job_fees_ex_serviceman: { type: Number, default: 0 },
   job_fees_pwd: { type: Number, default: 0 },
   job_fees_ews: { type: Number, default: 0 },
+  job_fees_women: { type: Number, default: 0 },
 
   // ELIGIBILITY CRITERIA
   job_eligibility_age_min: { type: Number, default: 0 },
@@ -75,6 +76,7 @@ const JobSchema = new mongoose.Schema({
   job_vacancy_for_ex_serviceman: { type: Number, default: 0 },
   job_vacancy_for_pwd: { type: Number, default: 0 },
   job_vacancy_for_ews: { type: Number, default: 0 },
+  job_vacancy_for_women: { type: Number, default: 0 },
 
   // JOB PAYMENT OPTIONS
   job_pmt_debit_card: { type: Boolean, default: false },
@@ -87,7 +89,7 @@ const JobSchema = new mongoose.Schema({
   // JOB SALARY DETAILS
   job_salary_min: { type: Number, default: 0 },
   job_salary_max: { type: Number, default: 0 },
-  job_salary_allowance: { type: Number, default: 0 },
+  job_salary_allowance: { type: String, default: "" },
   job_salary_inhand: { type: Number, default: 0 },
   job_salary_bond_condition: { type: String, required: false, default: "" },
 

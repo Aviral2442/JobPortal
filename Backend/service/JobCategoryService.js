@@ -686,6 +686,54 @@ exports.updateJobStatus = async (jobId, updateColumnName, updateValue) => {
   }
 };
 
+// BULK UPDATE JOB STATUS SERVICE
+exports.bulkUpdateJobStatus = async (jobIds, updateColumnName, updateValue) => {
+  try {
+    if (!Array.isArray(jobIds) || jobIds.length === 0) {
+      return { status: 400, message: "No job IDs provided" };
+    }
+
+    const validColumns = ["job_status", "jobRecommendation", "jobFeatured"];
+    if (!validColumns.includes(updateColumnName)) {
+      return { status: 400, message: "Invalid column name for update" };
+    }
+
+    const result = await Job.updateMany(
+      { _id: { $in: jobIds } },
+      { [updateColumnName]: updateValue }
+    );
+
+    return {
+      status: 200,
+      message: `${result.modifiedCount} job(s) updated successfully`,
+      jsonData: { modifiedCount: result.modifiedCount },
+    };
+  } catch (error) {
+    console.error("Error in bulkUpdateJobStatus Service:", error);
+    return { status: 500, message: "Server error" };
+  }
+};
+
+// BULK DELETE JOBS SERVICE
+exports.bulkDeleteJobs = async (jobIds) => {
+  try {
+    if (!Array.isArray(jobIds) || jobIds.length === 0) {
+      return { status: 400, message: "No job IDs provided" };
+    }
+
+    const result = await Job.deleteMany({ _id: { $in: jobIds } });
+
+    return {
+      status: 200,
+      message: `${result.deletedCount} job(s) deleted successfully`,
+      jsonData: { deletedCount: result.deletedCount },
+    };
+  } catch (error) {
+    console.error("Error in bulkDeleteJobs Service:", error);
+    return { status: 500, message: "Server error" };
+  }
+};
+
 // RECOMMEND JOBS FOR STUDENT SERVICE
 exports.recommendJobsForStudent = async (studentId) => {
   try {
@@ -953,13 +1001,23 @@ exports.privateSectorJobList = async (query) => {
     }
   }
 
+  // Status Filter
+  if (query.status) {
+    filter.job_status = parseInt(query.status);
+  }
+
   // Pagination and Data Retrieval
   const total = await Job.countDocuments(filter);
   const data = await Job.find(filter)
     .populate({
-      path: ["job_sector", "job_category"],
-      model: ["JobSector", "JobCategory"],
-      select: ["job_sector_name", "category_name"],
+      path: "job_sector",
+      model: "JobSector",
+      select: "job_sector_name",
+    })
+    .populate({
+      path: "job_category",
+      model: "JobCategory",
+      select: "category_name",
     })
     .skip(skip)
     .limit(limit)
@@ -1050,13 +1108,23 @@ exports.governmentSectorJobList = async (query) => {
     }
   }
 
+  // Status Filter
+  if (query.status) {
+    filter.job_status = parseInt(query.status);
+  }
+
   // Pagination and Data Retrieval
   const total = await Job.countDocuments(filter);
   const data = await Job.find(filter)
     .populate({
-      path: ["job_sector", "job_category"],
-      model: ["JobSector", "JobCategory"],
-      select: ["job_sector_name", "category_name"],
+      path: "job_sector",
+      model: "JobSector",
+      select: "job_sector_name",
+    })
+    .populate({
+      path: "job_category",
+      model: "JobCategory",
+      select: "category_name",
     })
     .skip(skip)
     .limit(limit)
@@ -1147,13 +1215,23 @@ exports.psuSectorJobList = async (query) => {
     }
   }
 
+  // Status Filter
+  if (query.status) {
+    filter.job_status = parseInt(query.status);
+  }
+
   // Pagination and Data Retrieval
   const total = await Job.countDocuments(filter);
   const data = await Job.find(filter)
     .populate({
-      path: ["job_sector", "job_category"],
-      model: ["JobSector", "JobCategory"],
-      select: ["job_sector_name", "category_name"],
+      path: "job_sector",
+      model: "JobSector",
+      select: "job_sector_name",
+    })
+    .populate({
+      path: "job_category",
+      model: "JobCategory",
+      select: "category_name",
     })
     .skip(skip)
     .limit(limit)

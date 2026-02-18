@@ -34,3 +34,34 @@ exports.updateJobByIdController = async (req, res) => {
         res.status(500).json({ message: "Internal server error", error: error.message });
     }
 };
+
+// HANDLE BULK UPLOAD OF JOBS
+exports.bulkUploadJobsController = async (req, res) => {
+    try {
+        // Controller accepts either:
+        // - multipart/form-data file under field `csv` (recommended)
+        // - or a `csvPath` in request body pointing to a server-side CSV file
+        let csvPath = null;
+
+        // file upload via multer -> req.file.path
+        if (req.file && req.file.path) {
+            csvPath = req.file.path;
+            console.log("Received CSV file for bulk upload:", csvPath);
+        }
+
+        // fallback to csvPath in body
+        if (!csvPath && req.body && req.body.csvPath) {
+            csvPath = req.body.csvPath;
+            console.log("Received csvPath in body for bulk upload:", csvPath);
+        }
+
+        if (!csvPath) {
+            return res.status(400).json({ status: 400, message: "CSV file is required (upload 'csv' file or provide csvPath)" });
+        }
+        console.log("Processing bulk upload from CSV path:", csvPath);
+        const result = await jobsService.bulkUploadJobs(csvPath);
+        return res.status(result.status || 200).json(result);
+    } catch (error) {
+        return res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+};

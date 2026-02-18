@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Formik, FieldArray } from "formik";
 import * as Yup from "yup";
 import { Form, Button, Row, Col, Card, Table, Alert, Image } from "react-bootstrap";
@@ -10,6 +10,7 @@ import { FaRegTrashAlt } from "react-icons/fa";
 import axios from "@/api/axios";
 import { fileToBase64, filesToBase64, validateFileType, validateFileSize } from "@/utils/fileToBase64";
 import ImageModal from "@/components/ImageModel";
+import toast from "react-hot-toast";
 
 const jobValidationSchema = Yup.object({
   _id: Yup.string(),
@@ -50,6 +51,7 @@ const jobValidationSchema = Yup.object({
       ST: Yup.number().min(0),
       PWD: Yup.number().min(0),
       ExService: Yup.number().min(0),
+      Women: Yup.number().min(0),
     })
   ),
   eligibility: Yup.object({
@@ -132,6 +134,11 @@ export default function AddJob() {
   const [selectedImage, setSelectedImage] = useState("");
   const [selectedImageTitle, setSelectedImageTitle] = useState("");
 
+  // Refs to track initial edit values — prevents sector/category watchers from clearing
+  // selections during initial edit data population
+  const editSectorRef = useRef(null);
+  const editCategoryRef = useRef(null);
+
   const requiredSections = [
     "basicDetails", "dates", "fees", "vacancies",
     "eligibility", "salary", "paymentOptions", "selection", "links",
@@ -150,8 +157,8 @@ export default function AddJob() {
         axios.get('/job-categories/get_job_type_list')
       ]);
       
-      const sectorData = sector.data?.jsonData?.data || sector.data?.jsonData || sector.data || [];
-      const jobTypeData = jobType.data?.jsonData?.jobTypes || jobType.data?.jsonData || jobType.data || [];
+      const sectorData = sector.data?.jsonData?.data || [];
+      const jobTypeData = jobType.data?.jsonData?.jobTypes || [];
       
       setSectorList(Array.isArray(sectorData) ? sectorData : []);
       setJobTypeList(Array.isArray(jobTypeData) ? jobTypeData : []);
@@ -317,6 +324,7 @@ export default function AddJob() {
       { category: "EWS", fee: jobData.job_fees_ews || "" },
       { category: "PWD", fee: jobData.job_fees_pwd || "" },
       { category: "Ex-Serviceman", fee: jobData.job_fees_ex_serviceman || "" },
+      { category: "Women", fee: jobData.job_fees_women || "" },
     ];
   };
 
@@ -331,6 +339,7 @@ export default function AddJob() {
       ST: jobData.job_vacancy_for_st || 0,
       PWD: jobData.job_vacancy_for_pwd || 0,
       ExService: jobData.job_vacancy_for_ex_serviceman || 0,
+      Women: jobData.job_vacancy_for_women || 0,
     }];
   };
 
@@ -480,7 +489,7 @@ export default function AddJob() {
       }, {
         headers: { "Content-Type": "application/json" }
       });
-      
+      toast.success("Logo uploaded successfully.");
       setFieldValue("job_logo", base64);
       setLogoFile(null);
       setLogoPreview("");
@@ -506,6 +515,7 @@ export default function AddJob() {
     if (section === "basicDetails") {
       // Validate basic details
       if (!values.job_title || !values.job_organization || !values.job_short_desc) {
+        toast.error("Please fill all required fields in Basic Details");
         setMessage({ text: "Please fill all required fields in Basic Details", variant: "danger" });
         return;
       }
@@ -560,6 +570,7 @@ export default function AddJob() {
       const validFees = (values.fees || []).filter(f => f.category && f.fee !== "" && f.fee !== null);
 
       if (validFees.length === 0) {
+        console.log("No valid fees found:", values.fees);
         setMessage({ text: "Please add at least one fee entry", variant: "warning" });
         return;
       }
@@ -583,6 +594,8 @@ export default function AddJob() {
           sectionData.job_fees_pwd = feeValue;
         } else if (key.includes("ex-serviceman") || key.includes("exservice")) {
           sectionData.job_fees_ex_serviceman = feeValue;
+        } else if (key.includes("women")) {
+          sectionData.job_fees_women = feeValue;
         }
       });
 
@@ -590,6 +603,7 @@ export default function AddJob() {
       // Validate vacancies
       const vacancy = values.vacancies?.[0];
       if (!vacancy || !vacancy.postName || vacancy.total === 0) {
+        console.log("Invalid vacancy data:", vacancy);
         setMessage({ text: "Please fill vacancy details", variant: "warning" });
         return;
       }
@@ -602,12 +616,14 @@ export default function AddJob() {
         job_vacancy_for_st: Number(vacancy.ST) || 0,
         job_vacancy_for_pwd: Number(vacancy.PWD) || 0,
         job_vacancy_for_ews: Number(vacancy.EWS) || 0,
+        job_vacancy_for_women: Number(vacancy.Women) || 0,
         job_vacancy_for_ex_serviceman: Number(vacancy.ExService) || 0,
       };
 
     } else if (section === "eligibility") {
       // Validate eligibility
       if (!values.eligibility?.qualification || !values.eligibility?.ageMin || !values.eligibility?.ageMax) {
+        console.log("Invalid eligibility data:", values.eligibility);
         setMessage({ text: "Please fill all required eligibility fields", variant: "warning" });
         return;
       }
@@ -623,6 +639,7 @@ export default function AddJob() {
     } else if (section === "salary") {
       // Validate salary
       if (!values.salary?.min || !values.salary?.max || !values.salary?.inHand) {
+        toast.error("Please fill all required salary fields");  
         setMessage({ text: "Please fill all required salary fields", variant: "warning" });
         return;
       }
@@ -631,7 +648,7 @@ export default function AddJob() {
         job_salary_min: Number(values.salary.min) || 0,
         job_salary_max: Number(values.salary.max) || 0,
         job_salary_inhand: Number(values.salary.inHand) || 0,
-        job_salary_allowance: Number(values.salary.allowances) || 0,
+        job_salary_allowance: values.salary.allowances?.trim() || "",
         job_salary_bond_condition: values.salary.salaryBondConditions?.trim() || "",
       };
 
@@ -650,6 +667,7 @@ export default function AddJob() {
       const validSelection = (values.selection || []).filter(s => s && s.trim());
 
       if (validSelection.length === 0) {
+        toast.error("Please add at least one selection step");
         setMessage({ text: "Please add at least one selection step", variant: "warning" });
         return;
       }
@@ -661,6 +679,7 @@ export default function AddJob() {
       const validLinks = (values.links || []).filter(l => l.type && l.label && l.url);
 
       if (validLinks.length === 0) {
+        toast.error("Please add at least one complete link");
         setMessage({ text: "Please add at least one complete link", variant: "warning" });
         return;
       }
@@ -676,6 +695,7 @@ export default function AddJob() {
 
     } else if (section === "howToApply") {
       if (!values.howToApply || values.howToApply.trim() === "") {
+        toast.error("Please fill 'How to Apply' section");
         setMessage({ text: "Please fill 'How to Apply' section", variant: "warning" });
         return;
       }
@@ -684,6 +704,7 @@ export default function AddJob() {
 
     } else if (section === "metaDetails") {
       if (!values.metaDetails?.job_meta_title) {
+        toast.error("Meta Title is required");
         setMessage({ text: "Meta Title is required", variant: "warning" });
         return;
       }
@@ -697,6 +718,7 @@ export default function AddJob() {
     } else if (section === "files") {
       // Handle file uploads with base64 conversion
       if (!uploadedFiles || uploadedFiles.length === 0) {
+        toast.error("Please select files to upload");
         setMessage({ text: "Please select files to upload", variant: "warning" });
         return;
       }
@@ -704,10 +726,12 @@ export default function AddJob() {
       // Validate all files
       for (const file of uploadedFiles) {
         if (!validateFileType(file)) {
+          toast.error(`Invalid file type: ${file.name}. Only images and documents are allowed.`);
           setMessage({ text: `Invalid file type: ${file.name}. Only images and documents are allowed.`, variant: "danger" });
           return;
         }
         if (!validateFileSize(file)) {
+          toast.error(`File size exceeds 5MB limit: ${file.name}`);
           setMessage({ text: `File size exceeds 5MB limit: ${file.name}`, variant: "danger" });
           return;
         }
@@ -724,11 +748,11 @@ export default function AddJob() {
         }, {
           headers: { "Content-Type": "application/json" }
         });
-        
         // Update form with all files from response (existing + newly uploaded)
         const updatedFiles = res.data?.data?.files || [];
         setFieldValue('files', updatedFiles);
         
+        toast.success("Files uploaded successfully");
         console.log("Files uploaded:", res.data);
         setMessage({ text: "Files uploaded successfully!", variant: "success" });
         setUploadedFiles([]); // Clear uploaded files
@@ -742,6 +766,7 @@ export default function AddJob() {
         }
         return; // Exit early for files
       } catch (error) {
+        toast.error("Error uploading files");
         console.error("Error uploading files:", error);
         setMessage({
           text: error.response?.data?.message || "Error uploading files",
@@ -752,6 +777,7 @@ export default function AddJob() {
     }
 
     if (!sectionData || Object.keys(sectionData).length === 0) {
+      toast.error("No valid data to save for this section");
       console.warn("No valid data to save for section:", section);
       setMessage({ text: "No data to save. Please fill required fields.", variant: "warning" });
       return;
@@ -764,6 +790,7 @@ export default function AddJob() {
         data: sectionData
       });
       console.log(`Saved section ${section}:`, res.data);
+      toast.success(`${section} saved successfully!`);
       setMessage({ text: `${section} saved successfully!`, variant: "success" });
 
       if (requiredSections.includes(section)) {
@@ -774,6 +801,7 @@ export default function AddJob() {
         });
       }
     } catch (error) {
+      toast.error(`Error saving ${section}`);
       console.error("Error saving section:", error);
       setMessage({
         text: error.response?.data?.error || `Error saving ${section}`,
@@ -788,10 +816,10 @@ export default function AddJob() {
       try {
         const res = await axios.delete(`/jobs/${values._id}/section/${section}/${index}`);
         console.log(`Deleted item from section ${section} at index ${index}:`, res.data);
-        setMessage({ text: `${section} item deleted successfully!`, variant: "success" });
+        toast.success(`${section} item deleted successfully!`);
       } catch (error) {
         console.error(`Error deleting ${section} item:`, error);
-        setMessage({ text: `Error deleting ${section} item`, variant: "danger" });
+        toast.error(`Error deleting ${section} item`);
         return; // Don't remove from UI if API call failed
       }
     }
@@ -820,11 +848,16 @@ export default function AddJob() {
               if (isEditMode && id && !values._id) {
                 fetchJobData(id).then((data) => {
                   if (data) {
+                    // Store expected edit values BEFORE setting fields
+                    // so sector/category watchers know not to clear them
+                    editSectorRef.current = data.job_sector;
+                    editCategoryRef.current = data.job_category;
+
                     Object.entries(data).forEach(([key, value]) => {
                       setFieldValue(key, value);
                     });
                     if (data.job_logo) {
-                      setLogoPreview(data.job_logo);
+                      setLogoPreview(`https://jobportal-84q1.onrender.com${data.job_logo}`);
                     }
                     // Fetch categories and subcategories for edit mode
                     if (data.job_sector) {
@@ -842,8 +875,10 @@ export default function AddJob() {
             useEffect(() => {
               if (values.job_sector) {
                 fetchCategoriesBySector(values.job_sector);
-                // Clear category and subcategory when sector changes
-                if (!isEditMode || values._id) {
+                // Skip clearing if this is the initial edit data population
+                if (editSectorRef.current === values.job_sector) {
+                  editSectorRef.current = null; // consumed — future changes will clear
+                } else {
                   setFieldValue('job_category', '');
                   setFieldValue('job_sub_category', '');
                   setSubcategoryList([]);
@@ -858,8 +893,10 @@ export default function AddJob() {
             useEffect(() => {
               if (values.job_category) {
                 fetchSubcategoriesByCategory(values.job_category);
-                // Clear subcategory when category changes
-                if (!isEditMode || values._id) {
+                // Skip clearing if this is the initial edit data population
+                if (editCategoryRef.current === values.job_category) {
+                  editCategoryRef.current = null; // consumed — future changes will clear
+                } else {
                   setFieldValue('job_sub_category', '');
                 }
               } else {
@@ -1202,13 +1239,14 @@ export default function AddJob() {
                                 <th>ST</th>
                                 <th>PWD</th>
                                 <th>Ex-Service</th>
+                                <th>Women</th>
                                 <th style={{ width: '100px' }}>Action</th>
                               </tr>
                             </thead>
                             <tbody>
                               {values.vacancies.map((v, idx) => (
                                 <tr key={idx}>
-                                  {["postName", "total", "UR", "EWS", "OBC", "SC", "ST", "PWD", "ExService"].map((fld) => (
+                                  {["postName", "total", "UR", "EWS", "OBC", "SC", "ST", "PWD", "ExService", "Women"].map((fld) => (
                                     <td key={fld}>
                                       <Form.Control
                                         className="border-0 shadow-none"
@@ -1361,7 +1399,7 @@ export default function AddJob() {
                         <FormInput
                           name="salary.allowances"
                           label="Allowances"
-                          type="number"
+                          type="text"
                           value={values.salary.allowances}
                           onChange={handleChange}
                         />
@@ -1579,7 +1617,7 @@ export default function AddJob() {
                               const fileName = file.split('/').pop();
                               const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file);
                               const isPdf = /\.pdf$/i.test(file);
-                              const fileUrl = `http://localhost:5000${file}`;
+                              const fileUrl = `https://jobportal-84q1.onrender.com${file}`;
                               
                               return (
                                 <tr key={idx}>

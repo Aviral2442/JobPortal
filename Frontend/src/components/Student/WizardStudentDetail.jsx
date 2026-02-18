@@ -757,7 +757,7 @@ const WizardStudentDetail = () => {
   useEffect(() => {
     const fetchCareerPreferences = async () => {
       try {
-        const response = await axios.get('/job-categories/get_career_preferences_list');
+        const response = await axios.get(`/job-categories/get_career_preferences_list/${id}`);
         if (response.data.status === 200) {
           console.log('Fetched career preferences:', response.data.jsonData?.data);
           const formatted = (response.data?.jsonData?.data || []).map(item => ({

@@ -112,7 +112,7 @@ const Topbar = () => {
                         <LuSearch className="app-search-icon text-muted" />
                     </div>
 
-                    {/* <SkinDropdown /> */}
+                    <SkinDropdown />
 
                     {/* <LanguageDropdown /> */}
 

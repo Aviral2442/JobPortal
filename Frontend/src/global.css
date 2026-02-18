@@ -29,3 +29,19 @@
     border: none;
     border-radius: 20%;
 }
+
+.borderBottom {
+    border-bottom: 1px dashed #dee2e6;
+}
+
+/* Blue accent checkboxes for row selection */
+.row-select-cb {
+    width: 12px;
+    height: 12px;
+    cursor: pointer;
+    accent-color: #0d6efd;
+}
+
+tr.selected-row {
+    background-color: #e8f0fe !important;
+}
