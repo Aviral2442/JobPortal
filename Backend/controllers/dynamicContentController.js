@@ -10,3 +10,12 @@ exports.updateDynamicContent = async (req, res) => {
         res.status(500).json({ status: 500, message: "An error occurred while updating dynamic content", error: error.message });
     }
 }
+
+exports.getDynamicContent = async (req, res) => {
+    try {
+        const result = await dynamicContentService.getDynamicContent();
+        res.status(result.status).json(result);
+    } catch (error) {
+        res.status(500).json({ status: 500, message: "An error occurred while retrieving dynamic content", error: error.message });
+    }
+}

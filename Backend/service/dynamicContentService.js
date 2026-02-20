@@ -2,7 +2,6 @@ const DynamicContentModel = require('../models/DynamicContentModel');
 
 exports.updateDynamicContent = async (dynamicContentData) => {
     try {
-
         const updateData = {};
 
         if (dynamicContentData.privacyPolicy) { updateData.privacyPolicy = dynamicContentData.privacyPolicy; }
@@ -21,5 +20,17 @@ exports.updateDynamicContent = async (dynamicContentData) => {
 
     } catch (error) {
         return { status: 500, message: "An error occurred while updating dynamic content: " + error.message, jsonData: {} };
+    }
+};
+
+exports.getDynamicContent = async () => {
+    try {
+        const dynamicContent = await DynamicContentModel.findOne({}).exec();
+        if (!dynamicContent) {
+            return { status: 404, message: "Dynamic content not found", jsonData: {} };
+        }
+        return { status: 200, message: "Dynamic content retrieved successfully", jsonData: dynamicContent };
+    } catch (error) {
+        return { status: 500, message: "An error occurred while retrieving dynamic content: " + error.message, jsonData: {} };
     }
 };
