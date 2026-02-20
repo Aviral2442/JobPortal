@@ -64,9 +64,8 @@ const jobValidationSchema = Yup.object({
   salary: Yup.object({
     min: Yup.number().min(0).required("Minimum salary is required"),
     max: Yup.number().min(0).required("Maximum salary is required"),
-    inHand: Yup.number().min(0).required("In-hand salary is required"),
-    allowances: Yup.string(),
-    salaryBondConditions: Yup.string(),
+    // allowances: Yup.string(),
+    // salaryBondConditions: Yup.string(),
   }),
   selection: Yup.array().of(Yup.string().required("Selection step is required")),
   links: Yup.array().of(
@@ -388,6 +387,7 @@ export default function AddJob() {
       { category: "ST", fee: "" },
       { category: "EWS", fee: "" },
       { category: "PWD", fee: "" },
+      { category: "Women", fee: "" },
       { category: "Ex-Serviceman", fee: "" },
     ],
     vacancies: [{
@@ -638,7 +638,7 @@ export default function AddJob() {
 
     } else if (section === "salary") {
       // Validate salary
-      if (!values.salary?.min || !values.salary?.max || !values.salary?.inHand) {
+      if (!values.salary?.min || !values.salary?.max) {
         toast.error("Please fill all required salary fields");  
         setMessage({ text: "Please fill all required salary fields", variant: "warning" });
         return;
@@ -1132,7 +1132,7 @@ export default function AddJob() {
                                   <td>
                                     <Form.Control
                                       className="border-0 shadow-none"
-                                      type="date"
+                                      type="datetime-local"
                                       name={`dates.${idx}.date`}
                                       value={field.date}
                                       onChange={handleChange}
@@ -1387,7 +1387,7 @@ export default function AddJob() {
                       <Col md={3}>
                         <FormInput
                           name="salary.inHand"
-                          label="In Hand *"
+                          label="In Hand"
                           type="number"
                           value={values.salary.inHand}
                           onChange={handleChange}
