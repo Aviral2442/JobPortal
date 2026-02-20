@@ -8,7 +8,8 @@ import {
   TbUserCircle,
 } from "react-icons/tb";
 import { LuCircleGauge, LuUsers } from "react-icons/lu";
-import { HiOutlineUserGroup } from "react-icons/hi2";
+import { HiMiniUserPlus, HiOutlineUserGroup } from "react-icons/hi2";
+import { IoFlash, IoFlashOutline } from "react-icons/io5";
 
 export const userDropdownItems = [
   {
@@ -135,6 +136,12 @@ export const menuItems = [
       },
     ],
   },
+  {
+    key: "Dynamic-content",
+    label: "Dynamic Content",
+    icon: IoFlashOutline,
+    url: "/admin/dynamic-content",
+  }
   // {
   //   key: 'student-login-tracker',
   //   label: 'Std Login Tracker',

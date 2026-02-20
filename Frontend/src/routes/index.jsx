@@ -36,6 +36,9 @@ const AddDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/Compo
 const EditDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/Components/AddDocument'));
 
 
+const DynamicContent = lazy(() => import('@/views/pages/dynamic-content'));
+
+
 
 // login
 const authRoutes = [
@@ -175,6 +178,11 @@ const admissionsRoutes=[{
 }];
 
 
+const dynamicContentRoutes=[{
+  path: '/admin/dynamic-content',
+  element: <DynamicContent/>
+}];
+
 // admin routes wrapped in main layout + protected route
 const adminRoutes = [
   {
@@ -196,7 +204,8 @@ const adminRoutes = [
       ...answerKeyRoutes,
       ...documentsRoutes,
       ...admissionsRoutes,
-      ...studentsRoutes
+      ...studentsRoutes,
+      ...dynamicContentRoutes
     ],
   },
 ];
