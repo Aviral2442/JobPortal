@@ -14,6 +14,7 @@ import SkinDropdown from '@/layouts/components/topbar/components/SkinDropdown';
 import MonochromeModeToggler from '@/layouts/components/topbar/components/MonochromeModeToggler';
 import { appName } from '@/helpers';
 import Base64Converter from './components/Base64Converter';
+    
 const Topbar = () => {
   const {
     changeSideNavSize,
@@ -122,7 +123,7 @@ const Topbar = () => {
                     {/* <NotificationDropdown /> */}
 
                     {/* <CustomizerToggler /> */}
-                    
+
 
                     <ThemeToggler />
 
