@@ -13,6 +13,7 @@ import { TbActivity, TbChevronDown, TbSettings, TbUserPlus } from 'react-icons/t
 import SkinDropdown from '@/layouts/components/topbar/components/SkinDropdown';
 import MonochromeModeToggler from '@/layouts/components/topbar/components/MonochromeModeToggler';
 import { appName } from '@/helpers';
+import Base64Converter from './components/Base64Converter';
 const Topbar = () => {
   const {
     changeSideNavSize,
@@ -111,6 +112,8 @@ const Topbar = () => {
                         <FormControl type="search" className="topbar-search" name="search" placeholder="Search for something..." />
                         <LuSearch className="app-search-icon text-muted" />
                     </div>
+
+                    <Base64Converter />
 
                     <SkinDropdown />
 
