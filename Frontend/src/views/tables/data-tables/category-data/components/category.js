@@ -2,6 +2,7 @@ import formatDate from "@/components/DateFormat"
 const basePath = import.meta.env.VITE_BASE_URL;
 
 export const categoryColumns = [
+  { data: "_id", title: "ID" },
   {
     data: "category_image",
     title: "Image",
@@ -28,6 +29,7 @@ export const categoryColumns = [
 ];
 
 export const subCategoryColumns = [
+  { data: "_id", title: "ID" },
   {
     data: "subcategory_image",
     title: "Image",
@@ -54,6 +56,7 @@ export const subCategoryColumns = [
 ];
 
 export const careerPreference = [
+  { data: "_id", title: "ID" },
   { data: "careerPreferenceName", title: "Name" },
   { data: "careerPreferenceSectorId.job_sector_name", title: "Sector", defaultContent: "N/A" },
     {
