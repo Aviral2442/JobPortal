@@ -21,6 +21,7 @@ const jobValidationSchema = Yup.object({
     job_meta_schemas: Yup.string(),
   }),
   job_title: Yup.string().required("Post Title is required"),
+  job_apply_link: Yup.string().url("Must be a valid URL"),
   job_organization: Yup.string().required("Organization is required"),
   job_advertisement_no: Yup.string().required("Advertisement Number is required"),
   job_type: Yup.string().required("Job Type is required"),
@@ -36,22 +37,29 @@ const jobValidationSchema = Yup.object({
   ),
   fees: Yup.array().of(
     Yup.object({
-      category: Yup.string().required("Category is required"),
-      fee: Yup.number().required("Fee is required").min(0),
+      post_name: Yup.string().required("Post name is required"),
+      for_general: Yup.number().min(0),
+      for_obc: Yup.number().min(0),
+      for_sc: Yup.number().min(0),
+      for_st: Yup.number().min(0),
+      for_ex_serviceman: Yup.number().min(0),
+      for_pwd: Yup.number().min(0),
+      for_ews: Yup.number().min(0),
+      for_women: Yup.number().min(0),
     })
   ),
   vacancies: Yup.array().of(
     Yup.object({
-      postName: Yup.string().required("Post name is required"),
+      post_name: Yup.string().required("Post name is required"),
       total: Yup.number().min(0).required("Total is required"),
-      UR: Yup.number().min(0),
-      EWS: Yup.number().min(0),
-      OBC: Yup.number().min(0),
-      SC: Yup.number().min(0),
-      ST: Yup.number().min(0),
-      PWD: Yup.number().min(0),
-      ExService: Yup.number().min(0),
-      Women: Yup.number().min(0),
+      for_general: Yup.number().min(0),
+      for_ews: Yup.number().min(0),
+      for_obc: Yup.number().min(0),
+      for_sc: Yup.number().min(0),
+      for_st: Yup.number().min(0),
+      for_pwd: Yup.number().min(0),
+      for_ex_serviceman: Yup.number().min(0),
+      for_women: Yup.number().min(0),
     })
   ),
   eligibility: Yup.object({
@@ -155,13 +163,13 @@ export default function AddJob() {
         axios.get('/job-categories/get_job_sector_list'),
         axios.get('/job-categories/get_job_type_list')
       ]);
-      
+
       const sectorData = sector.data?.jsonData?.data || [];
       const jobTypeData = jobType.data?.jsonData?.jobTypes || [];
-      
+
       setSectorList(Array.isArray(sectorData) ? sectorData : []);
       setJobTypeList(Array.isArray(jobTypeData) ? jobTypeData : []);
-      
+
       console.log('Sectors fetched:', sectorData);
       console.log('Job Types fetched:', jobTypeData);
     } catch (error) {
@@ -177,7 +185,7 @@ export default function AddJob() {
       setCategoryList([]);
       return;
     }
-    
+
     try {
       const response = await axios.get(`/job-categories/get_job_category_list_using_sector/${sectorId}`);
       const categoryData = response.data?.jsonData?.categories || [];
@@ -195,7 +203,7 @@ export default function AddJob() {
       setSubcategoryList([]);
       return;
     }
-    
+
     try {
       const response = await axios.get(`/job-categories/get_job_subcategory_list_using_category/${categoryId}`);
       const subcategoryData = response.data?.jsonData?.subcategories || [];
@@ -249,6 +257,7 @@ export default function AddJob() {
         job_meta_schemas: jobData.job_meta_schemas || "",
       },
       job_title: jobData.job_title || "",
+      job_apply_link: jobData.job_apply_link || "",
       job_organization: jobData.job_organization || "",
       job_advertisement_no: jobData.job_advertisement_no || "",
       // Handle ObjectId references - can be populated objects or just IDs
@@ -315,31 +324,38 @@ export default function AddJob() {
   };
 
   const transformFeesFromBackend = (jobData) => {
-    return [
-      { category: "General", fee: jobData.job_fees_general || "" },
-      { category: "OBC", fee: jobData.job_fees_obc || "" },
-      { category: "SC", fee: jobData.job_fees_sc || "" },
-      { category: "ST", fee: jobData.job_fees_st || "" },
-      { category: "EWS", fee: jobData.job_fees_ews || "" },
-      { category: "PWD", fee: jobData.job_fees_pwd || "" },
-      { category: "Ex-Serviceman", fee: jobData.job_fees_ex_serviceman || "" },
-      { category: "Women", fee: jobData.job_fees_women || "" },
-    ];
+    if (jobData.job_fees_details && Array.isArray(jobData.job_fees_details) && jobData.job_fees_details.length > 0) {
+      return jobData.job_fees_details.map(fee => ({
+        post_name: fee.post_name || "",
+        for_general: fee.for_general || 0,
+        for_obc: fee.for_obc || 0,
+        for_sc: fee.for_sc || 0,
+        for_st: fee.for_st || 0,
+        for_ex_serviceman: fee.for_ex_serviceman || 0,
+        for_pwd: fee.for_pwd || 0,
+        for_ews: fee.for_ews || 0,
+        for_women: fee.for_women || 0,
+      }));
+    }
+    return [{ post_name: "", for_general: 0, for_obc: 0, for_sc: 0, for_st: 0, for_ex_serviceman: 0, for_pwd: 0, for_ews: 0, for_women: 0 }];
   };
 
   const transformVacanciesFromBackend = (jobData) => {
-    return [{
-      postName: jobData.job_title || "",
-      total: jobData.job_vacancy_total || 0,
-      UR: jobData.job_vacancy_for_general || 0,
-      EWS: jobData.job_vacancy_for_ews || 0,
-      OBC: jobData.job_vacancy_for_obc || 0,
-      SC: jobData.job_vacancy_for_sc || 0,
-      ST: jobData.job_vacancy_for_st || 0,
-      PWD: jobData.job_vacancy_for_pwd || 0,
-      ExService: jobData.job_vacancy_for_ex_serviceman || 0,
-      Women: jobData.job_vacancy_for_women || 0,
-    }];
+    if (jobData.job_vacancy_details && Array.isArray(jobData.job_vacancy_details) && jobData.job_vacancy_details.length > 0) {
+      return jobData.job_vacancy_details.map(v => ({
+        post_name: v.post_name || "",
+        total: v.total || 0,
+        for_general: v.for_general || 0,
+        for_ews: v.for_ews || 0,
+        for_obc: v.for_obc || 0,
+        for_sc: v.for_sc || 0,
+        for_st: v.for_st || 0,
+        for_pwd: v.for_pwd || 0,
+        for_ex_serviceman: v.for_ex_serviceman || 0,
+        for_women: v.for_women || 0,
+      }));
+    }
+    return [{ post_name: "", total: 0, for_general: 0, for_ews: 0, for_obc: 0, for_sc: 0, for_st: 0, for_pwd: 0, for_ex_serviceman: 0, for_women: 0 }];
   };
 
   const transformLinksFromBackend = (jobData) => {
@@ -350,13 +366,14 @@ export default function AddJob() {
         url: link.url || "",
       }));
     }
-    return [{ type: "Apply Online", label: "Apply Online", url: "" }];
+    return [{ type: "", label: "", url: "" }];
   };
 
   const initialValues = useMemo(() => ({
     _id: "",
     metaDetails: { job_meta_title: "", job_meta_description: "", job_meta_keywords: "", job_meta_schemas: "" },
     job_title: "",
+    job_apply_link: "",
     job_organization: "",
     job_advertisement_no: "",
     job_type: "",
@@ -380,18 +397,11 @@ export default function AddJob() {
       { label: "Joining Date", date: "" },
       { label: "Re-Exam Date", date: "" },
     ],
-    fees: [
-      { category: "General", fee: "" },
-      { category: "OBC", fee: "" },
-      { category: "SC", fee: "" },
-      { category: "ST", fee: "" },
-      { category: "EWS", fee: "" },
-      { category: "PWD", fee: "" },
-      { category: "Women", fee: "" },
-      { category: "Ex-Serviceman", fee: "" },
-    ],
+    fees: [{
+      post_name: "", for_general: 0, for_obc: 0, for_sc: 0, for_st: 0, for_ex_serviceman: 0, for_pwd: 0, for_ews: 0, for_women: 0
+    }],
     vacancies: [{
-      postName: "", total: 0, UR: 0, EWS: 0, OBC: 0, SC: 0, ST: 0, PWD: 0, ExService: 0, extraRequirements: ""
+      post_name: "", total: 0, for_general: 0, for_ews: 0, for_obc: 0, for_sc: 0, for_st: 0, for_pwd: 0, for_ex_serviceman: 0, for_women: 0
     }],
     eligibility: {
       qualification: "",
@@ -416,7 +426,7 @@ export default function AddJob() {
       eChallen: false
     },
     selection: ["Shortlisting / Written Test", "Document Verification"],
-    links: [{ type: "Apply Online", label: "Apply Online", url: "" }],
+    links: [{ type: "", label: "", url: "" }],
     howToApply: "",
     job_logo: "",
     files: [],
@@ -432,6 +442,7 @@ export default function AddJob() {
 
     const minimal = {
       job_title: values.job_title.trim(),
+      job_apply_link: values.job_apply_link.trim(),
       job_short_desc: values.job_short_desc.trim(),
       job_advertisement_no: values.job_advertisement_no.trim(),
       job_organization: values.job_organization.trim(),
@@ -440,7 +451,6 @@ export default function AddJob() {
       job_category: values.job_category || "",
       job_sub_category: values.job_sub_category || "",
       job_status: 0, // Active by default
-      job_vacancy_total: 0, // Initialize with 0
     };
 
     try {
@@ -481,7 +491,7 @@ export default function AddJob() {
 
     try {
       const { base64, extension } = await fileToBase64(logoFile);
-      
+
       // Update job with logo
       await axios.put(`/jobs/update_job/${id}`, {
         job_logo: base64,
@@ -522,6 +532,7 @@ export default function AddJob() {
 
       sectionData = {
         job_title: values.job_title.trim(),
+        job_apply_link: values.job_apply_link.trim(),
         job_short_desc: values.job_short_desc.trim(),
         job_advertisement_no: values.job_advertisement_no.trim(),
         job_organization: values.job_organization.trim(),
@@ -567,7 +578,7 @@ export default function AddJob() {
 
     } else if (section === "fees") {
       // Filter out empty fees
-      const validFees = (values.fees || []).filter(f => f.category && f.fee !== "" && f.fee !== null);
+      const validFees = (values.fees || []).filter(f => f.post_name);
 
       if (validFees.length === 0) {
         console.log("No valid fees found:", values.fees);
@@ -575,49 +586,42 @@ export default function AddJob() {
         return;
       }
 
-      sectionData = {};
-      validFees.forEach((f) => {
-        const key = (f.category || "").toLowerCase().trim();
-        const feeValue = Number(f.fee) || 0;
-
-        if (key.includes("general") || key.includes("ur")) {
-          sectionData.job_fees_general = feeValue;
-        } else if (key.includes("obc")) {
-          sectionData.job_fees_obc = feeValue;
-        } else if (key.includes("sc")) {
-          sectionData.job_fees_sc = feeValue;
-        } else if (key.includes("st")) {
-          sectionData.job_fees_st = feeValue;
-        } else if (key.includes("ews")) {
-          sectionData.job_fees_ews = feeValue;
-        } else if (key.includes("pwd")) {
-          sectionData.job_fees_pwd = feeValue;
-        } else if (key.includes("ex-serviceman") || key.includes("exservice")) {
-          sectionData.job_fees_ex_serviceman = feeValue;
-        } else if (key.includes("women")) {
-          sectionData.job_fees_women = feeValue;
-        }
-      });
+      sectionData = {
+        job_fees_details: validFees.map(f => ({
+          post_name: f.post_name?.trim() || "",
+          for_general: Number(f.for_general) || 0,
+          for_obc: Number(f.for_obc) || 0,
+          for_sc: Number(f.for_sc) || 0,
+          for_st: Number(f.for_st) || 0,
+          for_ex_serviceman: Number(f.for_ex_serviceman) || 0,
+          for_pwd: Number(f.for_pwd) || 0,
+          for_ews: Number(f.for_ews) || 0,
+          for_women: Number(f.for_women) || 0,
+        })),
+      };
 
     } else if (section === "vacancies") {
       // Validate vacancies
-      const vacancy = values.vacancies?.[0];
-      if (!vacancy || !vacancy.postName || vacancy.total === 0) {
-        console.log("Invalid vacancy data:", vacancy);
+      const validVacancies = (values.vacancies || []).filter(v => v.post_name);
+      if (validVacancies.length === 0) {
+        console.log("Invalid vacancy data:", values.vacancies);
         setMessage({ text: "Please fill vacancy details", variant: "warning" });
         return;
       }
 
       sectionData = {
-        job_vacancy_total: Number(vacancy.total) || 0,
-        job_vacancy_for_general: Number(vacancy.UR) || 0,
-        job_vacancy_for_obc: Number(vacancy.OBC) || 0,
-        job_vacancy_for_sc: Number(vacancy.SC) || 0,
-        job_vacancy_for_st: Number(vacancy.ST) || 0,
-        job_vacancy_for_pwd: Number(vacancy.PWD) || 0,
-        job_vacancy_for_ews: Number(vacancy.EWS) || 0,
-        job_vacancy_for_women: Number(vacancy.Women) || 0,
-        job_vacancy_for_ex_serviceman: Number(vacancy.ExService) || 0,
+        job_vacancy_details: validVacancies.map(v => ({
+          post_name: v.post_name?.trim() || "",
+          total: Number(v.total) || 0,
+          for_general: Number(v.for_general) || 0,
+          for_obc: Number(v.for_obc) || 0,
+          for_sc: Number(v.for_sc) || 0,
+          for_st: Number(v.for_st) || 0,
+          for_ex_serviceman: Number(v.for_ex_serviceman) || 0,
+          for_pwd: Number(v.for_pwd) || 0,
+          for_ews: Number(v.for_ews) || 0,
+          for_women: Number(v.for_women) || 0,
+        })),
       };
 
     } else if (section === "eligibility") {
@@ -639,7 +643,7 @@ export default function AddJob() {
     } else if (section === "salary") {
       // Validate salary
       if (!values.salary?.min || !values.salary?.max) {
-        toast.error("Please fill all required salary fields");  
+        toast.error("Please fill all required salary fields");
         setMessage({ text: "Please fill all required salary fields", variant: "warning" });
         return;
       }
@@ -740,7 +744,7 @@ export default function AddJob() {
       try {
         // Convert files to base64
         const { base64Files, extensions } = await filesToBase64(uploadedFiles);
-        
+
         // Send new files to backend (backend will append them)
         const res = await axios.put(`/jobs/update_job/${id}`, {
           files: base64Files,
@@ -751,7 +755,7 @@ export default function AddJob() {
         // Update form with all files from response (existing + newly uploaded)
         const updatedFiles = res.data?.data?.files || [];
         setFieldValue('files', updatedFiles);
-        
+
         toast.success("Files uploaded successfully");
         console.log("Files uploaded:", res.data);
         setMessage({ text: "Files uploaded successfully!", variant: "success" });
@@ -933,18 +937,6 @@ export default function AddJob() {
                       </Col>
                       <Col md={4}>
                         <FormInput
-                          name="job_short_desc"
-                          label="Short Description"
-                          as="textarea"
-                          value={values.job_short_desc}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          style={{ height: "37px" }}
-                          required
-                        />
-                      </Col>
-                      <Col md={4}>
-                        <FormInput
                           name="job_advertisement_no"
                           label="Advertisement Number"
                           value={values.job_advertisement_no}
@@ -966,15 +958,27 @@ export default function AddJob() {
                           required
                         />
                       </Col>
-                      <Col md={4}>
+                      <Col md={12}>
+                        <FormInput
+                          name="job_short_desc"
+                          label="Short Description"
+                          as="textarea"
+                          row={3}
+                          value={values.job_short_desc}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          required
+                        />
+                      </Col>
+                      <Col md={3}>
                         <Form.Group className="mb-2">
                           <Form.Label>
                             Job Type
                             <span className="text-danger ms-1">*</span>
                           </Form.Label>
-                          <Form.Select 
-                            name="job_type" 
-                            value={values.job_type} 
+                          <Form.Select
+                            name="job_type"
+                            value={values.job_type}
                             onChange={handleChange}
                             onBlur={handleBlur}
                             isInvalid={touched.job_type && errors.job_type}
@@ -991,15 +995,15 @@ export default function AddJob() {
                           )}
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
+                      <Col md={3}>
                         <Form.Group className="mb-2">
                           <Form.Label>
                             Sector
                             <span className="text-danger ms-1">*</span>
                           </Form.Label>
-                          <Form.Select 
-                            name="job_sector" 
-                            value={values.job_sector} 
+                          <Form.Select
+                            name="job_sector"
+                            value={values.job_sector}
                             onChange={handleChange}
                             onBlur={handleBlur}
                             isInvalid={touched.job_sector && errors.job_sector}
@@ -1016,15 +1020,15 @@ export default function AddJob() {
                           )}
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
+                      <Col md={3}>
                         <Form.Group className="mb-2">
                           <Form.Label>
                             Category
                             <span className="text-danger ms-1">*</span>
                           </Form.Label>
-                          <Form.Select 
-                            name="job_category" 
-                            value={values.job_category} 
+                          <Form.Select
+                            name="job_category"
+                            value={values.job_category}
                             onChange={handleChange}
                             onBlur={handleBlur}
                             isInvalid={touched.job_category && errors.job_category}
@@ -1045,15 +1049,15 @@ export default function AddJob() {
                           )}
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
+                      <Col md={3}>
                         <Form.Group className="mb-2">
                           <Form.Label>
                             Sub-Category
                             <span className="text-danger ms-1">*</span>
                           </Form.Label>
-                          <Form.Select 
-                            name="job_sub_category" 
-                            value={values.job_sub_category} 
+                          <Form.Select
+                            name="job_sub_category"
+                            value={values.job_sub_category}
                             onChange={handleChange}
                             onBlur={handleBlur}
                             isInvalid={touched.job_sub_category && errors.job_sub_category}
@@ -1074,7 +1078,19 @@ export default function AddJob() {
                           )}
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
+                      <Col md={6}>
+                        <FormInput
+                          name="job_apply_link"
+                          label="Apply Link"
+                          value={values.job_apply_link}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          touched={touched.job_apply_link}
+                          errors={errors.job_apply_link}
+                          required
+                        />
+                      </Col>
+                      <Col md={6}>
                         <Form.Group className="mb-2">
                           <Form.Label>Logo</Form.Label>
                           <div className="d-flex align-items-center gap-3">
@@ -1099,6 +1115,7 @@ export default function AddJob() {
                           </div>
                         </Form.Group>
                       </Col>
+
                     </Row>
 
                     <div className="text-end mt-2">
@@ -1152,9 +1169,9 @@ export default function AddJob() {
                             </tbody>
                           </Table>
                           <div className="d-flex justify-content-end gap-2 align-items-center mt-2">
-                            <Button size="sm" variant="outline-primary" onClick={() => arrayHelpers.push({ label: "", date: "" })}>
+                            {/* <Button size="sm" variant="outline-primary" onClick={() => arrayHelpers.push({ label: "", date: "" })}>
                               + Add Date
-                            </Button>
+                            </Button> */}
                             <Button size="sm" onClick={() => saveSection("dates", values, setFieldValue)}>
                               Save Dates
                             </Button>
@@ -1171,29 +1188,35 @@ export default function AddJob() {
                     <FieldArray name="fees">
                       {(arrayHelpers) => (
                         <>
-                          <Table bordered size="sm">
+                          <Table bordered size="sm" responsive>
                             <thead>
                               <tr>
-                                <th>Category</th>
-                                <th>Fee</th>
-                                <th className="text-center" style={{ width: '100px' }}>Action</th>
+                                <th>Post</th>
+                                <th>General</th>
+                                <th>OBC</th>
+                                <th>SC</th>
+                                <th>ST</th>
+                                <th>EWS</th>
+                                <th>PWD</th>
+                                <th>Ex-Service</th>
+                                <th>Women</th>
+                                <th style={{ width: '100px' }}>Action</th>
                               </tr>
                             </thead>
                             <tbody>
                               {values.fees.map((f, idx) => (
                                 <tr key={idx}>
-                                  <td>
-                                    <span>{f.category}</span>
-                                  </td>
-                                  <td>
-                                    <Form.Control
-                                      className="border-0 shadow-none"
-                                      type="number"
-                                      name={`fees.${idx}.fee`}
-                                      value={f.fee}
-                                      onChange={handleChange}
-                                    />
-                                  </td>
+                                  {["post_name", "for_general", "for_obc", "for_sc", "for_st", "for_ews", "for_pwd", "for_ex_serviceman", "for_women"].map((fld) => (
+                                    <td key={fld}>
+                                      <Form.Control
+                                        className="border-0 shadow-none"
+                                        type={fld === "post_name" ? "text" : "number"}
+                                        name={`fees.${idx}.${fld}`}
+                                        value={f[fld]}
+                                        onChange={handleChange}
+                                      />
+                                    </td>
+                                  ))}
                                   <td className="text-center">
                                     <Button
                                       size="sm"
@@ -1208,7 +1231,9 @@ export default function AddJob() {
                             </tbody>
                           </Table>
                           <div className="d-flex justify-content-end gap-2 align-items-center mt-2">
-                            <Button size="sm" variant="outline-primary" onClick={() => arrayHelpers.push({ category: "", fee: "" })}>
+                            <Button size="sm" variant="outline-primary" onClick={() => arrayHelpers.push({
+                              post_name: "", for_general: 0, for_obc: 0, for_sc: 0, for_st: 0, for_ex_serviceman: 0, for_pwd: 0, for_ews: 0, for_women: 0
+                            })}>
                               + Add Fee
                             </Button>
                             <Button size="sm" onClick={() => saveSection("fees", values, setFieldValue)}>
@@ -1232,7 +1257,7 @@ export default function AddJob() {
                               <tr>
                                 <th>Post</th>
                                 <th>Total</th>
-                                <th>UR</th>
+                                <th>General</th>
                                 <th>EWS</th>
                                 <th>OBC</th>
                                 <th>SC</th>
@@ -1246,11 +1271,11 @@ export default function AddJob() {
                             <tbody>
                               {values.vacancies.map((v, idx) => (
                                 <tr key={idx}>
-                                  {["postName", "total", "UR", "EWS", "OBC", "SC", "ST", "PWD", "ExService", "Women"].map((fld) => (
+                                  {["post_name", "total", "for_general", "for_ews", "for_obc", "for_sc", "for_st", "for_pwd", "for_ex_serviceman", "for_women"].map((fld) => (
                                     <td key={fld}>
                                       <Form.Control
                                         className="border-0 shadow-none"
-                                        type={fld === "postName" ? "text" : "number"}
+                                        type={fld === "post_name" ? "text" : "number"}
                                         name={`vacancies.${idx}.${fld}`}
                                         value={v[fld]}
                                         onChange={handleChange}
@@ -1275,7 +1300,7 @@ export default function AddJob() {
                               size="sm"
                               variant="outline-primary"
                               onClick={() => arrayHelpers.push({
-                                postName: "", total: 0, UR: 0, EWS: 0, OBC: 0, SC: 0, ST: 0, PWD: 0, ExService: 0
+                                post_name: "", total: 0, for_general: 0, for_ews: 0, for_obc: 0, for_sc: 0, for_st: 0, for_pwd: 0, for_ex_serviceman: 0, for_women: 0
                               })}
                             >
                               + Add Vacancy
@@ -1618,7 +1643,7 @@ export default function AddJob() {
                               const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file);
                               const isPdf = /\.pdf$/i.test(file);
                               const fileUrl = `https://jobportal-84q1.onrender.com${file}`;
-                              
+
                               return (
                                 <tr key={idx}>
                                   <td>{idx + 1}</td>
@@ -1627,8 +1652,8 @@ export default function AddJob() {
                                   </td>
                                   <td>
                                     {isImage ? (
-                                      <Image 
-                                        src={fileUrl} 
+                                      <Image
+                                        src={fileUrl}
                                         alt={fileName}
                                         thumbnail
                                         style={{ width: '50px', height: '50px', objectFit: 'cover', cursor: 'pointer' }}
@@ -1639,8 +1664,8 @@ export default function AddJob() {
                                         }}
                                       />
                                     ) : (
-                                      <Button 
-                                        size="sm" 
+                                      <Button
+                                        size="sm"
                                         variant="outline-primary"
                                         onClick={() => {
                                           if (isPdf) {

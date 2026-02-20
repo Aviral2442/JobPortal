@@ -122,6 +122,7 @@ const saveJobSection = async (req, res) => {
       case "basicDetails":
         updateDoc.$set = {
           job_title: data.job_title,
+          job_apply_link: data.job_apply_link,
           job_short_desc: data.job_short_desc,
           job_advertisement_no: data.job_advertisement_no,
           job_organization: data.job_organization,
@@ -143,29 +144,14 @@ const saveJobSection = async (req, res) => {
 
       case "fees":
         updateDoc.$set = {
-          job_fees_general: data.job_fees_general ?? 0,
-          job_fees_obc: data.job_fees_obc ?? 0,
-          job_fees_sc: data.job_fees_sc ?? 0,
-          job_fees_st: data.job_fees_st ?? 0,
-          job_fees_ews: data.job_fees_ews ?? 0,
-          job_fees_pwd: data.job_fees_pwd ?? 0,
-          job_fees_ex_serviceman: data.job_fees_ex_serviceman ?? 0,
-          job_fees_women: data.job_fees_women ?? 0,
+          job_fees_details: data.job_fees_details || [],
           job_last_updated_date: Math.floor(Date.now() / 1000),
         };
         break;
 
       case "vacancies":
         updateDoc.$set = {
-          job_vacancy_total: data.job_vacancy_total ?? 0,
-          job_vacancy_for_general: data.job_vacancy_for_general ?? 0,
-          job_vacancy_for_obc: data.job_vacancy_for_obc ?? 0,
-          job_vacancy_for_sc: data.job_vacancy_for_sc ?? 0,
-          job_vacancy_for_st: data.job_vacancy_for_st ?? 0,
-          job_vacancy_for_pwd: data.job_vacancy_for_pwd ?? 0,
-          job_vacancy_for_ews: data.job_vacancy_for_ews ?? 0,
-          job_vacancy_for_ex_serviceman: data.job_vacancy_for_ex_serviceman ?? 0,
-          job_vacancy_for_women: data.job_vacancy_for_women ?? 0,
+          job_vacancies: data.job_vacancies || [],
           job_last_updated_date: Math.floor(Date.now() / 1000),
         };
         break;
