@@ -52,6 +52,7 @@ const AdmitCardGovernmentList = ({ isActive }) => {
   }, [isActive]);
 
   const columns = [
+    { title: "S.No.", data: null, render: (data, type, row, meta) => meta.row + 1 },
     { title: "Post Name", data: "admitCard_JobId.job_title" },
     { title: "Admit Card", data: "admitCard_Title" },
     { title: "Category", data: "admitCard_JobId.job_category.category_name" },

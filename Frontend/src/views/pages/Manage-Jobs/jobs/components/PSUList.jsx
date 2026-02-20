@@ -50,6 +50,8 @@ const PSUList = ({ isActive }) => {
   const [variant, setVariant] = useState("success");
   const navigate = useNavigate();
   const tableRef = useRef(null);
+  const jobsRef = useRef([]);
+
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -118,6 +120,11 @@ const PSUList = ({ isActive }) => {
     }
   }, [isActive, fetchJobs]);
 
+  // Keep jobsRef in sync
+  useEffect(() => {
+    jobsRef.current = jobs;
+  }, [jobs]);
+
   // Clear selection when data changes
   useEffect(() => {
     setSelectedRows([]);
@@ -127,7 +134,7 @@ const PSUList = ({ isActive }) => {
     setLocalSearchInput(searchFilter ? String(searchFilter) : "")
   }, [searchFilter]);
 
-  const handleSearchSubmit =  () => {
+  const handleSearchSubmit = () => {
     handleSearchFilterChange(localSearchInput);
     handlePageChange(0);
   };
@@ -140,11 +147,14 @@ const PSUList = ({ isActive }) => {
   };
 
   const toggleAllRows = () => {
-    if (selectedRows.length === jobs.length) {
-      setSelectedRows([]);
-    } else {
-      setSelectedRows(jobs.map((j) => j._id));
-    }
+    setSelectedRows((prev) => {
+      const currentJobs = jobsRef.current;
+      if (prev.length === currentJobs.length && currentJobs.length > 0) {
+        return [];
+      } else {
+        return currentJobs.map((j) => j._id);
+      }
+    });
   };
 
   // Sync DOM checkboxes + row highlight whenever selectedRows changes
@@ -298,7 +308,7 @@ const PSUList = ({ isActive }) => {
             >
               <TbEdit />
             </button>
-            <button
+            {/* <button
               className="remark-icon"
               onClick={async () => {
                 if (!window.confirm("Are you sure you want to delete this job?"))
@@ -319,7 +329,7 @@ const PSUList = ({ isActive }) => {
               }}
             >
               <TbTrash />
-            </button>
+            </button> */}
           </div>
         );
       },
@@ -388,7 +398,7 @@ const PSUList = ({ isActive }) => {
             onClearSelection={() => setSelectedRows([])}
           />
 
-          <Col>
+          <Col className="overflow-x-scroll">
             <DataTable
               ref={tableRef}
               data={jobs}

@@ -28,7 +28,7 @@ const Page = () => {
                 </Nav>
                 <ComponentCard title={
                     <div className="d-flex align-items-center justify-content-between">
-                        <h4 className="mb-0 ">{activeTab} Admit Cards</h4>
+                        <h4 className="mb-0 py-0 fs-4 fw-light">{activeTab} Admit Cards</h4>
                     </div>
                 } className="py-2" isLink={<Link to="/admin/admit-card/add"  >
                     + Add Admit Card
