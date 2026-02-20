@@ -76,6 +76,7 @@ const JobTypeList = ({ onEditRow, refreshFlag, onDataChanged }) => {
         return meta.row + 1;
       },
     },
+    { title: 'ID', data: '_id' },
     {
       title: 'Job Type Name',
       data: null,

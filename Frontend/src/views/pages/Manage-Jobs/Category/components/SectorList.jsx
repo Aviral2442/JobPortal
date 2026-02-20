@@ -68,6 +68,7 @@ const SectorList = ({ onEditRow, refreshFlag, onDataChanged }) => {
       orderable: false,
       render: (data, type, row, meta) => meta.row + 1
     },
+    { title: 'ID', data: '_id' },
     { title: 'Sector Name', data: 'job_sector_name' },
     {
       title: 'Status',
