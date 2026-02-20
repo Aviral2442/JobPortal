@@ -6,6 +6,7 @@ exports.getJobCategoryList = async (req, res) => {
     try {
         const result = await JobCategoryService.getJobCategoryList(req.query);
 
+        
         res.status(200).json({
             status: 200,
             message: 'Job category list fetched successfully',

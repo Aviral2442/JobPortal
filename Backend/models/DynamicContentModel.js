@@ -8,4 +8,4 @@ const DynamicContentSchema = new mongoose.Schema({
     contactSupportEmail: { type: String },
 });
 
-export default mongoose.model('DynamicContent', DynamicContentSchema);
+module.exports = mongoose.model('DynamicContent', DynamicContentSchema);

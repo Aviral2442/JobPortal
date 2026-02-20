@@ -9,6 +9,7 @@ const protectedRoutes = require("./routes/protectedRoutes");
 const jobRoutes = require("./routes/jobRoutes");
 const jobCategoryRoutes = require("./routes/jobCategoryRouters");
 const studentRoutes = require("./routes/studentRoutes");
+const dynamicContentRouters = require("./routes/dynamicContentRouters");
 
 dotenv.config();
 const app = express();
@@ -35,6 +36,7 @@ app.use("/api", protectedRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/job-categories", jobCategoryRoutes);
 app.use("/api/student", studentRoutes);
+app.use("/api/dynamic-content", dynamicContentRouters);
 
 // Test route
 app.get("/", (req, res) => {
