@@ -1,4 +1,4 @@
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import * as Yup from 'yup';
 import { Button, Card, Col, Form as BootstrapForm, Row, Spinner } from 'react-bootstrap';
 import axios from '@/api/axios';
@@ -16,6 +16,7 @@ const dynamicContentValidationSchema = Yup.object().shape({
 
 const DynamicContent = () => {
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
 
   const formik = useFormik({
     initialValues: {
@@ -26,6 +27,7 @@ const DynamicContent = () => {
       contactSupportEmail: '',
     },
     validationSchema: dynamicContentValidationSchema,
+    enableReinitialize: true,
     onSubmit: async (values) => {
       setLoading(true);
       try {
@@ -40,10 +42,42 @@ const DynamicContent = () => {
     },
   });
 
-  const { values, errors, touched, handleChange, handleBlur, handleSubmit, setFieldValue } = formik;
+  const { values, errors, touched, handleChange, handleBlur, handleSubmit, setFieldValue, setValues } = formik;
+
+  // Fetch existing dynamic content on mount
+  useEffect(() => {
+    const fetchDynamicContent = async () => {
+      try {
+        const res = await axios.get('/dynamic-content/get_dynamic_content');
+        const data = res.data?.jsonData;
+        if (data) {
+          setValues({
+            privacyPolicy: data.privacyPolicy || '',
+            aboutUs: data.aboutUs || '',
+            helpCenter: data.helpCenter || '',
+            contactSupportNumber: data.contactSupportNumber || '',
+            contactSupportEmail: data.contactSupportEmail || '',
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch dynamic content:', error);
+      } finally {
+        setFetching(false);
+      }
+    };
+    fetchDynamicContent();
+  }, []);
+
+  if (fetching) {
+    return (
+      <div className="d-flex justify-content-center align-items-center p-5">
+        <Spinner animation="border" />
+      </div>
+    );
+  }
 
   return (
-    <div className="p-3">
+    <div className="py-2">
       <Card>
         <Card.Header>
           <h5 className="mb-0">Dynamic Content</h5>
