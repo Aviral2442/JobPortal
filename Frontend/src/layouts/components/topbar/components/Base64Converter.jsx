@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Modal, Button, Form, InputGroup } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import { SiConvertio } from 'react-icons/si';
-import { TbCopy, TbUpload, TbX } from 'react-icons/tb';
+import { TbCopy } from 'react-icons/tb';
 
 const Base64Converter = () => {
   const [show, setShow] = useState(false);
