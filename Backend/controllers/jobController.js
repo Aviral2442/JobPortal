@@ -305,20 +305,35 @@ const deleteJob = async (req, res) => {
 const deleteJobArrayItem = async (req, res) => {
   try {
     const { id, section, index } = req.params;
+    console.log(`Request to delete item at index ${index} from section ${section} of job ${id}`);
+    
+    // Map frontend section names to actual model field names
+    const sectionFieldMap = {
+      fees: "job_fees_details",
+      vacancies: "job_vacancy_details",
+      links: "job_important_links",
+      selection: "selection",
+      files: "files",
+    };
 
+    const fieldName = sectionFieldMap[section] || section;
+    
     const job = await Job.findById(id);
     if (!job) return res.status(404).json({ error: "Job not found" });
 
-    if (!Array.isArray(job[section])) {
-      return res.status(400).json({ error: `${section} is not an array` });
+    if (!Array.isArray(job[fieldName])) {
+      console.log("not array h chahcha")
+      return res.status(400).json({ error: `${section} (${fieldName}) is not an array` });
     }
 
     const idx = Number(index);
-    if (Number.isNaN(idx) || idx < 0 || idx >= job[section].length) {
+    console.log(job[fieldName].length)
+    if (Number.isNaN(idx) || idx < 0 || idx > job[fieldName].length) {
+      console.log("invalid index")
       return res.status(400).json({ error: "Invalid index" });
     }
-
-    job[section].splice(idx, 1);
+    console.log(`Deleting item at index ${idx} from field ${fieldName} of job ${id}`);
+    job[fieldName].splice(idx, 1);
     job.job_last_updated_date = Math.floor(Date.now() / 1000);
     await job.save();
 

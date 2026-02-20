@@ -815,6 +815,13 @@ export default function AddJob() {
   };
 
   const deleteSectionItem = async (section, index, values, arrayHelpers) => {
+    // Dates are stored as individual fields in the model, not as an array,
+    // so skip API call for dates — just remove from form state
+    if (section === "dates") {
+      arrayHelpers.remove(index);
+      return;
+    }
+
     // Allow deletion even without job ID (for new items not yet saved)
     if (values._id) {
       try {
