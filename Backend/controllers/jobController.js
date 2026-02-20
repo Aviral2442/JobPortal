@@ -151,7 +151,7 @@ const saveJobSection = async (req, res) => {
 
       case "vacancies":
         updateDoc.$set = {
-          job_vacancies: data.job_vacancies || [],
+          job_vacancy_details: data.job_vacancy_details || [],
           job_last_updated_date: Math.floor(Date.now() / 1000),
         };
         break;
