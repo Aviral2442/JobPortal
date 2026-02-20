@@ -18,17 +18,17 @@ const Results = () => {
                 <Nav className="nav-tabs nav-bordered mb-3">
                     <NavItem className="nav-tabs-nav d-flex">
                         <NavLink eventKey="Government" id='1'>
-                            Government Sector
+                            Government
                         </NavLink>
                         <NavLink eventKey="PSU" id='2'>
-                            PSU Sector
+                            PSU
                         </NavLink>
                     </NavItem>
 
                 </Nav>
                 <ComponentCard title={
                     <div className="d-flex align-items-center justify-content-between">
-                        <h4 className="mb-0 ">{activeTab} Results</h4>
+                        <h4 className="mb-0 py-0 fs-4 fw-light">{activeTab} Results</h4>
                     </div>
                 } className="py-2"  isLink={<Link to="/admin/result/add"  >
                     + Add Result

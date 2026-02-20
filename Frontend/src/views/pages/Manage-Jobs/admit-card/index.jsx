@@ -18,10 +18,10 @@ const Page = () => {
                 <Nav className="nav-tabs nav-bordered mb-3">
                     <NavItem className="nav-tabs-nav d-flex">
                         <NavLink eventKey="Government" id='1'>
-                            Government Sector
+                            Government
                         </NavLink>
                         <NavLink eventKey="PSU" id='2'>
-                            PSU Sector
+                            PSU
                         </NavLink>
                     </NavItem>
 

@@ -68,9 +68,9 @@ const Page = () => {
       <TabContainer activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
         <Nav className="nav-tabs nav-bordered mb-3">
           <NavItem className="nav-tabs-nav d-flex">
-            <NavLink eventKey="Private" id="0">Private Sector</NavLink>
-            <NavLink eventKey="Government" id="2">Government Sector</NavLink>
-            <NavLink eventKey="PSU" id="3">PSU Sector</NavLink>
+            <NavLink eventKey="Private" id="0">Private</NavLink>
+            <NavLink eventKey="Government" id="2">Government</NavLink>
+            <NavLink eventKey="PSU" id="3">PSU</NavLink>
           </NavItem>
         </Nav>
         <ComponentCard
