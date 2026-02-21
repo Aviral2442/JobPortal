@@ -996,6 +996,7 @@ exports.jobStudyMaterialListService = async (req, res) => {
 exports.createJobStudyMaterial = async (req, res) => {
   try {
     const studyMaterialData = req.body;
+    console.log("Study Material Data:", studyMaterialData);
     const result =
       await JobCategoryService.createJobStudyMaterial(studyMaterialData);
     return res.status(result.status).json(result);

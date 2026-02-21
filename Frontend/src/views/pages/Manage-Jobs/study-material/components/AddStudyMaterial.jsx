@@ -207,12 +207,21 @@ const AddStudyMaterial = () => {
           : null,
         studyMaterial_files: files
           .filter((f) => f.file_path)
-          .map((f) => ({
-            file_name: f.file_name,
-            file_path: f.file_path,
-            file_downloadable: f.file_downloadable,
-            extension: f._file ? f._file.name.split(".").pop() : "png",
-          })),
+          .map((f) => {
+            // Extract extension from file name or file path
+            let extension = "png";
+            if (f._file) {
+              extension = f._file.name.split(".").pop() || "png";
+            } else if (f.file_path && !f.file_path.startsWith("data:")) {
+              extension = f.file_path.split(".").pop() || "png";
+            }
+            return {
+              file_name: f.file_name,
+              file_path: f.file_path,
+              file_downloadable: f.file_downloadable,
+              extension: extension,
+            };
+          }),
       };
 
       const res = await axios.post(`/job-categories/add_job_study_material`, payload);
@@ -251,15 +260,24 @@ const AddStudyMaterial = () => {
           : null,
         studyMaterial_files: files
           .filter((f) => f.file_path)
-          .map((f) => ({
-            file_name: f.file_name,
-            file_path: f.file_path,
-            file_downloadable: f.file_downloadable,
-            extension: f._file ? f._file.name.split(".").pop() : "png",
-          })),
+          .map((f) => {
+            // Extract extension from file name or file path
+            let extension = "png";
+            if (f._file) {
+              extension = f._file.name.split(".").pop() || "png";
+            } else if (f.file_path && !f.file_path.startsWith("data:")) {
+              extension = f.file_path.split(".").pop() || "png";
+            }
+            return {
+              file_name: f.file_name,
+              file_path: f.file_path,
+              file_downloadable: f.file_downloadable,
+              extension: extension,
+            };
+          }),
         
       };
-
+      console.log("Update Payload:", payload);
       const res = await axios.put(`/job-categories/update_job_study_material/${id}`, payload);
 
       if (res.data.status === 200) {

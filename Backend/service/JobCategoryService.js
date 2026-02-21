@@ -2907,7 +2907,6 @@ exports.createJobStudyMaterial = async (studyMaterialData) => {
     const studyMaterial_releaseDate = convertIntoUnixTimeStamp(
       studyMaterialData.studyMaterial_releaseDate,
     );
-
     let studyMaterial_files = [];
     if (
       studyMaterialData.studyMaterial_files &&
@@ -3032,7 +3031,7 @@ exports.updateJobStudyMaterial = async (studyMaterialId, studyMaterialData) => {
           studyMaterialData.studyMaterial_files[i].file_path,
           "studyMaterial",
           `file_${i + 1}`,
-          "png",
+          studyMaterialData.studyMaterial_files[i].extension,
         );
 
         studyMaterial_files.push({
