@@ -6,7 +6,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import ComponentCard from "@/components/ComponentCard";
 import axios from "@/api/axios";
 import React from "react";
-import { TbTrash, TbPlus } from "react-icons/tb";
+import { TbTrash, TbPlus, TbEye } from "react-icons/tb";
+import ImageModal from "@/components/ImageModel";
 
 const studyMaterialValidationSchema = Yup.object({
   studyMaterial_jobId: Yup.string().required("Job is required"),
@@ -62,6 +63,9 @@ const AddStudyMaterial = () => {
   const [loading, setLoading] = useState(false);
   const [studyMaterialData, setStudyMaterialData] = useState(null);
   const [files, setFiles] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState("");
+  const [selectedImageTitle, setSelectedImageTitle] = useState("");
 
   const initialValues = useMemo(
     () => ({
@@ -131,6 +135,19 @@ const AddStudyMaterial = () => {
     setFiles(updated);
   };
 
+  // Handle view file
+  const handleViewFile = (file, index) => {
+    if (file.file_path) {
+      const BASE_URL = import.meta.env.VITE_BASE_URL;
+      const imageSrc = file.file_path.startsWith("data:") 
+        ? file.file_path 
+        : `${BASE_URL}${file.file_path}`;
+      setSelectedImage(imageSrc);
+      setSelectedImageTitle(file.file_name || `File ${index + 1}`);
+      setShowModal(true);
+    }
+  };
+
   // Fetch jobs list
   const fetchJobsList = async () => {
     try {
@@ -194,6 +211,7 @@ const AddStudyMaterial = () => {
             file_name: f.file_name,
             file_path: f.file_path,
             file_downloadable: f.file_downloadable,
+            extension: f._file ? f._file.name.split(".").pop() : "png",
           })),
       };
 
@@ -237,7 +255,9 @@ const AddStudyMaterial = () => {
             file_name: f.file_name,
             file_path: f.file_path,
             file_downloadable: f.file_downloadable,
+            extension: f._file ? f._file.name.split(".").pop() : "png",
           })),
+        
       };
 
       const res = await axios.put(`/job-categories/update_job_study_material/${id}`, payload);
@@ -416,9 +436,21 @@ const AddStudyMaterial = () => {
                         </Col>
                         <Col md={4}>
                           <Form.Group>
-                            <Form.Label className="mb-0">
-                              File <span className="text-danger">*</span>
-                            </Form.Label>
+                            <div className="d-flex align-items-center gap-2 mb-1">
+                              <Form.Label className="mb-0">
+                                File <span className="text-danger">*</span>
+                              </Form.Label>
+                              {file.file_path && (
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-link p-0 text-primary"
+                                  onClick={() => handleViewFile(file, index)}
+                                  title="View file"
+                                >
+                                  <TbEye size={18} />
+                                </button>
+                              )}
+                            </div>
                             <Form.Control
                               type="file"
                               onChange={(e) => handleFileInputChange(index, e)}
@@ -468,6 +500,13 @@ const AddStudyMaterial = () => {
           }}
         </Formik>
       </Card.Body>
+
+      <ImageModal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        imageSrc={selectedImage}
+        title={selectedImageTitle}
+      />
     </div>
   );
 };

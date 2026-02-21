@@ -2919,7 +2919,7 @@ exports.createJobStudyMaterial = async (studyMaterialData) => {
           studyMaterialData.studyMaterial_files[i].file_path,
           "studyMaterial",
           `file_${i + 1}`,
-          "png",
+          studyMaterialData.studyMaterial_files[i].extension,
         );
 
         studyMaterial_files.push({
