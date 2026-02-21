@@ -108,6 +108,11 @@ export const menuItems = [
         url: "/admin/result",
       },
       {
+        key: "study-material",
+        label: "Study Material",
+        url: "/admin/study-material",
+      },
+      {
         key: "documents",
         label: "Documents",
         url: "/admin/documents",

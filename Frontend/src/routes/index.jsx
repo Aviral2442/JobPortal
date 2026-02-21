@@ -37,7 +37,8 @@ const EditDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/Comp
 
 
 const DynamicContent = lazy(() => import('@/views/pages/dynamic-content'));
-
+const StudyMaterial = lazy(() => import('@/views/pages/Manage-Jobs/study-material'));
+const AddStudyMaterial = lazy(() => import('@/views/pages/Manage-Jobs/study-material/components/AddStudyMaterial'));
 
 
 // login
@@ -183,6 +184,17 @@ const dynamicContentRoutes=[{
   element: <DynamicContent/>
 }];
 
+const studyMaterialRoutes=[{
+  path: '/admin/study-material',
+  element: <StudyMaterial/>
+},{
+  path: '/admin/study-material/add',
+  element: <AddStudyMaterial/>
+},{
+  path: '/admin/study-material/edit/:id',
+  element: <AddStudyMaterial/>
+}];
+
 // admin routes wrapped in main layout + protected route
 const adminRoutes = [
   {
@@ -205,7 +217,8 @@ const adminRoutes = [
       ...documentsRoutes,
       ...admissionsRoutes,
       ...studentsRoutes,
-      ...dynamicContentRoutes
+      ...dynamicContentRoutes,
+      ...studyMaterialRoutes
     ],
   },
 ];

@@ -15,7 +15,9 @@ const cityModel = require("../models/cityModel");
 const JobStudyMaterialModel = require("../models/JobStudyMaterialModel");
 const { buildDateFilter } = require("../utils/dateFilters");
 const { buildPagination } = require("../utils/paginationFilters");
-const { convertIntoUnixTimeStamp } = require("../utils/convertIntoUnixTimeStamp");
+const {
+  convertIntoUnixTimeStamp,
+} = require("../utils/convertIntoUnixTimeStamp");
 
 // Job Category List Service with Filters and Pagination
 exports.getJobCategoryList = async (query) => {
@@ -604,12 +606,10 @@ exports.upcommingJobForStudents = async (studentId) => {
     // ✅ Check if sector is valid
     const hasValidSector =
       studentSector &&
-      (
-        Array.isArray(studentSector)
-          ? studentSector.length > 0 &&
-          !studentSector.map(id => id.toString()).includes(notSpecifiedId)
-          : studentSector.toString() !== notSpecifiedId
-      );
+      (Array.isArray(studentSector)
+        ? studentSector.length > 0 &&
+          !studentSector.map((id) => id.toString()).includes(notSpecifiedId)
+        : studentSector.toString() !== notSpecifiedId);
 
     // Apply sector filter ONLY when valid
     if (hasValidSector) {
@@ -620,7 +620,7 @@ exports.upcommingJobForStudents = async (studentId) => {
 
     const upcommingJobSectorWise = await Job.find(filter)
       .select(
-        "job_title job_logo job_short_desc job_category job_sector job_type job_vacancy_total job_start_date"
+        "job_title job_logo job_short_desc job_category job_sector job_type job_vacancy_total job_start_date",
       )
       .populate("job_category", "category_name")
       .populate("job_sector", "job_sector_name")
@@ -629,9 +629,9 @@ exports.upcommingJobForStudents = async (studentId) => {
       .sort({ job_start_date: 1 })
       .lean();
 
-    const formattedJobs = upcommingJobSectorWise.map(job => ({
+    const formattedJobs = upcommingJobSectorWise.map((job) => ({
       ...job,
-      job_logo: job.job_logo || ""
+      job_logo: job.job_logo || "",
     }));
 
     return {
@@ -700,7 +700,7 @@ exports.bulkUpdateJobStatus = async (jobIds, updateColumnName, updateValue) => {
 
     const result = await Job.updateMany(
       { _id: { $in: jobIds } },
-      { [updateColumnName]: updateValue }
+      { [updateColumnName]: updateValue },
     );
 
     return {
@@ -761,12 +761,10 @@ exports.recommendJobsForStudent = async (studentId) => {
 
     const hasValidSector =
       studentSector &&
-      (
-        Array.isArray(studentSector)
-          ? studentSector.length > 0 &&
-          !studentSector.map(id => id.toString()).includes(notSpecifiedId)
-          : studentSector.toString() !== notSpecifiedId
-      );
+      (Array.isArray(studentSector)
+        ? studentSector.length > 0 &&
+          !studentSector.map((id) => id.toString()).includes(notSpecifiedId)
+        : studentSector.toString() !== notSpecifiedId);
 
     // Apply sector filter ONLY when valid
     if (hasValidSector) {
@@ -777,7 +775,7 @@ exports.recommendJobsForStudent = async (studentId) => {
 
     const recommendedJobs = await Job.find(filter)
       .select(
-        "job_title job_logo job_short_desc job_start_date job_category job_sector job_type job_vacancy_total"
+        "job_title job_logo job_short_desc job_start_date job_category job_sector job_type job_vacancy_total",
       )
       .populate("job_category", "category_name")
       .populate("job_sector", "job_sector_name")
@@ -786,9 +784,9 @@ exports.recommendJobsForStudent = async (studentId) => {
       .sort({ job_posted_date: -1 })
       .lean(); // faster
 
-    const formattedJobs = recommendedJobs.map(job => ({
+    const formattedJobs = recommendedJobs.map((job) => ({
       ...job,
-      job_logo: job.job_logo || ""
+      job_logo: job.job_logo || "",
     }));
 
     return {
@@ -811,8 +809,8 @@ exports.recommendJobsForStudent = async (studentId) => {
 // FEATURED JOBS FOR STUDENT SERVICE
 exports.featuredJobsForStudent = async (studentId) => {
   try {
-    const student = await Student.findById(studentId)
-      .select("studentJobSector");
+    const student =
+      await Student.findById(studentId).select("studentJobSector");
 
     if (!student) {
       return { status: 404, message: "Student not found", jsonData: {} };
@@ -830,8 +828,7 @@ exports.featuredJobsForStudent = async (studentId) => {
     // Apply sector filter ONLY if sector is valid
     if (
       studentSector &&
-      (!Array.isArray(studentSector) ||
-        studentSector.length > 0) &&
+      (!Array.isArray(studentSector) || studentSector.length > 0) &&
       (!notSpecifiedSector ||
         (Array.isArray(studentSector)
           ? !studentSector.includes(notSpecifiedSector._id)
@@ -844,7 +841,7 @@ exports.featuredJobsForStudent = async (studentId) => {
 
     const featuredJobs = await Job.find(filter)
       .select(
-        "job_title job_logo job_short_desc job_start_date job_category job_sector job_type job_vacancy_total"
+        "job_title job_logo job_short_desc job_start_date job_category job_sector job_type job_vacancy_total",
       )
       .populate("job_category", "category_name")
       .populate("job_sector", "job_sector_name")
@@ -853,11 +850,10 @@ exports.featuredJobsForStudent = async (studentId) => {
       .sort({ job_posted_date: -1 })
       .lean();
 
-    const formattedJobs = featuredJobs.map(job => ({
+    const formattedJobs = featuredJobs.map((job) => ({
       ...job,
-      job_logo: job.job_logo || ""
+      job_logo: job.job_logo || "",
     }));
-
 
     return {
       status: 200,
@@ -904,17 +900,18 @@ exports.jobListSectorWise = async (studentId) => {
         path: "job_type",
         model: "JobType",
         select: "job_type_name",
-      }).lean();
+      })
+      .lean();
 
-    const formattedJobs = fetchJobSectorWise.map(job => ({
+    const formattedJobs = fetchJobSectorWise.map((job) => ({
       ...job,
-      job_logo: job.job_logo || ""
+      job_logo: job.job_logo || "",
     }));
 
     return {
       status: 200,
       message: "Jobs fetched successfully",
-      jsonData: formattedJobs
+      jsonData: formattedJobs,
     };
   } catch (error) {
     console.error("Error in jobListSectorWise Service:", error);
@@ -2682,16 +2679,27 @@ exports.updateDocument = async (documentId, data) => {
 
     const updateData = {
       document_title: data.document_title || fetchDocument.document_title,
-      document_short_desc: data.document_short_desc || fetchDocument.document_short_desc,
-      document_long_desc: data.document_long_desc || fetchDocument.document_long_desc,
-      document_formated_desc1: data.document_formated_desc1 || fetchDocument.document_formated_desc1,
-      document_formated_desc2: data.document_formated_desc2 || fetchDocument.document_formated_desc2,
-      document_formated_desc3: data.document_formated_desc3 || fetchDocument.document_formated_desc3,
-      document_formated_desc4: data.document_formated_desc4 || fetchDocument.document_formated_desc4,
-      document_posted_date: data.document_posted_date || fetchDocument.document_posted_date,
-      document_important_dates: data.document_important_dates || fetchDocument.document_important_dates,
-      document_important_links: data.document_important_links || fetchDocument.document_important_links,
-      document_application_fees: data.document_application_fees || fetchDocument.document_application_fees,
+      document_short_desc:
+        data.document_short_desc || fetchDocument.document_short_desc,
+      document_long_desc:
+        data.document_long_desc || fetchDocument.document_long_desc,
+      document_formated_desc1:
+        data.document_formated_desc1 || fetchDocument.document_formated_desc1,
+      document_formated_desc2:
+        data.document_formated_desc2 || fetchDocument.document_formated_desc2,
+      document_formated_desc3:
+        data.document_formated_desc3 || fetchDocument.document_formated_desc3,
+      document_formated_desc4:
+        data.document_formated_desc4 || fetchDocument.document_formated_desc4,
+      document_posted_date:
+        data.document_posted_date || fetchDocument.document_posted_date,
+      document_important_dates:
+        data.document_important_dates || fetchDocument.document_important_dates,
+      document_important_links:
+        data.document_important_links || fetchDocument.document_important_links,
+      document_application_fees:
+        data.document_application_fees ||
+        fetchDocument.document_application_fees,
       document_files: data.document_files || fetchDocument.document_files,
       document_logo: logo,
     };
@@ -2747,8 +2755,8 @@ exports.getDocumentListById = async (documentId) => {
 // GET STATE DATA
 exports.getStateData = async () => {
   try {
-
-    const fetchAllState = await stateModel.find()
+    const fetchAllState = await stateModel
+      .find()
       .select("state_name state_id")
       .lean();
 
@@ -2772,12 +2780,12 @@ exports.getStateData = async () => {
 // GET CITY DATA BY STATE ID
 exports.getCityDataByStateId = async (stateId) => {
   try {
-
     const query = {
-      city_state: stateId
+      city_state: stateId,
     };
 
-    const cities = await cityModel.find(query)
+    const cities = await cityModel
+      .find(query)
       .select("city_name city_status")
       .lean();
 
@@ -2788,7 +2796,6 @@ exports.getCityDataByStateId = async (stateId) => {
         cities: cities,
       },
     };
-
   } catch (error) {
     console.error("Error in searchCityByStateId Service:", error);
     return {
@@ -2799,17 +2806,14 @@ exports.getCityDataByStateId = async (stateId) => {
   }
 };
 
-
-// SEARCH CITY BY NAME 
+// SEARCH CITY BY NAME
 exports.searchCityByName = async (cityName) => {
   try {
     const query = {
       city_name: { $regex: cityName, $options: "i" },
     };
 
-    const cities = await cityModel.find(query)
-      .select("city_name")
-      .lean();
+    const cities = await cityModel.find(query).select("city_name").lean();
 
     return {
       status: 200,
@@ -2863,8 +2867,7 @@ exports.jobStudyMaterialListService = async (query) => {
     });
 
     const totalCount = await JobStudyMaterialModel.countDocuments(filter);
-    const studyMaterials = await JobStudyMaterialModel
-      .find(filter)
+    const studyMaterials = await JobStudyMaterialModel.find(filter)
       .populate({
         path: "studyMaterial_jobId",
         model: "Jobs",
@@ -2896,12 +2899,14 @@ exports.jobStudyMaterialListService = async (query) => {
 // ADD JOB STUDY MATERIAL SERVICE
 exports.createJobStudyMaterial = async (studyMaterialData) => {
   try {
-
     const studyMaterial_jobId = studyMaterialData.studyMaterial_jobId;
     const studyMaterial_title = studyMaterialData.studyMaterial_title;
-    const studyMaterial_description = studyMaterialData.studyMaterial_description;
+    const studyMaterial_description =
+      studyMaterialData.studyMaterial_description;
     const studyMaterial_link = studyMaterialData.studyMaterial_link;
-    const studyMaterial_releaseDate = convertIntoUnixTimeStamp(studyMaterialData.studyMaterial_releaseDate);
+    const studyMaterial_releaseDate = convertIntoUnixTimeStamp(
+      studyMaterialData.studyMaterial_releaseDate,
+    );
 
     let studyMaterial_files = [];
     if (
@@ -2914,13 +2919,17 @@ exports.createJobStudyMaterial = async (studyMaterialData) => {
           studyMaterialData.studyMaterial_files[i].file_path,
           "studyMaterial",
           `file_${i + 1}`,
-          'png',
+          "png",
         );
 
         studyMaterial_files.push({
-          file_name: studyMaterialData.studyMaterial_files[i].file_name || `File ${i + 1}`,
+          file_name:
+            studyMaterialData.studyMaterial_files[i].file_name ||
+            `File ${i + 1}`,
           file_path: file_path,
-          file_downloadable: studyMaterialData.studyMaterial_files[i].file_downloadable !== false,
+          file_downloadable:
+            studyMaterialData.studyMaterial_files[i].file_downloadable !==
+            false,
         });
       }
     }
@@ -2941,7 +2950,6 @@ exports.createJobStudyMaterial = async (studyMaterialData) => {
       message: "Study material created successfully",
       jsonData: newStudyMaterial,
     };
-
   } catch (error) {
     console.error("Error in createJobStudyMaterial Service:", error);
     return {
@@ -2952,3 +2960,144 @@ exports.createJobStudyMaterial = async (studyMaterialData) => {
   }
 };
 
+exports.getJobStudyMaterialById = async (studyMaterialId) => {
+  try {
+    if (!studyMaterialId) {
+      return {
+        result: 400,
+        message: "Study material ID is required",
+        jsonData: {},
+      };
+    }
+
+    const studyMaterial = await JobStudyMaterialModel.findById(
+      studyMaterialId,
+    ).populate({
+      path: "studyMaterial_jobId",
+      model: "Jobs",
+      select: "job_title",
+    });
+    console.log("Fetched Study Material:", studyMaterial);
+    if (!studyMaterial) {
+      return {
+        result: 404,
+        message: "Study material not found",
+        jsonData: {},
+      };
+    }
+
+    return {
+      status: 200,
+      message: "Study material fetched successfully",
+      jsonData: {
+        studyMaterial: studyMaterial,
+      },
+    };
+  } catch (error) {
+    console.error("Error in getJobStudyMaterialById Service:", error);
+    return {
+      status: 500,
+      message: "Internal server error: " + error.message,
+      jsonData: {},
+    };
+  }
+};
+
+exports.updateJobStudyMaterial = async (studyMaterialId, studyMaterialData) => {
+  try {
+    const existingStudyMaterial = await JobStudyMaterialModel.findById(studyMaterialId);
+    if (!existingStudyMaterial) {
+      return {
+        status: 404,
+        message: "Study material not found",
+        jsonData: {},
+      };
+    }
+
+    const studyMaterial_jobId = studyMaterialData.studyMaterial_jobId || existingStudyMaterial.studyMaterial_jobId;
+    const studyMaterial_title = studyMaterialData.studyMaterial_title || existingStudyMaterial.studyMaterial_title;
+    const studyMaterial_description = studyMaterialData.studyMaterial_description || existingStudyMaterial.studyMaterial_description;
+    const studyMaterial_link = studyMaterialData.studyMaterial_link || existingStudyMaterial.studyMaterial_link;
+    const studyMaterial_releaseDate = studyMaterialData.studyMaterial_releaseDate ? convertIntoUnixTimeStamp(studyMaterialData.studyMaterial_releaseDate) : existingStudyMaterial.studyMaterial_releaseDate;
+
+    let studyMaterial_files = existingStudyMaterial.studyMaterial_files || [];
+    if (
+      studyMaterialData.studyMaterial_files &&
+      Array.isArray(studyMaterialData.studyMaterial_files) &&
+      studyMaterialData.studyMaterial_files.length > 0
+    ) {
+      studyMaterial_files = [];
+      for (let i = 0; i < studyMaterialData.studyMaterial_files.length; i++) {
+        const file_path = await saveBase64File(
+          studyMaterialData.studyMaterial_files[i].file_path,
+          "studyMaterial",
+          `file_${i + 1}`,
+          "png",
+        );
+
+        studyMaterial_files.push({
+          file_name:
+            studyMaterialData.studyMaterial_files[i].file_name ||
+            `File ${i + 1}`,
+          file_path: file_path,
+          file_downloadable:
+            studyMaterialData.studyMaterial_files[i].file_downloadable !==
+            false,
+        });
+      }
+    }
+
+    const updatedStudyMaterial = await JobStudyMaterialModel.findByIdAndUpdate(
+      studyMaterialId,
+      {
+        studyMaterial_jobId,
+        studyMaterial_title,
+        studyMaterial_description,
+        studyMaterial_link,
+        studyMaterial_releaseDate,
+        studyMaterial_files,
+      },
+      { new: true },
+    );
+
+    return {
+      status: 200,
+      message: "Study material updated successfully",
+      jsonData: updatedStudyMaterial,
+    };
+  } catch (error) {
+    console.error("Error in updateJobStudyMaterial Service:", error);
+    return {
+      status: 500,
+      message: "Internal server error, " + error.message,
+      jsonData: {},
+    };
+  }
+};
+
+exports.deleteJobStudyMaterial = async (id) => {
+  try {
+    const deletedStudyMaterial =
+      await JobStudyMaterialModel.findByIdAndDelete(id);
+    if (!deletedStudyMaterial) {
+      return {
+        result: 404,
+        message: "Study material not found",
+        jsonData: {},
+      };
+    }
+
+    return {
+      result: 200,
+      message: "Study material deleted successfully",
+      jsonData: deletedStudyMaterial,
+    };
+  } catch (error) {
+    console.error("Error in deleteJobStudyMaterial Service:", error);
+    return {
+      result: 500,
+      message: "Internal server error, " + error.message,
+      jsonData: {},
+    };
+  }
+};

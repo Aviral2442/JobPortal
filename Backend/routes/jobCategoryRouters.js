@@ -88,5 +88,8 @@ router.get('/search_city', JobCategoryController.searchCityByName);
 // JOB STUDY MATERIAL ROUTES
 router.get('/get_job_study_material_list', JobCategoryController.jobStudyMaterialListService);
 router.post('/add_job_study_material', JobCategoryController.createJobStudyMaterial);
+router.get('/get_job_study_material_by_id/:studyMaterialId', JobCategoryController.getJobStudyMaterialById);
+router.put('/update_job_study_material/:studyMaterialId', JobCategoryController.updateJobStudyMaterial);
+router.delete('/delete_job_study_material/:studyMaterialId', JobCategoryController.deleteJobStudyMaterial);
 
 module.exports = router;
