@@ -62,23 +62,17 @@ const JobSchema = new mongoose.Schema({
     for_ews: { type: Number, default: 0 },
     for_women: { type: Number, default: 0 },
   }],
-
-  // APPLICATION FEES
-  // job_fees_general: { type: Number, default: 0 },
-  // job_fees_obc: { type: Number, default: 0 },
-  // job_fees_sc: { type: Number, default: 0 },
-  // job_fees_st: { type: Number, default: 0 },
-  // job_fees_ex_serviceman: { type: Number, default: 0 },
-  // job_fees_pwd: { type: Number, default: 0 },
-  // job_fees_ews: { type: Number, default: 0 },
-  // job_fees_women: { type: Number, default: 0 },
-
+  
   // ELIGIBILITY CRITERIA
-  job_eligibility_age_min: { type: Number, default: 0 },
-  job_eligibility_age_max: { type: Number, default: 0 },
-  job_eligibility_qualifications: { type: String, required: false, default: "" },
-  job_eligibility_experience: { type: String, required: false, default: "" },
-  job_extra_criteria: { type: String, required: false, default: "" },
+  job_eligibility_details: [{
+    post_name: { type: String, default: "" },
+    eligibility_age_min: { type: Number, default: 0 },
+    eligibility_age_max: { type: Number, default: 0 },
+    eligibility_qualifications: { type: String, required: false, default: "" },
+    eligibility_experience: { type: String, required: false, default: "" },
+    extra_criteria: { type: String, required: false, default: "" },
+  }],
+
 
   // JOB VACANCY DETAILS
   job_vacancy_details: [{
@@ -93,16 +87,6 @@ const JobSchema = new mongoose.Schema({
     for_ews: { type: Number, default: 0 },
     for_women: { type: Number, default: 0 },
   }],
-
-  // job_vacancy_total: { type: Number, default: 0 },
-  // job_vacancy_for_general: { type: Number, default: 0 },
-  // job_vacancy_for_obc: { type: Number, default: 0 },
-  // job_vacancy_for_sc: { type: Number, default: 0 },
-  // job_vacancy_for_st: { type: Number, default: 0 },
-  // job_vacancy_for_ex_serviceman: { type: Number, default: 0 },
-  // job_vacancy_for_pwd: { type: Number, default: 0 },
-  // job_vacancy_for_ews: { type: Number, default: 0 },
-  // job_vacancy_for_women: { type: Number, default: 0 },
 
   // JOB PAYMENT OPTIONS
   job_pmt_debit_card: { type: Boolean, default: false },

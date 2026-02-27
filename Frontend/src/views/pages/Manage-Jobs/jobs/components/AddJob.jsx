@@ -62,13 +62,16 @@ const jobValidationSchema = Yup.object({
       for_women: Yup.number().min(0),
     })
   ),
-  eligibility: Yup.object({
-    qualification: Yup.string().required("Qualification is required"),
-    ageMin: Yup.number().min(0).required("Minimum age is required"),
-    ageMax: Yup.number().min(0).required("Maximum age is required"),
-    experience: Yup.string(),
-    extraRequirements: Yup.string(),
-  }),
+  eligibility: Yup.array().of(
+    Yup.object({
+      post_name: Yup.string().required("Post name is required"),
+      qualification: Yup.string().required("Qualification is required"),
+      ageMin: Yup.number().min(0).required("Minimum age is required"),
+      ageMax: Yup.number().min(0).required("Maximum age is required"),
+      experience: Yup.string(),
+      extraRequirements: Yup.string(),
+    })
+  ),
   salary: Yup.object({
     min: Yup.number().min(0).required("Minimum salary is required"),
     max: Yup.number().min(0).required("Maximum salary is required"),
@@ -269,13 +272,7 @@ export default function AddJob() {
       dates: transformDatesFromBackend(jobData),
       fees: transformFeesFromBackend(jobData),
       vacancies: transformVacanciesFromBackend(jobData),
-      eligibility: {
-        qualification: jobData.job_eligibility_qualifications || "",
-        ageMin: jobData.job_eligibility_age_min || 0,
-        ageMax: jobData.job_eligibility_age_max || 0,
-        experience: jobData.job_eligibility_experience || "",
-        extraRequirements: jobData.job_extra_criteria || "",
-      },
+      eligibility: transformEligibilityFromBackend(jobData),
       salary: {
         min: jobData.job_salary_min || 0,
         max: jobData.job_salary_max || 0,
@@ -319,7 +316,7 @@ export default function AddJob() {
 
     return Object.entries(dateMapping).map(([label, field]) => ({
       label,
-      date: jobData[field] ? new Date(jobData[field] * 1000).toISOString().split('T')[0] : "",
+      date: jobData[field] ? new Date(jobData[field] * 1000).toISOString().slice(0, 16) : "",
     }));
   };
 
@@ -356,6 +353,20 @@ export default function AddJob() {
       }));
     }
     return [{ post_name: "", total: 0, for_general: 0, for_ews: 0, for_obc: 0, for_sc: 0, for_st: 0, for_pwd: 0, for_ex_serviceman: 0, for_women: 0 }];
+  };
+
+  const transformEligibilityFromBackend = (jobData) => {
+    if (jobData.job_eligibility_details && Array.isArray(jobData.job_eligibility_details) && jobData.job_eligibility_details.length > 0) {
+      return jobData.job_eligibility_details.map(e => ({
+        post_name: e.post_name || "",
+        qualification: e.eligibility_qualifications || "",
+        ageMin: e.eligibility_age_min || 0,
+        ageMax: e.eligibility_age_max || 0,
+        experience: e.eligibility_experience || "",
+        extraRequirements: e.extra_criteria || "",
+      }));
+    }
+    return [{ post_name: "", qualification: "", ageMin: 0, ageMax: 0, experience: "", extraRequirements: "" }];
   };
 
   const transformLinksFromBackend = (jobData) => {
@@ -403,13 +414,14 @@ export default function AddJob() {
     vacancies: [{
       post_name: "", total: 0, for_general: 0, for_ews: 0, for_obc: 0, for_sc: 0, for_st: 0, for_pwd: 0, for_ex_serviceman: 0, for_women: 0
     }],
-    eligibility: {
+    eligibility: [{
+      post_name: "",
       qualification: "",
       ageMin: 0,
       ageMax: 0,
       experience: "",
       extraRequirements: "",
-    },
+    }],
     salary: {
       min: 0,
       max: 0,
@@ -626,18 +638,24 @@ export default function AddJob() {
 
     } else if (section === "eligibility") {
       // Validate eligibility
-      if (!values.eligibility?.qualification || !values.eligibility?.ageMin || !values.eligibility?.ageMax) {
+      const validEligibility = (values.eligibility || []).filter(e => e.post_name && e.qualification && e.ageMin && e.ageMax);
+      
+      if (validEligibility.length === 0) {
         console.log("Invalid eligibility data:", values.eligibility);
+        toast.error("Please fill all required eligibility fields");
         setMessage({ text: "Please fill all required eligibility fields", variant: "warning" });
         return;
       }
 
       sectionData = {
-        job_eligibility_age_min: Number(values.eligibility.ageMin) || 0,
-        job_eligibility_age_max: Number(values.eligibility.ageMax) || 0,
-        job_eligibility_qualifications: values.eligibility.qualification.trim(),
-        job_eligibility_experience: values.eligibility.experience?.trim() || "",
-        job_extra_criteria: values.eligibility.extraRequirements?.trim() || "",
+        job_eligibility_details: validEligibility.map(e => ({
+          post_name: e.post_name?.trim() || "",
+          eligibility_age_min: Number(e.ageMin) || 0,
+          eligibility_age_max: Number(e.ageMax) || 0,
+          eligibility_qualifications: e.qualification?.trim() || "",
+          eligibility_experience: e.experience?.trim() || "",
+          extra_criteria: e.extraRequirements?.trim() || "",
+        })),
       };
 
     } else if (section === "salary") {
@@ -1322,71 +1340,123 @@ export default function AddJob() {
                   </Card.Body>
                 </ComponentCard>
 
-                {/* Eligibility - Add experience field */}
+                {/* Eligibility */}
                 <ComponentCard className="mb-3" title="Eligibility" isCollapsible>
                   <Card.Body>
-                    <Row>
-                      <Col md={4}>
-                        <FormInput
-                          name="eligibility.qualification"
-                          label="Qualification *"
-                          value={values.eligibility.qualification}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          touched={touched.eligibility?.qualification}
-                          errors={errors.eligibility?.qualification}
-                        />
-                      </Col>
-                      <Col md={2}>
-                        <FormInput
-                          name="eligibility.ageMin"
-                          label="Min Age *"
-                          type="number"
-                          value={values.eligibility.ageMin}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          touched={touched.eligibility?.ageMin}
-                          errors={errors.eligibility?.ageMin}
-                        />
-                      </Col>
-                      <Col md={2}>
-                        <FormInput
-                          name="eligibility.ageMax"
-                          label="Max Age *"
-                          type="number"
-                          value={values.eligibility.ageMax}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          touched={touched.eligibility?.ageMax}
-                          errors={errors.eligibility?.ageMax}
-                        />
-                      </Col>
-                      <Col md={4}>
-                        <FormInput
-                          name="eligibility.experience"
-                          label="Experience Required"
-                          value={values.eligibility.experience}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                        />
-                      </Col>
-                      <Col md={12}>
-                        <FormInput
-                          name="eligibility.extraRequirements"
-                          label="Extra Requirements"
-                          as="textarea"
-                          value={values.eligibility.extraRequirements}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          rows={2}
-                        />
-                      </Col>
-                    </Row>
-                    <div className="text-end mt-2">
-                      <Button size="sm" onClick={() => saveSection("eligibility", values, setFieldValue)}>
-                        Save Eligibility
-                      </Button>
-                    </div>
+                    <FieldArray name="eligibility">
+                      {(arrayHelpers) => (
+                        <>
+                          <Table bordered size="sm" responsive>
+                            <thead>
+                              <tr>
+                                <th>Post Name</th>
+                                <th>Qualification</th>
+                                <th>Min Age</th>
+                                <th>Max Age</th>
+                                <th>Experience</th>
+                                <th>Extra Requirements</th>
+                                <th style={{ width: '100px' }}>Action</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {values.eligibility.map((e, idx) => (
+                                <tr key={idx}>
+                                  <td>
+                                    <Form.Control
+                                      className="border-0 shadow-none"
+                                      type="text"
+                                      name={`eligibility.${idx}.post_name`}
+                                      value={e.post_name}
+                                      onChange={handleChange}
+                                      placeholder="e.g., Clerk, Officer"
+                                    />
+                                  </td>
+                                  <td>
+                                    <Form.Control
+                                      className="border-0 shadow-none"
+                                      type="text"
+                                      name={`eligibility.${idx}.qualification`}
+                                      value={e.qualification}
+                                      onChange={handleChange}
+                                      placeholder="e.g., 10th, 12th, Graduate"
+                                    />
+                                  </td>
+                                  <td>
+                                    <Form.Control
+                                      className="border-0 shadow-none"
+                                      type="number"
+                                      name={`eligibility.${idx}.ageMin`}
+                                      value={e.ageMin}
+                                      onChange={handleChange}
+                                      style={{ width: '80px' }}
+                                    />
+                                  </td>
+                                  <td>
+                                    <Form.Control
+                                      className="border-0 shadow-none"
+                                      type="number"
+                                      name={`eligibility.${idx}.ageMax`}
+                                      value={e.ageMax}
+                                      onChange={handleChange}
+                                      style={{ width: '80px' }}
+                                    />
+                                  </td>
+                                  <td>
+                                    <Form.Control
+                                      className="border-0 shadow-none"
+                                      type="text"
+                                      name={`eligibility.${idx}.experience`}
+                                      value={e.experience}
+                                      onChange={handleChange}
+                                      placeholder="e.g., 2 years"
+                                    />
+                                  </td>
+                                  <td>
+                                    <Form.Control
+                                      className="border-0 shadow-none"
+                                      as="textarea"
+                                      rows={1}
+                                      name={`eligibility.${idx}.extraRequirements`}
+                                      value={e.extraRequirements}
+                                      onChange={handleChange}
+                                      placeholder="Additional criteria"
+                                    />
+                                  </td>
+                                  <td className="text-center">
+                                    <Button
+                                      size="sm"
+                                      variant="light"
+                                      onClick={() => deleteSectionItem("eligibility", idx, values, arrayHelpers)}
+                                    >
+                                      <FaRegTrashAlt />
+                                    </Button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </Table>
+                          <div className="d-flex justify-content-end gap-2 align-items-center mt-2">
+                            <Button
+                              size="sm"
+                              variant="outline-primary"
+                              onClick={() => arrayHelpers.push({
+                                post_name: "",
+                                qualification: "",
+                                ageMin: 0,
+                                ageMax: 0,
+                                experience: "",
+                                extraRequirements: "",
+                              })}
+                            >
+                              + Add Eligibility
+                            </Button>
+                            <Button size="sm" onClick={() => saveSection("eligibility", values, setFieldValue)}>
+                              Save Eligibility
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </FieldArray>
                   </Card.Body>
                 </ComponentCard>
 

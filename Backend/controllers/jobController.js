@@ -158,11 +158,7 @@ const saveJobSection = async (req, res) => {
 
       case "eligibility":
         updateDoc.$set = {
-          job_eligibility_age_min: data.job_eligibility_age_min ?? 0,
-          job_eligibility_age_max: data.job_eligibility_age_max ?? 0,
-          job_eligibility_qualifications: data.job_eligibility_qualifications ?? "",
-          job_eligibility_experience: data.job_eligibility_experience ?? "",
-          job_extra_criteria: data.job_extra_criteria ?? "",
+          job_eligibility_details: data.job_eligibility_details || [],
           job_last_updated_date: Math.floor(Date.now() / 1000),
         };
         break;
