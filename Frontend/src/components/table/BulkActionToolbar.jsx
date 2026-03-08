@@ -73,6 +73,9 @@ const BulkActionToolbar = ({ selectedIds, onActionComplete, onClearSelection }) 
           <Dropdown.Item onClick={() => handleBulkUpdate("job_status", 0, "Deactivate")}>
             <TbToggleLeft className="me-2 text-secondary" /> Deactivate
           </Dropdown.Item>
+          <Dropdown.Item onClick={() => handleBulkUpdate("job_status", 2, "Delete")}>
+            <TbTrash className="me-2 text-danger" /> Delete
+          </Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
 

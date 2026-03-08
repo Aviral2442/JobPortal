@@ -1016,6 +1016,9 @@ exports.privateSectorJobList = async (query) => {
       model: "JobCategory",
       select: "category_name",
     })
+    // where job_status is not equalt to 2 (which is for expired jobs)
+    .where("job_status")
+    .ne(2)
     .skip(skip)
     .limit(limit)
     .sort({ job_posted_date: -1 });
@@ -1123,6 +1126,8 @@ exports.governmentSectorJobList = async (query) => {
       model: "JobCategory",
       select: "category_name",
     })
+    .where("job_status")
+    .ne(2)
     .skip(skip)
     .limit(limit)
     .sort({ job_posted_date: -1 });
@@ -1230,6 +1235,8 @@ exports.psuSectorJobList = async (query) => {
       model: "JobCategory",
       select: "category_name",
     })
+    .where("job_status")
+    .ne(2)
     .skip(skip)
     .limit(limit)
     .sort({ job_posted_date: -1 });
@@ -1268,7 +1275,10 @@ exports.governmentAndPsuSectorJobList = async (query) => {
 
     const data = await Job.find({
       job_sector: { $in: allowedSectors },
-    }).select("job_title job_short_desc job_posted_date");
+    })
+    .where("job_status")
+    .ne(2)
+    .select("job_title job_short_desc job_posted_date");
 
     return {
       status: 200,

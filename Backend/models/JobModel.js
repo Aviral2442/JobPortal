@@ -27,7 +27,7 @@ const JobSchema = new mongoose.Schema({
     required: true,
   },
   job_logo: { type: String, required: false, default: " " },
-  job_status: { type: Number, default: 0 }, // 0 = Active, 1 = Inactive
+  job_status: { type: Number, default: 0 }, // 0 = Active, 1 = Inactive, 2= DeletedForAdmin&StudentBoth
   job_posted_date: {
     type: Number,
     default: () => Math.floor(Date.now() / 1000),
