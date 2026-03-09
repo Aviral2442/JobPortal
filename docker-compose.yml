@@ -2,13 +2,16 @@ services:
   backend:
     build: ./Backend
     container_name: jobPortal-server
-    ports: 
+    ports:
       - "5000:4000"
     networks:
       - jobPortal-network
     env_file:
       - ./Backend/.env
     restart: unless-stopped
+    volumes:
+      - ./Backend/uploads:/app/uploads
+
   frontend:
     build: ./Frontend
     container_name: jobPortal-client
