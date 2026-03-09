@@ -6,6 +6,7 @@ import PageMeta from "@/components/PageMeta";
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import api from '@/api/axios';
 const Page = () => {
     const [formData, setFormData] = useState({
         email: "",
@@ -31,8 +32,8 @@ const Page = () => {
         console.log("Submitting login form with data:", formData);
         // console.log("Using base URL:", import.meta.env.VITE_BASE_URL);
         try {
-            const res = await axios.post(
-                `${import.meta.env.VITE_BASE_URL}/api/auth/login`,
+            const res = await api.post(
+                `/auth/login`,
                 formData
             );
             console.log("✅ Login successful:", res.data);

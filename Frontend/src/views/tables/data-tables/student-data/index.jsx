@@ -20,6 +20,7 @@ import jszip from "jszip";
 import pdfmake from "pdfmake";
 import { formatDate } from "@/components/DateFormat";
 import "@/global.css";
+import api from "@/api/axios";
 
 DataTable.use(DT);
 DT.Buttons.jszip(jszip);
@@ -39,7 +40,7 @@ const StudentList = ({ refreshFlag }) => {
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/student/students_list");
+      const response = await api.get("/student/students_list");
       const studentsData = response.data?.jsonData?.students || response.data?.data || [];
       console.log("Fetched students:", studentsData);
 
