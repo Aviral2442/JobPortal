@@ -1,4 +1,5 @@
 import formatDate from "@/components/DateFormat"
+import { IMAGE_BASE_URL } from "@/config/apiConfig";
 const basePath = import.meta.env.VITE_BASE_URL;
 
 export const categoryColumns = [
@@ -10,7 +11,7 @@ export const categoryColumns = [
       if (!data) return "No Image";
       // console.log("Image data:", data);
       // console.log("Base path:", basePath);
-      return `<img src="${basePath}${data}" alt="Category Image" style="width: 24px; height: 24px;" />`;
+      return `<img src="${IMAGE_BASE_URL}${data}" alt="Category Image" style="width: 24px; height: 24px;" />`;
     },
   },
   { data: "category_name", title: "Name" },
@@ -35,7 +36,7 @@ export const subCategoryColumns = [
     title: "Image",
     render: (data) => {
       if (!data) return "No Image";
-      return `<img src="${basePath}${data}" alt="Category Image" style="width: 24px; height: 24px;" />`;
+      return `<img src="${IMAGE_BASE_URL}${data}" alt="Category Image" style="width: 24px; height: 24px;" />`;
     },
   },
   { data: "subcategory_name", title: "Sub Category Name" },

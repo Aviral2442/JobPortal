@@ -26,7 +26,7 @@ import axios from "@/api/axios";
 import toast from "react-hot-toast";
 import axios2 from "axios";
 import "@/global.css";
-
+import { IMAGE_BASE_URL } from "@/config/apiConfig";
 import {
   TbUserCircle,
   TbMapPin,
@@ -529,7 +529,7 @@ const RenderField = ({ field, value, onChange, onViewImage, careerPreferences })
 
     // If base value is a file path from backend
     if (baseValue && (baseValue.startsWith("/") || baseValue.startsWith("uploads"))) {
-      return `https://jobportalbackend-3ew9.onrender.com${baseValue}`;
+      return `${IMAGE_BASE_URL}${baseValue}`;
     }
 
     return "";

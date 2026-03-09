@@ -3,6 +3,7 @@ import { Form, Button, Alert, Container, Image, Spinner } from 'react-bootstrap'
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import ComponentCard from '@/components/ComponentCard';
+import { IMAGE_BASE_URL } from '@/config/apiConfig';
 
 const EditSubCategory = () => {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ const EditSubCategory = () => {
 
         setSubCategoryName(sub.subCategoryName);
         setParentCategory(sub.parentCategory?._id || '');
-        setPreview(sub.subCategoryImage ? `${BASE_URL}${sub.subCategoryImage}` : null);
+        setPreview(sub.subCategoryImage ? `${IMAGE_BASE_URL}${sub.subCategoryImage}` : null);
       } catch (err) {
         console.error(err);
         setMessage('Failed to load sub-category');

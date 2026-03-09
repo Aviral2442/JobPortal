@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { Card, Row, Col, Table, Badge, Image, Alert, Button } from "react-bootstrap";
 import ComponentCard from "@/components/ComponentCard";
+import { IMAGE_BASE_URL } from "@/config/apiConfig";
 
 // Axios with Vite baseURL
 const api = (() => {
@@ -88,7 +89,7 @@ export default function ViewJob() {
               <div><strong>Advt No:</strong> {advtNumber || "-"}</div>
             </Col>
             <Col md={4} className="text-md-end">
-              {logo ? <Image src={`${import.meta.env.VITE_BASE_URL}/${logo}`} alt="Logo" height={60} /> : null}
+              {logo ? <Image src={`${IMAGE_BASE_URL}/${logo}`} alt="Logo" height={60} /> : null}
             </Col>
           </Row>
           <Row className="mb-2">

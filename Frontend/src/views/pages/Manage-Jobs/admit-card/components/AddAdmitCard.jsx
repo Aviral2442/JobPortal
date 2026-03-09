@@ -6,6 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import ComponentCard from "@/components/ComponentCard";
 import axios from "@/api/axios";
 import React from "react";
+import { IMAGE_BASE_URL } from "@/config/apiConfig";
 
 const admitCardValidationSchema = Yup.object({
   _id: Yup.string(),

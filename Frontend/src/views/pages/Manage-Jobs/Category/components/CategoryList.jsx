@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ReactDOMServer from "react-dom/server";
+import { Image_BASE_URL } from "@/config/apiConfig";
 
 import {
   TbDotsVertical,
@@ -81,7 +82,7 @@ const CategoryList = () => {
       orderable: false,
       createdCell: (td, cellData) => {
         td.innerHTML = cellData
-          ? `<img src="${BASE_URL}${cellData}" alt="img" width="50" />`
+          ? `<img src="${Image_BASE_URL}${cellData}" alt="img" width="50" />`
           : "";
       },
     },

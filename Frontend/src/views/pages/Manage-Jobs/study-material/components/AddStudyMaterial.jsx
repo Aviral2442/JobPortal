@@ -8,6 +8,7 @@ import axios from "@/api/axios";
 import React from "react";
 import { TbTrash, TbPlus, TbEye } from "react-icons/tb";
 import ImageModal from "@/components/ImageModel";
+import { IMAGE_BASE_URL } from "@/config/apiConfig";
 
 const studyMaterialValidationSchema = Yup.object({
   studyMaterial_jobId: Yup.string().required("Job is required"),
@@ -141,7 +142,7 @@ const AddStudyMaterial = () => {
       const BASE_URL = import.meta.env.VITE_BASE_URL;
       const imageSrc = file.file_path.startsWith("data:") 
         ? file.file_path 
-        : `${BASE_URL}${file.file_path}`;
+        : `${IMAGE_BASE_URL}${file.file_path}`;
       setSelectedImage(imageSrc);
       setSelectedImageTitle(file.file_name || `File ${index + 1}`);
       setShowModal(true);

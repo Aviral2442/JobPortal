@@ -21,6 +21,7 @@ import pdfmake from "pdfmake";
 import { formatDate } from "@/components/DateFormat";
 import "@/global.css";
 import api from "@/api/axios";
+import { IMAGE_BASE_URL } from "@/config/apiConfig";
 
 DataTable.use(DT);
 DT.Buttons.jszip(jszip);
@@ -105,7 +106,7 @@ const StudentList = ({ refreshFlag }) => {
       orderable: false,
       render: (data) => {
         if (data) {
-          return `<img src="${BASE_URL}${data}" alt="Profile" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;" />`;
+          return `<img src="${IMAGE_BASE_URL}${data}" alt="Profile" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;" />`;
         }
         return `<div style="width: 20px; height: 20px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center;">
                   <i class="ti ti-user"></i>

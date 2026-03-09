@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, Button, Alert, Container, Image, Spinner } from 'react-bootstrap';
 import axios from '@/api/axios';
 import ComponentCard from '@/components/ComponentCard';
+import { IMAGE_BASE_URL } from '@/config/apiConfig';
 
 const AddSubCategory = ({ mode, data, onCancel, onDataChanged }) => {
   const isEditMode = mode === 'edit' && data;
@@ -23,7 +24,7 @@ const AddSubCategory = ({ mode, data, onCancel, onDataChanged }) => {
       setParentCategory(data.subcategory_category_id || data.parentCategory || '');
       const imageUrl = data.subcategory_image || data.subCategoryImage || '';
       if (imageUrl) {
-        setPreview(imageUrl.startsWith('http') ? imageUrl : `${import.meta.env.VITE_BASE_URL}${imageUrl}`);
+        setPreview(imageUrl.startsWith('http') ? imageUrl : `${IMAGE_BASE_URL}${imageUrl}`);
       }
     }
   }, [isEditMode, data]);

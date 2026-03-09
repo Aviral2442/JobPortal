@@ -26,6 +26,7 @@ import pdfmake from "pdfmake";
 import DatatableActionButton from "../../../../../components/DatatableActionButton";
 import BulkActionToolbar from "@/components/table/BulkActionToolbar";
 import "@/global.css";
+import { IMAGE_BASE_URL } from "@/config/apiConfig";
 
 DT.Buttons.jszip(jszip);
 DT.Buttons.pdfMake(pdfmake);
