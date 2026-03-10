@@ -98,6 +98,34 @@ exports.getJobByIdService = async (jobId) => {
   }
 };
 
+
+// GET JOB DETAILS USING ID
+exports.getJobDetailsService = async (jobId) => {
+  try {
+    const job = await JobModel.findById(jobId).populate("job_category").populate("job_sub_category").populate("job_type").populate("job_sector");
+    if (!job) {
+      return {
+        status: 404,
+        message: "Job not found",
+      };
+    }
+
+    return {
+      status: 200,
+      message: "Job fetched successfully",
+      jsonData: {
+        data: job,
+      },
+    };
+  } catch (error) {
+    return {
+      status: 500,
+      message: "Error fetching job",
+      error: error.message,
+    };
+  }
+};
+
 // UPDATE JOB USING ID SERVICE
 exports.updateJobByIdService = async (jobId, updateData) => {
   try {

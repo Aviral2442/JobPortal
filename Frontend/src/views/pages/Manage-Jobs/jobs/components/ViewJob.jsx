@@ -4,17 +4,18 @@ import axios from "axios";
 import { Card, Row, Col, Table, Badge, Image, Alert, Button } from "react-bootstrap";
 import ComponentCard from "@/components/ComponentCard";
 import { IMAGE_BASE_URL } from "@/config/apiConfig";
+import api from "@/api/axios";
 
 // Axios with Vite baseURL
-const api = (() => {
-  const instance = axios.create();
-  instance.interceptors.request.use((config) => {
-    const baseURL = import.meta.env?.VITE_BASE_URL || "";
-    config.baseURL = baseURL;
-    return config;
-  });
-  return instance;
-})();
+// const api = (() => {
+//   const instance = axios.create();
+//   instance.interceptors.request.use((config) => {
+//     const baseURL = import.meta.env?.VITE_BASE_URL || "";
+//     config.baseURL = baseURL;
+//     return config;
+//   });
+//   return instance;
+// })();
 
 export default function ViewJob() {
   const { id } = useParams();
@@ -25,8 +26,9 @@ export default function ViewJob() {
     let cancelled = false;
     const load = async () => {
       try {
-        const res = await api.get(`/api/jobs/${id}`);
-        if (!cancelled) setJob(res.data || null);
+        const res = await api.get(`/jobs/get_job_details/${id}`);
+        console.log("Fetched job data:", res.data);
+        if (!cancelled) setJob(res.data?.jsonData?.data || null);
       } catch (e) {
         setError("Failed to load job");
       }
@@ -43,36 +45,66 @@ export default function ViewJob() {
   }
 
   const {
-    postName,
-    organization,
-    advtNumber,
-    jobType,
-    sector,
-    jobCategory,
-    jobLocation,
-    experience,
-    modeOfExam,
-    shortDescription,
-    expiryDate,
-    logo,
-    metaDetails = {},
-    dates = [],
-    fees = [],
-    vacancies = [],
-    eligibility = {},
-    salary = {},
+    job_title,
+    job_organization,
+    job_advertisement_no,
+    job_type,
+    job_sector,
+    job_category,
+    job_short_desc,
+    job_end_date,
+    job_logo,
+    job_fees_details = [],
+    job_vacancy_details = [],
+    job_eligibility_details = [],
+    job_salary_min,
+    job_salary_max,
+    job_salary_allowance,
+    job_salary_inhand,
+    job_salary_bond_condition,
     selection = [],
-    links = [],
+    job_important_links = [],
     howToApply = "",
     files = [],
-    createdAt,
-    updatedAt,
+    job_posted_date,
+    job_last_updated_date,
+    // date fields
+    job_start_date,
+    job_notification_release_date,
+    job_fees_pmt_last_date,
+    job_correction_start_date,
+    job_correction_end_date,
+    job_reopen_start_date,
+    job_reopen_end_date,
+    job_last_date_extended,
+    job_fees_pmt_last_date_extended,
+    job_exam_date,
+    job_exam_date_extended,
+    job_joining_date,
+    job_re_exam_date,
   } = job;
+
+  const dates = [
+    { label: "Start Date", value: job_start_date },
+    { label: "End Date", value: job_end_date },
+    { label: "Notification Release Date", value: job_notification_release_date },
+    { label: "Fees Payment Last Date", value: job_fees_pmt_last_date },
+    { label: "Correction Start Date", value: job_correction_start_date },
+    { label: "Correction End Date", value: job_correction_end_date },
+    { label: "Reopen Start Date", value: job_reopen_start_date },
+    { label: "Reopen End Date", value: job_reopen_end_date },
+    { label: "Last Date Extended", value: job_last_date_extended },
+    { label: "Fees Last Date Extended", value: job_fees_pmt_last_date_extended },
+    { label: "Exam Date", value: job_exam_date },
+    { label: "Exam Date Extended", value: job_exam_date_extended },
+    { label: "Joining Date", value: job_joining_date },
+    { label: "Re-Exam Date", value: job_re_exam_date },
+  ].filter((d) => d.value && d.value !== 0);
 
   return (
     <div className="mb-4 pt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="mb-0">{postName || "Job Details"}</h4>
+        <h4 className="mb-0">{job_title || "Job Details"}</h4>
         <div className="d-flex gap-2">
           <Link to="/admin/jobs" className="btn btn-secondary btn-sm">Back to List</Link>
           <Link to={`/admin/jobs/edit/${job._id}`} className="btn btn-primary btn-sm">Edit</Link>
@@ -84,30 +116,28 @@ export default function ViewJob() {
         <Card.Body>
           <Row className="mb-2">
             <Col md={8}>
-              <div><strong>Post:</strong> {postName || "-"}</div>
-              <div><strong>Organization:</strong> {organization || "-"}</div>
-              <div><strong>Advt No:</strong> {advtNumber || "-"}</div>
+              <div><strong>Post:</strong> {job_title || "-"}</div>
+              <div><strong>Organization:</strong> {job_organization || "-"}</div>
+              <div><strong>Advt No:</strong> {job_advertisement_no || "-"}</div>
             </Col>
             <Col md={4} className="text-md-end">
-              {logo ? <Image src={`${IMAGE_BASE_URL}/${logo}`} alt="Logo" height={60} /> : null}
+              {job_logo?.trim() ? <Image src={`${IMAGE_BASE_URL}/${job_logo}`} alt="Logo" height={60} /> : null}
             </Col>
           </Row>
           <Row className="mb-2">
-            <Col md={3}><strong>Job Type:</strong> {jobType || "-"}</Col>
-            <Col md={3}><strong>Sector:</strong> {sector || "-"}</Col>
-            <Col md={3}><strong>Category:</strong> {jobCategory || "-"}</Col>
-            <Col md={3}><strong>Location:</strong> {jobLocation || "-"}</Col>
+            <Col md={4}><strong>Job Type:</strong> {job_type?.job_type_name?.toString() || "-"}</Col>
+            <Col md={4}><strong>Sector:</strong> {job_sector?.job_sector_name?.toString() || "-"}</Col>
+            <Col md={4}><strong>Category:</strong> {job_category?.category_name?.toString() || "-"}</Col>
           </Row>
           <Row className="mb-2">
-            <Col md={3}><strong>Experience:</strong> {experience || "-"}</Col>
-            <Col md={3}><strong>Mode of Exam:</strong> {modeOfExam || "-"}</Col>
-            <Col md={3}><strong>Expiry Date:</strong> {expiryDate ? new Date(expiryDate).toLocaleDateString() : "-"}</Col>
-            <Col md={3}><strong>Updated:</strong> {updatedAt ? new Date(updatedAt).toLocaleString() : "-"}</Col>
+            <Col md={4}><strong>Expiry Date:</strong> {job_end_date ? new Date(job_end_date * 1000).toLocaleDateString() : "-"}</Col>
+            <Col md={4}><strong>Posted:</strong> {job_posted_date ? new Date(job_posted_date * 1000).toLocaleString() : "-"}</Col>
+            <Col md={4}><strong>Last Updated:</strong> {job_last_updated_date ? new Date(job_last_updated_date * 1000).toLocaleString() : "-"}</Col>
           </Row>
           <Row>
             <Col>
               <strong>Short Description:</strong>
-              <div className="mt-1">{shortDescription || "-"}</div>
+              <div className="mt-1">{job_short_desc || "-"}</div>
             </Col>
           </Row>
         </Card.Body>
@@ -124,8 +154,8 @@ export default function ViewJob() {
               <tbody>
                 {dates.map((d, idx) => (
                   <tr key={idx}>
-                    <td>{d.label || "-"}</td>
-                    <td>{d.date ? new Date(d.date).toLocaleDateString() : "-"}</td>
+                    <td>{d.label}</td>
+                    <td>{new Date(d.value * 1000).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -137,16 +167,27 @@ export default function ViewJob() {
       {/* Application Fee */}
       <ComponentCard className="mb-3" title="Application Fee" isCollapsible  defaultOpen={false}>
         <Card.Body>
-          {fees.length === 0 ? (
+          {job_fees_details.length === 0 ? (
             <div className="text-muted">No fee details.</div>
           ) : (
             <Table bordered size="sm">
-              <thead><tr><th>Category</th><th>Fee</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Post</th><th>General</th><th>OBC</th><th>SC</th><th>ST</th><th>EWS</th><th>PwD</th><th>Ex-SM</th><th>Women</th>
+                </tr>
+              </thead>
               <tbody>
-                {fees.map((f, idx) => (
+                {job_fees_details.map((f, idx) => (
                   <tr key={idx}>
-                    <td>{f.category || "-"}</td>
-                    <td>{f.fee || "-"}</td>
+                    <td>{f.post_name || "-"}</td>
+                    <td>{f.for_general ?? "-"}</td>
+                    <td>{f.for_obc ?? "-"}</td>
+                    <td>{f.for_sc ?? "-"}</td>
+                    <td>{f.for_st ?? "-"}</td>
+                    <td>{f.for_ews ?? "-"}</td>
+                    <td>{f.for_pwd ?? "-"}</td>
+                    <td>{f.for_ex_serviceman ?? "-"}</td>
+                    <td>{f.for_women ?? "-"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -158,71 +199,79 @@ export default function ViewJob() {
       {/* Vacancies */}
       <ComponentCard className="mb-3" title="Vacancies" isCollapsible  defaultOpen={false}>
         <Card.Body>
-          {vacancies.length === 0 ? (
+          {job_vacancy_details.length === 0 ? (
             <div className="text-muted">No vacancies listed.</div>
           ) : (
             <Table bordered size="sm">
               <thead>
                 <tr>
-                  <th>Post</th><th>Total</th><th>UR</th><th>EWS</th><th>OBC</th><th>SC</th><th>ST</th><th>PwBD</th>
+                  <th>Post</th><th>Total</th><th>General</th><th>EWS</th><th>OBC</th><th>SC</th><th>ST</th><th>PwD</th><th>Ex-SM</th><th>Women</th>
                 </tr>
               </thead>
               <tbody>
-                {vacancies.map((v, idx) => (
+                {job_vacancy_details.map((v, idx) => (
                   <tr key={idx}>
-                    <td>{v.postName || "-"}</td>
+                    <td>{v.post_name || "-"}</td>
                     <td>{v.total ?? "-"}</td>
-                    <td>{v.UR ?? "-"}</td>
-                    <td>{v.EWS ?? "-"}</td>
-                    <td>{v.OBC ?? "-"}</td>
-                    <td>{v.SC ?? "-"}</td>
-                    <td>{v.ST ?? "-"}</td>
-                    <td>{v.PwBD ?? "-"}</td>
+                    <td>{v.for_general ?? "-"}</td>
+                    <td>{v.for_ews ?? "-"}</td>
+                    <td>{v.for_obc ?? "-"}</td>
+                    <td>{v.for_sc ?? "-"}</td>
+                    <td>{v.for_st ?? "-"}</td>
+                    <td>{v.for_pwd ?? "-"}</td>
+                    <td>{v.for_ex_serviceman ?? "-"}</td>
+                    <td>{v.for_women ?? "-"}</td>
                   </tr>
                 ))}
               </tbody>
             </Table>
           )}
-          {vacancies[0]?.extraRequirements ? (
-            <div className="mt-2">
-              <strong>Extra Requirements:</strong>
-              <div className="mt-1" dangerouslySetInnerHTML={{ __html: vacancies[0].extraRequirements }} />
-            </div>
-          ) : null}
         </Card.Body>
       </ComponentCard>
 
       {/* Eligibility */}
       <ComponentCard className="mb-3" title="Eligibility" isCollapsible  defaultOpen={false}>
         <Card.Body>
-          <Row className="mb-2">
-            <Col md={3}><strong>Qualification:</strong> {eligibility.qualification || "-"}</Col>
-            <Col md={2}><strong>Final Year:</strong> {eligibility.finalYearEligible || "-"}</Col>
-            <Col md={2}><strong>Min Age:</strong> {eligibility.ageMin ?? "-"}</Col>
-            <Col md={2}><strong>Max Age:</strong> {eligibility.ageMax ?? "-"}</Col>
-            <Col md={3}><strong>GATE Required:</strong> {eligibility.gateRequired || "-"}</Col>
-          </Row>
-          <Row className="mb-2">
-            <Col md={6}><strong>Age Relaxation:</strong> {eligibility.ageRelaxation || "-"}</Col>
-            <Col md={6}><strong>GATE Codes:</strong> {eligibility.gateCodes || "-"}</Col>
-          </Row>
-          {eligibility.extraRequirements ? (
-            <div>
-              <strong>Extra Requirements:</strong>
-              <div className="mt-1" dangerouslySetInnerHTML={{ __html: eligibility.extraRequirements }} />
-            </div>
-          ) : null}
+          {job_eligibility_details.length === 0 ? (
+            <div className="text-muted">No eligibility details provided.</div>
+          ) : (
+            <Table bordered size="sm">
+              <thead>
+                <tr>
+                  <th>Post</th><th>Min Age</th><th>Max Age</th><th>Qualification</th><th>Experience</th><th>Extra Criteria</th>
+                </tr>
+              </thead>
+              <tbody>
+                {job_eligibility_details.map((e, idx) => (
+                  <tr key={idx}>
+                    <td>{e.post_name || "-"}</td>
+                    <td>{e.eligibility_age_min ?? "-"}</td>
+                    <td>{e.eligibility_age_max ?? "-"}</td>
+                    <td>{e.eligibility_qualifications || "-"}</td>
+                    <td>{e.eligibility_experience || "-"}</td>
+                    <td>{e.extra_criteria || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
         </Card.Body>
       </ComponentCard>
 
       {/* Salary & Benefits */}
       <ComponentCard className="mb-3" title="Salary & Benefits" isCollapsible  defaultOpen={false}>
         <Card.Body>
-          <Row>
-            <Col md={4}><strong>Pay Scale:</strong> <span>{salary.payScale || "-"}</span></Col>
-            <Col md={4}><strong>In Hand:</strong> <span>{salary.inHand || "-"}</span></Col>
-            <Col md={4}><strong>Allowances:</strong> <span>{salary.allowances || "-"}</span></Col>
+          <Row className="mb-2">
+            <Col md={3}><strong>Min Salary:</strong> <span>{job_salary_min || "-"}</span></Col>
+            <Col md={3}><strong>Max Salary:</strong> <span>{job_salary_max || "-"}</span></Col>
+            <Col md={3}><strong>In Hand:</strong> <span>{job_salary_inhand || "-"}</span></Col>
+            <Col md={3}><strong>Allowances:</strong> <span>{job_salary_allowance || "-"}</span></Col>
           </Row>
+          {job_salary_bond_condition ? (
+            <Row>
+              <Col><strong>Bond Condition:</strong> <span>{job_salary_bond_condition}</span></Col>
+            </Row>
+          ) : null}
         </Card.Body>
       </ComponentCard>
 
@@ -244,11 +293,11 @@ export default function ViewJob() {
       {/* Important Links */}
       <ComponentCard className="mb-3" title="Important Links" isCollapsible  defaultOpen={false}>
         <Card.Body>
-          {links.length === 0 ? (
+          {job_important_links.length === 0 ? (
             <div className="text-muted">No links provided.</div>
           ) : (
             <ul className="mb-0">
-              {links.map((l, idx) => (
+              {job_important_links.map((l, idx) => (
                 <li key={idx}>
                   <Badge bg="secondary" className="me-2">{l.type || "Link"}</Badge>
                   <a href={l.url} target="_blank" rel="noreferrer">{l.label || l.url}</a>
@@ -288,27 +337,27 @@ export default function ViewJob() {
       </ComponentCard>
 
       {/* SEO & Meta Info */}
-      <ComponentCard className="mb-3" title="SEO & Meta Info" isCollapsible  defaultOpen={false}>
+      {/* <ComponentCard className="mb-3" title="SEO & Meta Info" isCollapsible  defaultOpen={false}>
         <Card.Body>
           <Row className="mb-2">
-            <Col md={6}><strong>Meta Title:</strong> <span>{metaDetails.title || "-"}</span></Col>
-            <Col md={6}><strong>Keywords:</strong> <span>{metaDetails.keywords || "-"}</span></Col>
+            <Col md={6}><strong>Meta Title:</strong> <span>{job_meta_title || "-"}</span></Col>
+            <Col md={6}><strong>Keywords:</strong> <span>{job_meta_keywords || "-"}</span></Col>
           </Row>
           <Row className="mb-2">
             <Col><strong>Description:</strong>
-              <div className="mt-1">{metaDetails.description || "-"}</div>
+              <div className="mt-1">{job_meta_description || "-"}</div>
             </Col>
           </Row>
-          {metaDetails.schemas ? (
+          {job_meta_schemas ? (
             <div>
               <strong>Schemas:</strong>
               <pre className="mt-1 bg-light p-2 rounded" style={{ whiteSpace: "pre-wrap" }}>
-                {metaDetails.schemas}
+                {job_meta_schemas}
               </pre>
             </div>
           ) : null}
         </Card.Body>
-      </ComponentCard>
+      </ComponentCard> */}
 
       <div className="d-flex justify-content-end">
         <Link to={`/admin/jobs/edit/${job._id}`} className="btn btn-primary">Edit Job</Link>

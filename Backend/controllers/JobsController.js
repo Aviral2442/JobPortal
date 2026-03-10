@@ -23,6 +23,17 @@ exports.getJobByIdController = async (req, res) => {
     }
 };
 
+// Get job Details
+exports.getJobDetailsController = async (req, res) => {
+    try {
+        const jobId = req.params.jobId;
+        const result = await jobsService.getJobDetailsService(jobId);
+        res.status(result.status).json(result);
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+};
+
 // Update job by ID
 exports.updateJobByIdController = async (req, res) => {
     try {

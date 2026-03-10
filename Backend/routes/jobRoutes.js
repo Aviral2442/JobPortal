@@ -85,6 +85,7 @@ router.delete("/:id/section/:section/:index", deleteJobArrayItem);
 router.post("/add", JobsController.addJobsController);
 router.get("/get_job/:jobId", JobsController.getJobByIdController);
 router.put("/update_job/:id", JobsController.updateJobByIdController);
+router.get("/get_job_details/:jobId", JobsController.getJobDetailsController);
 
 // route for bulk uploading jobs (accepts multipart/form-data field `csv`)
 router.post("/bulk-upload", uploadCsv.single("csv"), JobsController.bulkUploadJobsController);
