@@ -34,6 +34,7 @@ const AppliedJobs = lazy(() => import('@/views/pages/student/AppliedOn'));
 const Douments = lazy(() => import('@/views/pages/Manage-Jobs/documents'));
 const AddDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/Components/AddDocument'));
 const EditDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/Components/AddDocument'));
+// const PrivacyPolicy = lazy(() => import('@/views/pages/privacy-policy'));
 
 
 const DynamicContent = lazy(() => import('@/views/pages/dynamic-content'));
