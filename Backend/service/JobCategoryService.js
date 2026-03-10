@@ -882,7 +882,7 @@ exports.jobListSectorWise = async (studentId) => {
 
     const studentSector = student.studentJobSector;
 
-    const fetchJobSectorWise = await Job.find({ job_sector: studentSector })
+    const fetchJobSectorWise = await Job.find({ job_sector: studentSector, job_status: 0 })
       .select(
         "job_title job_logo job_short_desc job_category job_sector job_type job_vacancy_total job_start_date",
       )
