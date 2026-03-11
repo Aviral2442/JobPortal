@@ -26,11 +26,8 @@ jobs:
 
         git config --global --add safe.directory ${{ secrets.VPS_PATH }}
 
-        echo "Fetch latest code"
-        git fetch origin
-        
-        echo "Reset to latest main"
-        git reset --hard origin/main
+        echo "Pull latest code"
+        git pull origin main
 
         echo "Stop containers"
         docker-compose down

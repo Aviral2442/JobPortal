@@ -1,6 +1,6 @@
 export const currency = '$';
 export const currentYear = new Date().getFullYear();
-export const appName = 'Job Portal';
+export const appName = 'Jobbcbcjkbkjcbkjbkjbckjb   Portal';
 export const appTitle = 'Job Portal Admin Dashboard';
 export const appDescription = 'Project management tools, web Dashboard, and powerful features.';
 export const author = 'Job Portal';
