@@ -1,0 +1,40 @@
+name: Deploy MERN JobPortal
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.7.0
+      with:
+        ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+    - name: Deploy to VPS
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+
+        cd ${{ secrets.VPS_PATH }}
+
+        echo "Pull latest code"
+        git pull origin main
+
+        echo "Stop containers"
+        docker compose down
+
+        echo "Rebuild containers"
+        docker compose up -d --build
+
+        echo "Remove unused images"
+        docker system prune -f
+
+        EOF
