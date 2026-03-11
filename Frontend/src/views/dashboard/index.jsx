@@ -10,47 +10,47 @@ import RecentSessions from '@/views/dashboard/components/RecentSessions';
 import ModelUsageSummary from '@/views/dashboard/components/ModelUsageSummary';
 import APIPerformanceMetrics from '@/views/dashboard/components/APIPerformanceMetrics';
 const Page = () => {
-  return <Container fluid>
-            <PageTitle title="Job Portaldetfryguhnjkml," subtitle="A premium collection of elegant, accessible components and a powerful codebase. Built for modern frameworks. Developer Friendly. Production Ready." badge={{
-      title: 'Medium and Large Business',
-      icon: LuSparkles
-    }} />
+    return <Container fluid>
+        <PageTitle title="Job Portaldetfryguhnjkml," subtitle="Aelegant, accessible components and a powerful codebase. Built for modern frameworks. Developer Friendly. Production Ready." badge={{
+            title: 'Medium and Large Business',
+            icon: LuSparkles
+        }} />
 
-            <Row className="row-cols-xxl-4 row-cols-md-2 row-cols-1">
-                <Col>
-                    <PromptsUsage />
-                </Col>
+        <Row className="row-cols-xxl-4 row-cols-md-2 row-cols-1">
+            <Col>
+                <PromptsUsage />
+            </Col>
 
-                <Col>
-                    <ActiveUsers />
-                </Col>
+            <Col>
+                <ActiveUsers />
+            </Col>
 
-                <Col>
-                    <ResponseAccuracy />
-                </Col>
+            <Col>
+                <ResponseAccuracy />
+            </Col>
 
-                <Col>
-                    <TokenUsage />
-                </Col>
-            </Row>
+            <Col>
+                <TokenUsage />
+            </Col>
+        </Row>
 
-            <Row>
-                <Col cols={12}>
-                    <RequestStatistics />
-                </Col>
-            </Row>
+        <Row>
+            <Col cols={12}>
+                <RequestStatistics />
+            </Col>
+        </Row>
 
-            <Row>
-                <Col xxl={6}>
-                    <RecentSessions />
-                </Col>
+        <Row>
+            <Col xxl={6}>
+                <RecentSessions />
+            </Col>
 
-                <Col xxl={6}>
-                    <ModelUsageSummary />
+            <Col xxl={6}>
+                <ModelUsageSummary />
 
-                    <APIPerformanceMetrics />
-                </Col>
-            </Row>
-        </Container>;
+                <APIPerformanceMetrics />
+            </Col>
+        </Row>
+    </Container>;
 };
 export default Page;
