@@ -23,7 +23,7 @@ const ActiveUsers = () => {
 
                 <div className="d-flex justify-content-between">
                     <div>
-                        <span className="text-muted">Avg. Session Time</span>
+                        <span className="text-muted">Avg. Session Time Counts Total </span>
                         <h5 className="mb-0">4m 12s</h5>
                     </div>
                     <div className="text-end">
