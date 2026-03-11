@@ -16,6 +16,11 @@ const Page = () => {
             icon: LuSparkles
         }} />
 
+        <PageTitle title="Job Portaldetfryguhnjkml," subtitle="Aelegant, accessible components and a powerful codebase. Built for modern frameworks. Developer Friendly. Production Ready." badge={{
+            title: 'Medium and Large Business',
+            icon: LuSparkles
+        }} />
+
         <Row className="row-cols-xxl-4 row-cols-md-2 row-cols-1">
             <Col>
                 <PromptsUsage />
