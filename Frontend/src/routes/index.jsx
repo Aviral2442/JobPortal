@@ -207,10 +207,6 @@ const adminRoutes = [
       </ProtectedRoute>
     ),
     children: [
-      {
-        path: '/',
-        element: <Navigate to="/admin/dashboard" replace />,
-      },
       ...dashboardRoutes,
       ...categoryRoutes,
       ...jobRoutes,
@@ -231,7 +227,7 @@ const publicRoutes = [
     element: <PublicLayout />,
     children: [
       {
-        path: '/home',
+        path: '/',
         element: <Home />,
       },
       {

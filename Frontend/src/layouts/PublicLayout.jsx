@@ -19,7 +19,7 @@ const PublicLayout = () => {
                         <span className="fw-bold fs-5">{appName}</span>
                     </Navbar.Brand>
                     <div className="d-flex align-items-center gap-3">
-                        <Link to="/home#contact" className="btn btn-outline-primary btn-sm">Contact Us</Link>
+                        {/* <Link to="/#contact" className="btn btn-outline-primary btn-sm">Contact Us</Link> */}
                         <Link to="/privacy-policy" className="btn btn-outline-primary btn-sm">Privacy Policy</Link>
                         <Link to="/admin/login" className="btn btn-primary btn-sm">Admin Login</Link>
                     </div>

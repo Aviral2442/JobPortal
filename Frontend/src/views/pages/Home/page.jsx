@@ -60,7 +60,7 @@ const Home = () => {
                     </div>
                     <h1 className="fw-bold mb-3">Welcome to {appName}</h1>
                     <p className="lead mb-4" style={{ maxWidth: 600, margin: '0 auto' }}>
-                        Your one-stop destination for discovering government, private &amp; PSU jobs opportunities, admit cards, results, and more.
+                        Your one-stop destination for discovering Government, Private &amp; PSU jobs opportunities, admit cards, results, and more.
                     </p>
                     <a href="#contact" className="btn btn-light btn-lg px-4">
                         Get In Touch
