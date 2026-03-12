@@ -1,6 +1,7 @@
 import { lazy } from 'react';
 import { Navigate } from 'react-router';
 import MainLayout from "@/layouts/MainLayout";
+import PublicLayout from "@/layouts/PublicLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 
@@ -35,6 +36,7 @@ const Douments = lazy(() => import('@/views/pages/Manage-Jobs/documents'));
 const AddDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/Components/AddDocument'));
 const EditDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/Components/AddDocument'));
 const PrivacyPolicy = lazy(() => import('@/views/pages/privacy-policy'));
+const Home = lazy(() => import('@/views/pages/Home/page'));
 
 
 const DynamicContent = lazy(() => import('@/views/pages/dynamic-content'));
@@ -226,8 +228,17 @@ const adminRoutes = [
 
 const publicRoutes = [
   {
-    path: '/privacy-policy',
-    element: <PrivacyPolicy />,
+    element: <PublicLayout />,
+    children: [
+      {
+        path: '/home',
+        element: <Home />,
+      },
+      {
+        path: '/privacy-policy',
+        element: <PrivacyPolicy />,
+      },
+    ],
   },
 ];
 

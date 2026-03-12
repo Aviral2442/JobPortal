@@ -272,7 +272,7 @@ const MultiSelectWithApiSearch = ({ value = [], onChange, placeholder = "Search 
         setLoading(true);
         const response = await fetch(`https://medcab.onrender.com/api/get_city_search?search=${searchTerm}`);
         const data = await response.json();
-        // console.log('Fetched cities data:', data.status);  
+        // //console.log('Fetched cities data:', data.status);  
         if (data.status === 200 && data.jsonData?.city_list) {
           const formatted = data.jsonData.city_list.map(city => ({
             value: city.city_name,
@@ -759,14 +759,14 @@ const WizardStudentDetail = () => {
       try {
         const response = await axios.get(`/job-categories/get_career_preferences_list/${id}`);
         if (response.data.status === 200) {
-          console.log('Fetched career preferences:', response.data.jsonData?.data);
+          //console.log('Fetched career preferences:', response.data.jsonData?.data);
           const formatted = (response.data?.jsonData?.data || []).map(item => ({
             value: item._id || item.value,
             name: Array.isArray(item.careerPreferenceName)
               ? item.careerPreferenceName.join(', ')
               : item.careerPreferenceName || item.name || 'Unknown'
           }));
-          console.log('Formatted career preferences:', formatted);
+          //console.log('Formatted career preferences:', formatted);
           setCareerPreferences(formatted);
         }
       } catch (error) {
@@ -781,7 +781,7 @@ const WizardStudentDetail = () => {
       try {
         setLoading(true);
         const res = await axios.get(`/student/studentAllDetails/${id}`);
-        console.log("Fetched student details:", res.data);
+        //console.log("Fetched student details:", res.data);
         const flattened = flattenData(res.data.jsonData);
         const progress = res.data.jsonData?.studentPrimaryData?.profileCompletion || {};
         let completeProfile = 0;
@@ -808,7 +808,7 @@ const WizardStudentDetail = () => {
       try {
         const response = await axios.get('/job-categories/get_job_sector_list');
         if (response.data.status === 200) {
-          console.log('Fetched job sectors:', response.data.jsonData?.data);
+          //console.log('Fetched job sectors:', response.data.jsonData?.data);
           const formatted = (response.data?.jsonData?.data || []).map(item => ({
             value: item._id || item.value,
             label: item.job_sector_name
@@ -908,7 +908,7 @@ const WizardStudentDetail = () => {
           extension: sectionData.passbookUrlExtension
         };
 
-        console.log('Bank details payload:', payload);
+        //console.log('Bank details payload:', payload);
         await axios.put(endpoint, payload); // JSON ONLY
         toast.success("Bank details saved successfully");
         return;
@@ -939,7 +939,7 @@ const WizardStudentDetail = () => {
         payload.hobbies = sanitize(payload.hobbies);
         payload.computerKnowledge = sanitize(payload.computerKnowledge);
 
-        console.log('Skills payload:', payload);
+        //console.log('Skills payload:', payload);
         await axios.put(endpoint, payload);
         toast.success('Skills updated successfully!');
         return;
@@ -1020,7 +1020,7 @@ const WizardStudentDetail = () => {
 
         };
 
-        console.log('Education payload being sent:', payload);
+        //console.log('Education payload being sent:', payload);
         await axios.put(endpoint, payload); // JSON ONLY
         toast.success("Education details saved successfully");
 
@@ -1084,7 +1084,7 @@ const WizardStudentDetail = () => {
           experiences: allExperiences
         };
 
-        console.log('Work experience payload:', payload);
+        //console.log('Work experience payload:', payload);
       }
 
       // 🔥 DOCUMENT UPLOAD FIX - Convert all images to base64 with extensions
@@ -1140,7 +1140,7 @@ const WizardStudentDetail = () => {
           otherDocuments: otherDocsArray
         };
 
-        console.log('Document upload payload:', payload);
+        //console.log('Document upload payload:', payload);
         await axios.put(endpoint, payload); // JSON ONLY with base64
         toast.success("Documents saved successfully");
 
@@ -1155,8 +1155,8 @@ const WizardStudentDetail = () => {
         return;
       }
 
-      console.log('Endpoint:', endpoint);
-      console.log('Payload being sent:', payload);
+      //console.log('Endpoint:', endpoint);
+      //console.log('Payload being sent:', payload);
 
       if (endpoint.includes('updateStudentCertificates')) {
         if (!payload.certificationName || !payload.issuingOrganization || !payload.issueDate) {
@@ -1173,7 +1173,7 @@ const WizardStudentDetail = () => {
           ? Math.floor(new Date(payload.expirationDate).getTime() / 1000)
           : null;
 
-        console.log("certificate")
+        //console.log("certificate")
 
         payload.issueDate = issueTimestamp;
         payload.expirationDate = expirationTimestamp;
@@ -1184,7 +1184,7 @@ const WizardStudentDetail = () => {
           const existingCert = certificates[editingCertificateIndex];
           if (existingCert && existingCert._id) {
             payload.certificateId = existingCert._id.toString();
-            console.log('Editing certificate with ID:', payload.certificateId);
+            //console.log('Editing certificate with ID:', payload.certificateId);
           }
         }
       }
@@ -1196,7 +1196,7 @@ const WizardStudentDetail = () => {
           const existingExp = workExperiences[editingExperienceIndex];
           if (existingExp && existingExp._id) {
             payload.experienceId = existingExp._id.toString();
-            console.log('Editing experience with ID:', payload.experienceId);
+            //console.log('Editing experience with ID:', payload.experienceId);
           }
         }
       }
@@ -1239,17 +1239,17 @@ const WizardStudentDetail = () => {
           });
         }
 
-        console.log('Sending FormData with files');
+        //console.log('Sending FormData with files');
         const response = await axios.put(endpoint, formData, {
           headers: {
             'Content-Type': 'application/json',
           },
         });
-        console.log('Response:', response.data);
+        //console.log('Response:', response.data);
       } else {
-        console.log('Sending JSON payload');
+        //console.log('Sending JSON payload');
         const response = await axios.put(endpoint, payload);
-        console.log('Response:', response.data);
+        //console.log('Response:', response.data);
       }
 
       toast.success("Changes saved successfully!");

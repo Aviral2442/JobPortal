@@ -1,4 +1,5 @@
 const DynamicContentModel = require('../models/DynamicContentModel');
+const ContactUsModel = require('../models/ContactUsModel');
 
 exports.updateDynamicContent = async (dynamicContentData) => {
     try {
@@ -32,5 +33,32 @@ exports.getDynamicContent = async () => {
         return { status: 200, message: "Dynamic content retrieved successfully", jsonData: dynamicContent };
     } catch (error) {
         return { status: 500, message: "An error occurred while retrieving dynamic content: " + error.message, jsonData: {} };
+    }
+};
+
+exports.submitContactUsForm = async (contactData) => {
+    try {
+        const contactUs = new ContactUsModel(contactData);
+        await contactUs.save();
+        return { status: 200, message: "Contact us form submitted successfully", jsonData: {} };
+    } catch (error) {
+        return {
+            status: 500,
+            message: "An error occurred while submitting contact us form: " + error.message,
+            jsonData: {}
+        }
+    }
+};
+
+exports.getContactUsSubmissions = async () => {
+    try {
+        const submissions = await ContactUsModel.find({}).sort({ createdAt: -1 }).exec();
+        return { status: 200, message: "Contact us submissions retrieved successfully", jsonData: submissions };
+    } catch (error) {
+        return {
+            status: 500,
+            message: "An error occurred while retrieving contact us submissions: " + error.message,
+            jsonData: []
+        }
     }
 };

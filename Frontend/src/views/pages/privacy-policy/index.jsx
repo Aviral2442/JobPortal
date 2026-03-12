@@ -1,10 +1,9 @@
 import api from '@/api/axios';
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Container, Row, Spinner, Navbar } from 'react-bootstrap';
+import { Card, Col, Container, Row, Spinner } from 'react-bootstrap';
 import { TbShieldLock, TbHelpCircle, TbPhone, TbMail } from 'react-icons/tb';
 import PageMeta from '@/components/PageMeta';
-import { appName, currentYear } from '@/helpers';
-import logoSm from '@/assets/images/logo-sm.png';
+import { appName } from '@/helpers';
 
 const PrivacyPolicy = () => {
     const [data, setData] = useState(null);
@@ -34,21 +33,8 @@ const PrivacyPolicy = () => {
     }
 
     return (
-        <div className="d-flex flex-column" style={{ minHeight: '100vh' }}>
+        <>
             <PageMeta title="Privacy Policy" />
-
-            {/* Header */}
-            <Navbar
-                className="shadow-sm px-3 px-md-4 py-2"
-                style={{ background: '#fff', borderBottom: '1px solid #e9ecef', position: 'sticky', top: 0, zIndex: 1030 }}
-            >
-                <Container fluid>
-                    <Navbar.Brand href="/" className="d-flex align-items-center gap-2 text-decoration-none">
-                        <img src={logoSm} alt={appName} height={36} />
-                        <span className="fw-bold fs-5">{appName}</span>
-                    </Navbar.Brand>
-                </Container>
-            </Navbar>
 
             {/* Main Content */}
             <div className="flex-grow-1" style={{ background: '#f5f7fa' }}>
@@ -206,17 +192,7 @@ const PrivacyPolicy = () => {
                     </Row>
                 </Container>
             </div>
-
-            {/* Footer */}
-            <footer
-                className="text-center py-3"
-                style={{ background: '#fff', borderTop: '1px solid #e9ecef' }}
-            >
-                <p className="text-muted mb-0 small">
-                    &copy; {currentYear} {appName}. All rights reserved.
-                </p>
-            </footer>
-        </div>
+        </>
     );
 };
 
