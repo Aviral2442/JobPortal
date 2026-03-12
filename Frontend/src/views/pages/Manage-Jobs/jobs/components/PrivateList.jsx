@@ -270,9 +270,9 @@ const PrivateList = ({ isActive }) => {
             className="border-0 bg-transparent p-0"
           >
             {rowData.job_status === 1 ? (
-              <MdOutlineToggleOn size={24} color="green" />
-            ) : (
               <MdOutlineToggleOff size={24} color="gray" />
+            ) : (
+              <MdOutlineToggleOn size={24} color="green" />
             )}
           </button>
         );

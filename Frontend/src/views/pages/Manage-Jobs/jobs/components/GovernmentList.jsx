@@ -98,6 +98,7 @@ const GovernmentList = ({ isActive }) => {
       const params = getFilterParams(PAGE_SIZE);
       const res = await axios.get(`/job-categories/government_sector_job_list`, { params });
       const data = res.data.jsonData;
+      console.log("Fetched government jobs:", data);
       setJobs(data?.governmentJobs || []);
       setTotalPages(data?.totalPages || 0);
     } catch (err) {
@@ -270,9 +271,9 @@ const GovernmentList = ({ isActive }) => {
             className="border-0 bg-transparent p-0"
           >
             {rowData.job_status === 1 ? (
-              <MdOutlineToggleOn size={24} color="green" />
-            ) : (
               <MdOutlineToggleOff size={24} color="gray" />
+            ) : (
+              <MdOutlineToggleOn size={24} color="green" />
             )}
           </button>
         );

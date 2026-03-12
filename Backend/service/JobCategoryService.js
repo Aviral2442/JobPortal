@@ -755,6 +755,7 @@ exports.recommendJobsForStudent = async (studentId) => {
 
     let filter = {
       jobRecommendation: true,
+      job_status: 0,
     };
 
     const notSpecifiedId = notSpecifiedSector?._id?.toString();
@@ -882,7 +883,7 @@ exports.jobListSectorWise = async (studentId) => {
 
     const studentSector = student.studentJobSector;
 
-    const fetchJobSectorWise = await Job.find({ job_sector: studentSector })
+    const fetchJobSectorWise = await Job.find({ job_sector: studentSector, job_status: 0 })
       .select(
         "job_title job_logo job_short_desc job_category job_sector job_type job_vacancy_total job_start_date",
       )
@@ -1061,6 +1062,7 @@ exports.governmentSectorJobList = async (query) => {
 
   const filter = {
     job_sector: governmentSector._id,
+    job_status: { $ne: 2 }
   };
 
   // Search Filter
@@ -1126,8 +1128,6 @@ exports.governmentSectorJobList = async (query) => {
       model: "JobCategory",
       select: "category_name",
     })
-    .where("job_status")
-    .ne(2)
     .skip(skip)
     .limit(limit)
     .sort({ job_posted_date: -1 });
