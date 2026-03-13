@@ -14,12 +14,12 @@ const PublicLayout = () => {
                 style={{ background: '#fff', borderBottom: '1px solid #e9ecef', position: 'sticky', top: 0, zIndex: 1030 }}
             >
                 <Container fluid>
-                    <Navbar.Brand as={Link} to="/home" className="d-flex align-items-center gap-2 text-decoration-none">
+                    <Navbar.Brand as={Link} to="/" className="d-flex align-items-center gap-2 text-decoration-none">
                         <img src={logoSm} alt={appName} height={36} />
                         <span className="fw-bold fs-5">{appName}</span>
                     </Navbar.Brand>
                     <div className="d-flex align-items-center gap-3">
-                        {/* <Link to="/#contact" className="btn btn-outline-primary btn-sm">Contact Us</Link> */}
+                        <Link to="/about-us" className="btn btn-outline-primary btn-sm">About Us</Link>
                         <Link to="/privacy-policy" className="btn btn-outline-primary btn-sm">Privacy Policy</Link>
                         <Link to="/admin/login" className="btn btn-primary btn-sm">Admin Login</Link>
                     </div>

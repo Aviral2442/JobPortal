@@ -35,8 +35,9 @@ const AppliedJobs = lazy(() => import('@/views/pages/student/AppliedOn'));
 const Douments = lazy(() => import('@/views/pages/Manage-Jobs/documents'));
 const AddDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/Components/AddDocument'));
 const EditDocument = lazy(() => import('@/views/pages/Manage-Jobs/documents/Components/AddDocument'));
-const PrivacyPolicy = lazy(() => import('@/views/pages/privacy-policy'));
-const Home = lazy(() => import('@/views/pages/Home/page'));
+const PrivacyPolicy = lazy(() => import('@/views/pages/(main)/privacy-policy'));
+const Home = lazy(() => import('@/views/pages/(main)/Home'));
+const AboutUs = lazy(() => import('@/views/pages/(main)/aboutus'));
 
 
 const DynamicContent = lazy(() => import('@/views/pages/dynamic-content'));
@@ -233,6 +234,10 @@ const publicRoutes = [
       {
         path: '/privacy-policy',
         element: <PrivacyPolicy />,
+      },
+      {
+        path: '/about-us',
+        element: <AboutUs />,
       },
     ],
   },
