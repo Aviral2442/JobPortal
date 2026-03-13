@@ -29,7 +29,7 @@ import "@/global.css";
 import { IMAGE_BASE_URL } from "@/config/apiConfig";
 import {
   TbUserCircle,
-  TbMapPin,
+  TbMail,
   TbBuildingBank,
   TbHeart,
   TbPhone,
@@ -407,7 +407,7 @@ const Header = ({ withProgress }) => {
   const steps = [
     { icon: TbUserCircle, label: "Primary Info", desc: "Basic details" },
     { icon: TbUserCircle, label: "Basic Details", desc: "Personal info" },
-    { icon: TbMapPin, label: "Address", desc: "Address Info" },
+    { icon: TbMail, label: "Address", desc: "Address Info" },
     { icon: TbBuildingBank, label: "Bank Details", desc: "Financial" },
     { icon: TbMan, label: "Body Detail", desc: "Physical" },
     { icon: TbPhone, label: "Emergency", desc: "Contact detail" },

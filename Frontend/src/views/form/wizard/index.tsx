@@ -15,7 +15,7 @@ import ComponentCard from '@/components/ComponentCard'
 import Flatpickr from 'react-flatpickr'
 import {useWizard, Wizard} from 'react-use-wizard'
 import {LuWandSparkles} from 'react-icons/lu'
-import {TbBook, TbFolder, TbMapPin, TbUserCircle, TbUsers} from 'react-icons/tb'
+import {TbBook, TbFolder, TbMail, TbUserCircle, TbUsers} from 'react-icons/tb'
 import clsx from 'clsx'
 
 const Header = ({className, withProgress}: { className?: string; withProgress?: boolean }) => {
@@ -46,7 +46,7 @@ const Header = ({className, withProgress}: { className?: string; withProgress?: 
                         className={clsx('nav-link d-flex w-100 text-start border-0', activeStep === 1 && 'active', activeStep > 1 && 'wizard-item-done')}
                         onClick={() => goToStep(1)}>
             <span className="d-flex align-items-center">
-              <TbMapPin className="fs-32"/>
+              <TbMail className="fs-32"/>
               <span className="flex-grow-1 ms-2 text-truncate">
                 <span className="mb-0 lh-base d-block fw-semibold text-body fs-base">Address Info</span>
                 <span className="fs-xxs mb-0">Where you live</span>

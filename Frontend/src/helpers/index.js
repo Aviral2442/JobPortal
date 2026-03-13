@@ -1,9 +1,9 @@
 export const currency = '$';
 export const currentYear = new Date().getFullYear();
-export const appName = 'Job Portal';
-export const appTitle = 'Job Portal Admin Dashboard';
+export const appName = 'Naukari Alert';
+export const appTitle = 'Naukari Alert Admin Dashboard';
 export const appDescription = 'Project management tools, web Dashboard, and powerful features.';
-export const author = 'Job Portal';
+export const author = 'Naukari Alert';
 export const authorWebsite = 'https://innovativemodernengineers.com/';
 export const authorContact = '';
 export const basePath = '';
