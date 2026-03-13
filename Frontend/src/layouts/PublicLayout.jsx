@@ -20,6 +20,7 @@ const PublicLayout = () => {
                     </Navbar.Brand>
                     <div className="d-flex align-items-center gap-3">
                         <Link to="/about-us" className="btn btn-outline-primary btn-sm">About Us</Link>
+                        <Link to="/terms-and-conditions" className="btn btn-outline-primary btn-sm">Terms & Conditions</Link>
                         <Link to="/privacy-policy" className="btn btn-outline-primary btn-sm">Privacy Policy</Link>
                         <Link to="/admin/login" className="btn btn-primary btn-sm">Admin Login</Link>
                     </div>

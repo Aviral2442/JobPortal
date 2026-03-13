@@ -4,6 +4,7 @@ const DynamicContentSchema = new mongoose.Schema({
     privacyPolicy: { type: String },
     aboutUs: { type: String },
     helpCenter: { type: String },
+    termsAndConditions: { type: String },
     contactSupportNumber: { type: String },
     contactSupportEmail: { type: String },
 });

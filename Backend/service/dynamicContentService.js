@@ -10,6 +10,7 @@ exports.updateDynamicContent = async (dynamicContentData) => {
         if (dynamicContentData.helpCenter) { updateData.helpCenter = dynamicContentData.helpCenter; }
         if (dynamicContentData.contactSupportNumber) { updateData.contactSupportNumber = dynamicContentData.contactSupportNumber; }
         if (dynamicContentData.contactSupportEmail) { updateData.contactSupportEmail = dynamicContentData.contactSupportEmail; }
+        if (dynamicContentData.termsAndConditions) { updateData.termsAndConditions = dynamicContentData.termsAndConditions; }
 
         const updatedContent = await DynamicContentModel.findOneAndUpdate(
             {},

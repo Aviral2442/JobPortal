@@ -23,6 +23,7 @@ const DynamicContent = () => {
       privacyPolicy: '',
       aboutUs: '',
       helpCenter: '',
+      termsAndConditions: '',
       contactSupportNumber: '',
       contactSupportEmail: '',
     },
@@ -55,6 +56,7 @@ const DynamicContent = () => {
             privacyPolicy: data.privacyPolicy || '',
             aboutUs: data.aboutUs || '',
             helpCenter: data.helpCenter || '',
+            termsAndConditions: data.termsAndConditions || '',
             contactSupportNumber: data.contactSupportNumber || '',
             contactSupportEmail: data.contactSupportEmail || '',
           });
@@ -123,6 +125,20 @@ const DynamicContent = () => {
               </Suspense>
               {touched.helpCenter && errors.helpCenter && (
                 <div className="text-danger mt-1 small">{errors.helpCenter}</div>
+              )}
+            </BootstrapForm.Group>
+
+            {/* Terms and Conditions Editor */}
+            <BootstrapForm.Group className="mb-4">
+              <BootstrapForm.Label className="fw-semibold">Terms and Conditions</BootstrapForm.Label>
+              <Suspense fallback={<Spinner animation="border" size="sm" />}>
+                <SnowEditor
+                  value={values.termsAndConditions}
+                  onChange={(v) => setFieldValue('termsAndConditions', v)}
+                />
+              </Suspense>
+              {touched.termsAndConditions && errors.termsAndConditions && (
+                <div className="text-danger mt-1 small">{errors.termsAndConditions}</div>
               )}
             </BootstrapForm.Group>
 
