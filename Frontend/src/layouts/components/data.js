@@ -9,7 +9,7 @@ import {
 } from "react-icons/tb";
 import { LuCircleGauge, LuUsers } from "react-icons/lu";
 import { HiMiniUserPlus, HiOutlineUserGroup } from "react-icons/hi2";
-import { IoFlash, IoFlashOutline } from "react-icons/io5";
+import { IoCall, IoCallOutline, IoContract, IoFlash, IoFlashOutline } from "react-icons/io5";
 
 export const userDropdownItems = [
   {
@@ -146,6 +146,12 @@ export const menuItems = [
     label: "Dynamic Content",
     icon: IoFlashOutline,
     url: "/admin/dynamic-content",
+  },
+  {
+    key: "contact-us",
+    label: "Contact Us",
+    icon: IoCallOutline,
+    url: "/admin/contact-us",
   }
   // {
   //   key: 'student-login-tracker',
